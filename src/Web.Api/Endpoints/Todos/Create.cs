@@ -1,8 +1,8 @@
 using Application.Abstractions.Authentication;
 using Application.Abstractions.Messaging;
 using Application.Todos.Create;
-using Domain.Todos;
 using SharedKernel;
+using Web.Api.Endpoints.Mappings;
 using Web.Api.Endpoints.Users;
 using Web.Api.Extensions;
 using Web.Api.Infrastructure;
@@ -27,14 +27,7 @@ internal sealed class Create : IEndpoint
             ICommandHandler<CreateTodoCommand, Guid> handler,
             CancellationToken cancellationToken) =>
         {
-            var command = new CreateTodoCommand
-            {
-                UserId = userContext.UserId,
-                Description = request.Description,
-                DueDate = request.DueDate,
-                Labels = request.Labels,
-                Priority = (Priority)request.Priority
-            };
+            CreateTodoCommand command = request.ToCommand(userContext.UserId);
 
             Result<Guid> result = await handler.Handle(command, cancellationToken);
 

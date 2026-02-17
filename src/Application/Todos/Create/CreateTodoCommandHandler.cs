@@ -21,24 +21,16 @@ internal sealed class CreateTodoCommandHandler(
             return Result.Failure<Guid>(UserErrors.Unauthorized());
         }
 
-        User? user = await context.Users.AsNoTracking()
-            .SingleOrDefaultAsync(u => u.Id == command.UserId, cancellationToken);
+        bool userExists = await context.Users
+            .AsNoTracking()
+            .AnyAsync(u => u.Id == command.UserId, cancellationToken);
 
-        if (user is null)
+        if (!userExists)
         {
             return Result.Failure<Guid>(UserErrors.NotFound(command.UserId));
         }
 
-        var todoItem = new TodoItem
-        {
-            UserId = user.Id,
-            Description = command.Description,
-            Priority = command.Priority,
-            DueDate = command.DueDate,
-            Labels = command.Labels,
-            IsCompleted = false,
-            CreatedAt = dateTimeProvider.UtcNow
-        };
+        TodoItem todoItem = command.ToEntity(dateTimeProvider.UtcNow);
 
         todoItem.Raise(new TodoItemCreatedDomainEvent(todoItem.Id));
 

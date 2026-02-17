@@ -1,4 +1,5 @@
-﻿using Infrastructure.Database;
+using Infrastructure.Authorization;
+using Infrastructure.Database;
 using Microsoft.EntityFrameworkCore;
 
 namespace Web.Api.Extensions;
@@ -13,5 +14,10 @@ public static class MigrationExtensions
             scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
 
         dbContext.Database.Migrate();
+
+        AuthorizationSeeder seeder =
+            scope.ServiceProvider.GetRequiredService<AuthorizationSeeder>();
+
+        seeder.SeedAsync(CancellationToken.None).GetAwaiter().GetResult();
     }
 }

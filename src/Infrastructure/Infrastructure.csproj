@@ -19,4 +19,10 @@
 	<InternalsVisibleTo Include="ArchitectureTests" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Compile Update="Database\Migrations\*.cs">
+      <NoWarn>$(NoWarn);IDE0161;CA1861</NoWarn>
+    </Compile>
+  </ItemGroup>
+
 </Project>

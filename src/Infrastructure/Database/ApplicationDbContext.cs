@@ -1,4 +1,6 @@
-﻿using Application.Abstractions.Data;
+using Application.Abstractions.Data;
+using Domain.Authorization;
+using Domain.Logging;
 using Domain.Todos;
 using Domain.Users;
 using Infrastructure.DomainEvents;
@@ -13,28 +15,25 @@ public sealed class ApplicationDbContext(
     : DbContext(options), IApplicationDbContext
 {
     public DbSet<User> Users { get; set; }
-
+    public DbSet<LogEvent> LogEvents { get; set; }
+    public DbSet<AlertRule> AlertRules { get; set; }
+    public DbSet<AlertIncident> AlertIncidents { get; set; }
+    public DbSet<RefreshToken> RefreshTokens { get; set; }
+    public DbSet<Role> Roles { get; set; }
+    public DbSet<Permission> Permissions { get; set; }
+    public DbSet<UserRole> UserRoles { get; set; }
+    public DbSet<RolePermission> RolePermissions { get; set; }
+    public DbSet<UserPermission> UserPermissions { get; set; }
     public DbSet<TodoItem> TodoItems { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(ApplicationDbContext).Assembly);
-
         modelBuilder.HasDefaultSchema(Schemas.Default);
     }
 
     public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
     {
-        // When should you publish domain events?
-        //
-        // 1. BEFORE calling SaveChangesAsync
-        //     - domain events are part of the same transaction
-        //     - immediate consistency
-        // 2. AFTER calling SaveChangesAsync
-        //     - domain events are a separate transaction
-        //     - eventual consistency
-        //     - handlers can fail
-
         int result = await base.SaveChangesAsync(cancellationToken);
 
         await PublishDomainEventsAsync();
@@ -50,9 +49,7 @@ public sealed class ApplicationDbContext(
             .SelectMany(entity =>
             {
                 List<IDomainEvent> domainEvents = entity.DomainEvents;
-
                 entity.ClearDomainEvents();
-
                 return domainEvents;
             })
             .ToList();

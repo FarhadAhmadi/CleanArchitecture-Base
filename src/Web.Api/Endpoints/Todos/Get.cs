@@ -2,6 +2,7 @@ using Application.Abstractions.Authentication;
 using Application.Abstractions.Messaging;
 using Application.Todos.Get;
 using SharedKernel;
+using Web.Api.Endpoints.Mappings;
 using Web.Api.Endpoints.Users;
 using Web.Api.Extensions;
 using Web.Api.Infrastructure;
@@ -14,12 +15,27 @@ internal sealed class Get : IEndpoint
     {
         app.MapGet("todos", async (
             IUserContext userContext,
-            IQueryHandler<GetTodosQuery, List<TodoResponse>> handler,
+            int page,
+            int pageSize,
+            string? search,
+            bool? isCompleted,
+            string? sortBy,
+            string? sortOrder,
+            IQueryHandler<GetTodosQuery, PagedResponse<TodoResponse>> handler,
             CancellationToken cancellationToken) =>
         {
-            var query = new GetTodosQuery(userContext.UserId);
+            page = page <= 0 ? 1 : page;
+            pageSize = pageSize is <= 0 or > 100 ? 20 : pageSize;
 
-            Result<List<TodoResponse>> result = await handler.Handle(query, cancellationToken);
+            var query = userContext.UserId.ToGetTodosQuery(
+                page,
+                pageSize,
+                search,
+                isCompleted,
+                sortBy,
+                sortOrder);
+
+            Result<PagedResponse<TodoResponse>> result = await handler.Handle(query, cancellationToken);
 
             return result.Match(Results.Ok, CustomResults.Problem);
         })

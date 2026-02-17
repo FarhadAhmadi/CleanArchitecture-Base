@@ -1,6 +1,7 @@
 using Application.Abstractions.Messaging;
 using Application.Todos.Delete;
 using SharedKernel;
+using Web.Api.Endpoints.Mappings;
 using Web.Api.Endpoints.Users;
 using Web.Api.Extensions;
 using Web.Api.Infrastructure;
@@ -16,7 +17,7 @@ internal sealed class Delete : IEndpoint
             ICommandHandler<DeleteTodoCommand> handler,
             CancellationToken cancellationToken) =>
         {
-            var command = new DeleteTodoCommand(id);
+            var command = id.ToDeleteTodoCommand();
 
             Result result = await handler.Handle(command, cancellationToken);
 

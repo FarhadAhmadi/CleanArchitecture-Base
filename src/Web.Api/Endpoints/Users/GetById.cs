@@ -1,6 +1,7 @@
-﻿using Application.Abstractions.Messaging;
+using Application.Abstractions.Messaging;
 using Application.Users.GetById;
 using SharedKernel;
+using Web.Api.Endpoints.Mappings;
 using Web.Api.Extensions;
 using Web.Api.Infrastructure;
 
@@ -15,7 +16,7 @@ internal sealed class GetById : IEndpoint
             IQueryHandler<GetUserByIdQuery, UserResponse> handler,
             CancellationToken cancellationToken) =>
         {
-            var query = new GetUserByIdQuery(userId);
+            var query = userId.ToGetUserByIdQuery();
 
             Result<UserResponse> result = await handler.Handle(query, cancellationToken);
 

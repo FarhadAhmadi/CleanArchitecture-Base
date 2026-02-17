@@ -1,26 +1,31 @@
-﻿using Microsoft.Extensions.Primitives;
+using System.Diagnostics;
+using Microsoft.Extensions.Primitives;
 using Serilog.Context;
 
 namespace Web.Api.Middleware;
 
-public class RequestContextLoggingMiddleware(RequestDelegate next)
+public sealed class RequestContextLoggingMiddleware(RequestDelegate next)
 {
     private const string CorrelationIdHeaderName = "Correlation-Id";
 
-    public Task Invoke(HttpContext context)
+    public async Task Invoke(HttpContext context)
     {
-        using (LogContext.PushProperty("CorrelationId", GetCorrelationId(context)))
+        string correlationId = GetCorrelationId(context);
+
+        context.TraceIdentifier = correlationId;
+        context.Response.Headers[CorrelationIdHeaderName] = correlationId;
+
+        Activity.Current?.SetTag("correlation.id", correlationId);
+
+        using (LogContext.PushProperty("CorrelationId", correlationId))
         {
-            return next.Invoke(context);
+            await next.Invoke(context);
         }
     }
 
     private static string GetCorrelationId(HttpContext context)
     {
-        context.Request.Headers.TryGetValue(
-            CorrelationIdHeaderName,
-            out StringValues correlationId);
-
+        context.Request.Headers.TryGetValue(CorrelationIdHeaderName, out StringValues correlationId);
         return correlationId.FirstOrDefault() ?? context.TraceIdentifier;
     }
 }

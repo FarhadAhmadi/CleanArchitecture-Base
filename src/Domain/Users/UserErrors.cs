@@ -19,4 +19,16 @@ public static class UserErrors
     public static readonly Error EmailNotUnique = Error.Conflict(
         "Users.EmailNotUnique",
         "The provided email is not unique");
+
+    public static readonly Error InvalidRefreshToken = Error.Problem(
+        "Users.InvalidRefreshToken",
+        "The provided refresh token is invalid.");
+
+    public static readonly Error ExpiredRefreshToken = Error.Problem(
+        "Users.ExpiredRefreshToken",
+        "The provided refresh token has expired.");
+
+    public static readonly Error RevokedRefreshToken = Error.Problem(
+        "Users.RevokedRefreshToken",
+        "The provided refresh token has been revoked.");
 }

@@ -1,6 +1,7 @@
 using Application.Abstractions.Messaging;
 using Application.Todos.Complete;
 using SharedKernel;
+using Web.Api.Endpoints.Mappings;
 using Web.Api.Endpoints.Users;
 using Web.Api.Extensions;
 using Web.Api.Infrastructure;
@@ -16,7 +17,7 @@ internal sealed class Complete : IEndpoint
             ICommandHandler<CompleteTodoCommand> handler,
             CancellationToken cancellationToken) =>
         {
-            var command = new CompleteTodoCommand(id);
+            var command = id.ToCompleteTodoCommand();
 
             Result result = await handler.Handle(command, cancellationToken);
 

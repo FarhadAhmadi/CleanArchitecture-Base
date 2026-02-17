@@ -2,6 +2,7 @@ using Application.Abstractions.Authentication;
 using Application.Abstractions.Messaging;
 using Application.Todos.Copy;
 using SharedKernel;
+using Web.Api.Endpoints.Mappings;
 using Web.Api.Endpoints.Users;
 using Web.Api.Extensions;
 using Web.Api.Infrastructure;
@@ -18,11 +19,7 @@ internal sealed class Copy : IEndpoint
             ICommandHandler<CopyTodoCommand, Guid> handler,
             CancellationToken cancellationToken) =>
         {
-            var command = new CopyTodoCommand
-            {
-                UserId = userContext.UserId,
-                TodoId = todoId
-            };
+            var command = todoId.ToCopyTodoCommand(userContext.UserId);
 
             Result<Guid> result = await handler.Handle(command, cancellationToken);
 

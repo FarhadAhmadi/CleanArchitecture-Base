@@ -4,11 +4,11 @@ internal sealed class JwtOptions
 {
     public const string SectionName = "Jwt";
 
-    public string Secret { get; init; } = string.Empty;
+    public string Secret { get; set; } = string.Empty;
 
-    public string Issuer { get; init; } = string.Empty;
+    public string Issuer { get; set; } = string.Empty;
 
-    public string Audience { get; init; } = string.Empty;
+    public string Audience { get; set; } = string.Empty;
 
-    public int ExpirationInMinutes { get; init; } = 60;
+    public int ExpirationInMinutes { get; set; } = 60;
 }

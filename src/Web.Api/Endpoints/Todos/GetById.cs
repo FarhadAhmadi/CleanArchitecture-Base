@@ -1,6 +1,7 @@
 using Application.Abstractions.Messaging;
 using Application.Todos.GetById;
 using SharedKernel;
+using Web.Api.Endpoints.Mappings;
 using Web.Api.Endpoints.Users;
 using Web.Api.Extensions;
 using Web.Api.Infrastructure;
@@ -16,9 +17,9 @@ internal sealed class GetById : IEndpoint
             IQueryHandler<GetTodoByIdQuery, TodoResponse> handler,
             CancellationToken cancellationToken) =>
         {
-            var command = new GetTodoByIdQuery(id);
+            var query = id.ToGetTodoByIdQuery();
 
-            Result<TodoResponse> result = await handler.Handle(command, cancellationToken);
+            Result<TodoResponse> result = await handler.Handle(query, cancellationToken);
 
             return result.Match(Results.Ok, CustomResults.Problem);
         })

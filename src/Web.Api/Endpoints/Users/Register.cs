@@ -1,6 +1,7 @@
-﻿using Application.Abstractions.Messaging;
+using Application.Abstractions.Messaging;
 using Application.Users.Register;
 using SharedKernel;
+using Web.Api.Endpoints.Mappings;
 using Web.Api.Extensions;
 using Web.Api.Infrastructure;
 
@@ -17,11 +18,7 @@ internal sealed class Register : IEndpoint
             ICommandHandler<RegisterUserCommand, Guid> handler,
             CancellationToken cancellationToken) =>
         {
-            var command = new RegisterUserCommand(
-                request.Email,
-                request.FirstName,
-                request.LastName,
-                request.Password);
+            RegisterUserCommand command = request.ToCommand();
 
             Result<Guid> result = await handler.Handle(command, cancellationToken);
 

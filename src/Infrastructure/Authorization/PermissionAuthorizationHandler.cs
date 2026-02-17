@@ -1,3 +1,4 @@
+using Infrastructure.Authentication;
 using Microsoft.AspNetCore.Authorization;
 
 namespace Infrastructure.Authorization;
@@ -5,22 +6,23 @@ namespace Infrastructure.Authorization;
 internal sealed class PermissionAuthorizationHandler(PermissionProvider permissionProvider)
     : AuthorizationHandler<PermissionRequirement>
 {
-    protected override Task HandleRequirementAsync(
+    protected override async Task HandleRequirementAsync(
         AuthorizationHandlerContext context,
         PermissionRequirement requirement)
     {
         if (context.User.Identity?.IsAuthenticated is not true)
         {
-            return Task.CompletedTask;
+            return;
         }
 
-        HashSet<string> permissions = permissionProvider.GetForUser(context.User);
+        Guid userId = context.User.GetUserId();
 
-        if (permissions.Contains(requirement.Permission) || permissions.Contains("*"))
+        HashSet<string> permissions = await permissionProvider.GetForUserAsync(userId, CancellationToken.None);
+
+        if (permissions.Contains(requirement.Permission, StringComparer.OrdinalIgnoreCase) ||
+            permissions.Contains("*", StringComparer.OrdinalIgnoreCase))
         {
             context.Succeed(requirement);
         }
-
-        return Task.CompletedTask;
     }
 }

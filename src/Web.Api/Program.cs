@@ -4,10 +4,21 @@ using HealthChecks.UI.Client;
 using Infrastructure;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Serilog;
+using Web.Api.Endpoints.Logging;
 using Web.Api;
 using Web.Api.Extensions;
+using Web.Api.Infrastructure;
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
+
+ApiSecurityOptions apiSecurityOptions = builder.Configuration
+    .GetSection(ApiSecurityOptions.SectionName)
+    .Get<ApiSecurityOptions>() ?? new ApiSecurityOptions();
+
+builder.WebHost.ConfigureKestrel(options =>
+{
+    options.Limits.MaxRequestBodySize = apiSecurityOptions.MaxRequestBodySizeMb * 1024L * 1024L;
+});
 
 builder.Host.UseSerilog((context, loggerConfig) => loggerConfig.ReadFrom.Configuration(context.Configuration));
 
@@ -15,19 +26,22 @@ builder.Services.AddSwaggerGenWithAuth();
 
 builder.Services
     .AddApplication()
-    .AddPresentation()
+    .AddPresentation(builder.Configuration)
     .AddInfrastructure(builder.Configuration);
 
 builder.Services.AddEndpoints(Assembly.GetExecutingAssembly());
 
 WebApplication app = builder.Build();
 
-app.MapEndpoints();
+RouteGroupBuilder v1 = app
+    .MapGroup("api/v1");
+
+app.MapEndpoints(v1);
+app.MapLoggingEndpoints();
 
 if (app.Environment.IsDevelopment())
 {
     app.UseSwaggerWithUi();
-
     app.ApplyMigrations();
 }
 
@@ -37,21 +51,19 @@ app.MapHealthChecks("health", new HealthCheckOptions
 });
 
 app.UseRequestContextLogging();
-
 app.UseSerilogRequestLogging();
-
 app.UseExceptionHandler();
-
+app.UseStatusCodePages(StatusCodePageExtensions.WriteProblemDetails);
+app.UseRequestTimeouts();
+app.UseCors(Web.Api.DependencyInjection.GetCorsPolicyName());
+app.UseRateLimiter();
 app.UseAuthentication();
-
 app.UseAuthorization();
 
-// REMARK: If you want to use Controllers, you'll need this.
 app.MapControllers();
 
 await app.RunAsync();
 
-// REMARK: Required for functional and integration tests to work.
 namespace Web.Api
 {
     public partial class Program;
