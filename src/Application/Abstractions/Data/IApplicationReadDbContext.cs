@@ -19,5 +19,6 @@ public interface IApplicationReadDbContext
     IQueryable<RolePermission> RolePermissions { get; }
     IQueryable<UserPermission> UserPermissions { get; }
     IQueryable<TodoItem> TodoItems { get; }
+    IQueryable<UserExternalLogin> UserExternalLogins { get; }
     IQueryable<AuditEntry> AuditEntries { get; }
 }

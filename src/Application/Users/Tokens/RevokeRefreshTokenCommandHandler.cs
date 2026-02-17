@@ -1,6 +1,7 @@
 using Application.Abstractions.Authentication;
 using Application.Abstractions.Data;
 using Application.Abstractions.Messaging;
+using Application.Abstractions.Security;
 using Microsoft.EntityFrameworkCore;
 using SharedKernel;
 
@@ -8,7 +9,8 @@ namespace Application.Users.Tokens;
 
 internal sealed class RevokeRefreshTokenCommandHandler(
     IApplicationDbContext context,
-    IRefreshTokenProvider refreshTokenProvider) : ICommandHandler<RevokeRefreshTokenCommand>
+    IRefreshTokenProvider refreshTokenProvider,
+    ISecurityEventLogger securityEventLogger) : ICommandHandler<RevokeRefreshTokenCommand>
 {
     public async Task<Result> Handle(RevokeRefreshTokenCommand command, CancellationToken cancellationToken)
     {
@@ -19,6 +21,7 @@ internal sealed class RevokeRefreshTokenCommandHandler(
 
         if (existing is null)
         {
+            securityEventLogger.AuthenticationFailed("RevokeRefreshTokenInvalid", null, null, null);
             return Result.Failure(Domain.Users.UserErrors.InvalidRefreshToken);
         }
 
@@ -31,6 +34,7 @@ internal sealed class RevokeRefreshTokenCommandHandler(
         existing.RevokedReason = "Revoked by user";
 
         await context.SaveChangesAsync(cancellationToken);
+        securityEventLogger.AuthenticationSucceeded(existing.UserId.ToString("N"), null, null, "refresh-revoke");
 
         return Result.Success();
     }

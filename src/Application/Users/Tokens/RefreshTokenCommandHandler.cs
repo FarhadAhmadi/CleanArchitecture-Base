@@ -1,6 +1,7 @@
 using Application.Abstractions.Authentication;
 using Application.Abstractions.Data;
 using Application.Abstractions.Messaging;
+using Application.Abstractions.Security;
 using Domain.Users;
 using Microsoft.EntityFrameworkCore;
 using SharedKernel;
@@ -11,7 +12,8 @@ internal sealed class RefreshTokenCommandHandler(
     IApplicationDbContext context,
     ITokenProvider tokenProvider,
     IRefreshTokenProvider refreshTokenProvider,
-    ITokenLifetimeProvider tokenLifetimeProvider) : ICommandHandler<RefreshTokenCommand, TokenResponse>
+    ITokenLifetimeProvider tokenLifetimeProvider,
+    ISecurityEventLogger securityEventLogger) : ICommandHandler<RefreshTokenCommand, TokenResponse>
 {
     public async Task<Result<TokenResponse>> Handle(RefreshTokenCommand command, CancellationToken cancellationToken)
     {
@@ -22,16 +24,19 @@ internal sealed class RefreshTokenCommandHandler(
 
         if (existing is null)
         {
+            securityEventLogger.AuthenticationFailed("RefreshTokenInvalid", null, null, null);
             return Result.Failure<TokenResponse>(UserErrors.InvalidRefreshToken);
         }
 
         if (existing.RevokedAtUtc.HasValue)
         {
+            securityEventLogger.AuthenticationFailed("RefreshTokenRevoked", existing.UserId.ToString("N"), null, null);
             return Result.Failure<TokenResponse>(UserErrors.RevokedRefreshToken);
         }
 
         if (existing.ExpiresAtUtc <= DateTime.UtcNow)
         {
+            securityEventLogger.AuthenticationFailed("RefreshTokenExpired", existing.UserId.ToString("N"), null, null);
             return Result.Failure<TokenResponse>(UserErrors.ExpiredRefreshToken);
         }
 
@@ -40,6 +45,7 @@ internal sealed class RefreshTokenCommandHandler(
 
         if (user is null)
         {
+            securityEventLogger.AuthenticationFailed("RefreshUserNotFound", existing.UserId.ToString("N"), null, null);
             return Result.Failure<TokenResponse>(UserErrors.NotFound(existing.UserId));
         }
 
@@ -64,6 +70,7 @@ internal sealed class RefreshTokenCommandHandler(
         });
 
         await context.SaveChangesAsync(cancellationToken);
+        securityEventLogger.AuthenticationSucceeded(user.Id.ToString("N"), null, null, "refresh-token");
 
         return new TokenResponse(
             accessToken,

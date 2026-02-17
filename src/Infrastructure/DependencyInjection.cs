@@ -3,6 +3,7 @@ using System.Text;
 using Application.Abstractions.Authentication;
 using Application.Abstractions.Authorization;
 using Application.Abstractions.Data;
+using Application.Abstractions.Security;
 using Infrastructure.Authentication;
 using Infrastructure.Auditing;
 using Infrastructure.Caching;
@@ -13,6 +14,7 @@ using Infrastructure.Integration;
 using Infrastructure.Logging;
 using Infrastructure.Messaging;
 using Infrastructure.Monitoring;
+using Infrastructure.Security;
 using Infrastructure.Time;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
@@ -45,6 +47,7 @@ public static class DependencyInjection
         services.AddSingleton<IDateTimeProvider, DateTimeProvider>();
         services.AddTransient<IDomainEventsDispatcher, DomainEventsDispatcher>();
         services.AddScoped<IAuditTrailService, AuditTrailService>();
+        services.AddSingleton<ISecurityEventLogger, SecurityEventLogger>();
         services.AddScoped<OperationalMetricsService>();
         return services;
     }
@@ -172,6 +175,10 @@ public static class DependencyInjection
             .GetSection(RefreshTokenOptions.SectionName)
             .Get<RefreshTokenOptions>() ?? new RefreshTokenOptions();
 
+        AuthSecurityOptions authSecurityOptions = configuration
+            .GetSection(AuthSecurityOptions.SectionName)
+            .Get<AuthSecurityOptions>() ?? new AuthSecurityOptions();
+
         if (string.IsNullOrWhiteSpace(jwtOptions.Secret) &&
             string.Equals(configuration["ASPNETCORE_ENVIRONMENT"], "Testing", StringComparison.OrdinalIgnoreCase))
         {
@@ -186,6 +193,7 @@ public static class DependencyInjection
 
         services.AddSingleton(jwtOptions);
         services.AddSingleton(refreshTokenOptions);
+        services.AddSingleton(authSecurityOptions);
 
         services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             .AddJwtBearer(o =>
@@ -212,6 +220,31 @@ public static class DependencyInjection
                     ValidateLifetime = true,
                     NameClaimType = ClaimTypes.NameIdentifier,
                     ClockSkew = TimeSpan.Zero
+                };
+                o.Events = new JwtBearerEvents
+                {
+                    OnAuthenticationFailed = context =>
+                    {
+                        ISecurityEventLogger securityLogger = context.HttpContext.RequestServices
+                            .GetRequiredService<ISecurityEventLogger>();
+                        securityLogger.AuthenticationFailed(
+                            "JwtAuthenticationFailed",
+                            context.Principal?.Identity?.Name,
+                            context.HttpContext.Connection.RemoteIpAddress?.ToString(),
+                            context.HttpContext.TraceIdentifier);
+                        return Task.CompletedTask;
+                    },
+                    OnChallenge = context =>
+                    {
+                        ISecurityEventLogger securityLogger = context.HttpContext.RequestServices
+                            .GetRequiredService<ISecurityEventLogger>();
+                        securityLogger.AuthenticationFailed(
+                            $"JwtChallenge:{context.Error}",
+                            context.HttpContext.User.Identity?.Name,
+                            context.HttpContext.Connection.RemoteIpAddress?.ToString(),
+                            context.HttpContext.TraceIdentifier);
+                        return Task.CompletedTask;
+                    }
                 };
             });
 

@@ -1,32 +1,29 @@
-﻿using System.Security.Cryptography;
 using Application.Abstractions.Authentication;
+using Domain.Users;
+using Microsoft.AspNetCore.Identity;
 
 namespace Infrastructure.Authentication;
 
 internal sealed class PasswordHasher : IPasswordHasher
 {
-    private const int SaltSize = 16;
-    private const int HashSize = 32;
-    private const int Iterations = 500000;
-
-    private static readonly HashAlgorithmName Algorithm = HashAlgorithmName.SHA512;
+    private readonly Microsoft.AspNetCore.Identity.PasswordHasher<User> _passwordHasher = new();
+    private static readonly User HashUser = new()
+    {
+        Id = Guid.Empty,
+        Email = "password-hash@system.local",
+        FirstName = "System",
+        LastName = "Hasher",
+        PasswordHash = string.Empty
+    };
 
     public string Hash(string password)
     {
-        byte[] salt = RandomNumberGenerator.GetBytes(SaltSize);
-        byte[] hash = Rfc2898DeriveBytes.Pbkdf2(password, salt, Iterations, Algorithm, HashSize);
-
-        return $"{Convert.ToHexString(hash)}-{Convert.ToHexString(salt)}";
+        return _passwordHasher.HashPassword(HashUser, password);
     }
 
     public bool Verify(string password, string passwordHash)
     {
-        string[] parts = passwordHash.Split('-');
-        byte[] hash = Convert.FromHexString(parts[0]);
-        byte[] salt = Convert.FromHexString(parts[1]);
-
-        byte[] inputHash = Rfc2898DeriveBytes.Pbkdf2(password, salt, Iterations, Algorithm, HashSize);
-
-        return CryptographicOperations.FixedTimeEquals(hash, inputHash);
+        PasswordVerificationResult result = _passwordHasher.VerifyHashedPassword(HashUser, passwordHash, password);
+        return result is PasswordVerificationResult.Success or PasswordVerificationResult.SuccessRehashNeeded;
     }
 }

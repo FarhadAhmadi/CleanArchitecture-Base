@@ -1,6 +1,7 @@
 using Application.Abstractions.Authentication;
 using Application.Abstractions.Data;
 using Application.Abstractions.Messaging;
+using Application.Abstractions.Security;
 using Domain.Users;
 using Microsoft.EntityFrameworkCore;
 using SharedKernel;
@@ -12,7 +13,9 @@ internal sealed class LoginUserCommandHandler(
     IPasswordHasher passwordHasher,
     ITokenProvider tokenProvider,
     IRefreshTokenProvider refreshTokenProvider,
-    ITokenLifetimeProvider tokenLifetimeProvider) : ICommandHandler<LoginUserCommand, TokenResponse>
+    ITokenLifetimeProvider tokenLifetimeProvider,
+    AuthSecurityOptions authSecurityOptions,
+    ISecurityEventLogger securityEventLogger) : ICommandHandler<LoginUserCommand, TokenResponse>
 {
     public async Task<Result<TokenResponse>> Handle(LoginUserCommand command, CancellationToken cancellationToken)
     {
@@ -21,6 +24,13 @@ internal sealed class LoginUserCommandHandler(
 
         if (user is null)
         {
+            securityEventLogger.AuthenticationFailed("UserNotFound", command.Email, null, null);
+            return Result.Failure<TokenResponse>(UserErrors.NotFoundByEmail);
+        }
+
+        if (user.LockoutEndUtc.HasValue && user.LockoutEndUtc.Value > DateTime.UtcNow)
+        {
+            securityEventLogger.AccountLocked(user.Id.ToString("N"), user.LockoutEndUtc.Value, null, null);
             return Result.Failure<TokenResponse>(UserErrors.NotFoundByEmail);
         }
 
@@ -28,8 +38,20 @@ internal sealed class LoginUserCommandHandler(
 
         if (!verified)
         {
+            user.FailedLoginCount++;
+            if (user.FailedLoginCount >= Math.Max(1, authSecurityOptions.MaxFailedLoginAttempts))
+            {
+                user.LockoutEndUtc = DateTime.UtcNow.AddMinutes(Math.Max(1, authSecurityOptions.LockoutMinutes));
+                securityEventLogger.AccountLocked(user.Id.ToString("N"), user.LockoutEndUtc.Value, null, null);
+            }
+
+            await context.SaveChangesAsync(cancellationToken);
+            securityEventLogger.AuthenticationFailed("InvalidPassword", command.Email, null, null);
             return Result.Failure<TokenResponse>(UserErrors.NotFoundByEmail);
         }
+
+        user.FailedLoginCount = 0;
+        user.LockoutEndUtc = null;
 
         string accessToken = tokenProvider.Create(user);
 
@@ -48,6 +70,7 @@ internal sealed class LoginUserCommandHandler(
         });
 
         await context.SaveChangesAsync(cancellationToken);
+        securityEventLogger.AuthenticationSucceeded(user.Id.ToString("N"), null, null, "password");
 
         var response = new TokenResponse(
             accessToken,

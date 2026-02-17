@@ -20,6 +20,7 @@ public interface IApplicationDbContext
     DbSet<RolePermission> RolePermissions { get; }
     DbSet<UserPermission> UserPermissions { get; }
     DbSet<TodoItem> TodoItems { get; }
+    DbSet<UserExternalLogin> UserExternalLogins { get; }
     DbSet<AuditEntry> AuditEntries { get; }
 
     Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);

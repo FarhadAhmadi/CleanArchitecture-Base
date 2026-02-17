@@ -26,6 +26,7 @@ public sealed class ApplicationDbContext(
     public DbSet<RolePermission> RolePermissions { get; set; }
     public DbSet<UserPermission> UserPermissions { get; set; }
     public DbSet<TodoItem> TodoItems { get; set; }
+    public DbSet<UserExternalLogin> UserExternalLogins { get; set; }
     public DbSet<AuditEntry> AuditEntries { get; set; }
     internal DbSet<OutboxMessage> OutboxMessages => Set<OutboxMessage>();
     internal DbSet<InboxMessage> InboxMessages => Set<InboxMessage>();

@@ -1,6 +1,10 @@
 using System.Threading.RateLimiting;
 using Asp.Versioning;
 using System.Security.Claims;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authentication.Facebook;
+using Microsoft.AspNetCore.Authentication.Google;
 using Microsoft.Extensions.Http.Resilience;
 using Microsoft.AspNetCore.RateLimiting;
 using OpenTelemetry.Metrics;
@@ -34,10 +38,15 @@ public static class DependencyInjection
             .GetSection(OperationalAlertingOptions.SectionName)
             .Get<OperationalAlertingOptions>() ?? new OperationalAlertingOptions();
 
+        ExternalOAuthOptions externalOAuthOptions = configuration
+            .GetSection(ExternalOAuthOptions.SectionName)
+            .Get<ExternalOAuthOptions>() ?? new ExternalOAuthOptions();
+
         services.AddSingleton(apiSecurityOptions);
         services.AddSingleton(telemetryOptions);
         services.AddSingleton(operationalSloOptions);
         services.AddSingleton(operationalAlertingOptions);
+        services.AddSingleton(externalOAuthOptions);
 
         services.AddEndpointsApiExplorer();
         services.AddApiVersioning(options =>
@@ -49,6 +58,41 @@ public static class DependencyInjection
         });
 
         services.AddControllers();
+
+        AuthenticationBuilder authenticationBuilder = services.AddAuthentication();
+        authenticationBuilder.AddCookie(ExternalAuthSchemes.ExternalCookie, options =>
+        {
+            options.Cookie.Name = "__external-auth";
+            options.Cookie.HttpOnly = true;
+            options.Cookie.SameSite = SameSiteMode.Lax;
+            options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
+            options.ExpireTimeSpan = TimeSpan.FromMinutes(10);
+            options.SlidingExpiration = false;
+        });
+
+        if (externalOAuthOptions.Google.Enabled &&
+            !string.IsNullOrWhiteSpace(externalOAuthOptions.Google.ClientId) &&
+            !string.IsNullOrWhiteSpace(externalOAuthOptions.Google.ClientSecret))
+        {
+            authenticationBuilder.AddGoogle(ExternalAuthSchemes.Google, options =>
+            {
+                options.SignInScheme = ExternalAuthSchemes.ExternalCookie;
+                options.ClientId = externalOAuthOptions.Google.ClientId;
+                options.ClientSecret = externalOAuthOptions.Google.ClientSecret;
+            });
+        }
+
+        if (externalOAuthOptions.Meta.Enabled &&
+            !string.IsNullOrWhiteSpace(externalOAuthOptions.Meta.AppId) &&
+            !string.IsNullOrWhiteSpace(externalOAuthOptions.Meta.AppSecret))
+        {
+            authenticationBuilder.AddFacebook(ExternalAuthSchemes.Meta, options =>
+            {
+                options.SignInScheme = ExternalAuthSchemes.ExternalCookie;
+                options.AppId = externalOAuthOptions.Meta.AppId;
+                options.AppSecret = externalOAuthOptions.Meta.AppSecret;
+            });
+        }
 
         services.AddExceptionHandler<GlobalExceptionHandler>();
         services.AddProblemDetails();
