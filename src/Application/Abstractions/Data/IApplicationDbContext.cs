@@ -1,3 +1,4 @@
+using Domain.Auditing;
 using Domain.Authorization;
 using Domain.Logging;
 using Domain.Todos;
@@ -19,6 +20,7 @@ public interface IApplicationDbContext
     DbSet<RolePermission> RolePermissions { get; }
     DbSet<UserPermission> UserPermissions { get; }
     DbSet<TodoItem> TodoItems { get; }
+    DbSet<AuditEntry> AuditEntries { get; }
 
     Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
 }

@@ -1,0 +1,90 @@
+name: CD
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: "Target environment"
+        required: true
+        type: choice
+        options: [ "staging", "production" ]
+      imageTag:
+        description: "Docker image tag"
+        required: true
+      namespace:
+        description: "Kubernetes namespace"
+        required: true
+        default: "default"
+
+env:
+  DOTNET_VERSION: "10.x"
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.environment }}
+    timeout-minutes: 40
+    permissions:
+      contents: read
+      packages: read
+      id-token: write
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Azure Login
+        uses: azure/login@v2
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Set AKS Context
+        uses: azure/aks-set-context@v4
+        with:
+          resource-group: ${{ secrets.AKS_RESOURCE_GROUP }}
+          cluster-name: ${{ secrets.AKS_CLUSTER_NAME }}
+
+      - name: Apply Kubernetes Base Manifests
+        run: |
+          kubectl -n ${{ inputs.namespace }} apply -f deploy/k8s/web-api-service.yaml
+          kubectl -n ${{ inputs.namespace }} apply -f deploy/k8s/web-api-ingress.yaml
+
+      - name: Capture Active Track
+        id: active_track
+        run: |
+          ACTIVE=$(kubectl -n "${{ inputs.namespace }}" get svc web-api -o jsonpath='{.spec.selector.track}')
+          if [ -z "$ACTIVE" ]; then ACTIVE="blue"; fi
+          echo "track=$ACTIVE" >> "$GITHUB_OUTPUT"
+
+      - name: Database Migration
+        env:
+          ConnectionStrings__Database: ${{ secrets.DATABASE_CONNECTION_STRING }}
+        run: |
+          dotnet tool install --global dotnet-ef
+          echo "$HOME/.dotnet/tools" >> $GITHUB_PATH
+          dotnet ef database update \
+            --project src/Infrastructure/Infrastructure.csproj \
+            --startup-project src/Web.Api/Web.Api.csproj \
+            --context Infrastructure.Database.ApplicationDbContext
+
+      - name: Blue/Green Deploy
+        run: |
+          chmod +x deploy/k8s/blue-green-deploy.sh
+          deploy/k8s/blue-green-deploy.sh \
+            "${{ inputs.namespace }}" \
+            "${{ inputs.imageTag }}" \
+            "${{ secrets.CONTAINER_IMAGE_REPOSITORY }}" \
+            "/health"
+
+      - name: Post-Deploy Smoke Test
+        run: |
+          curl --fail --retry 10 --retry-delay 3 "${{ secrets.PUBLIC_HEALTH_URL }}"
+
+      - name: Rollback Service Selector On Failure
+        if: failure()
+        run: |
+          kubectl -n "${{ inputs.namespace }}" patch service web-api -p "{\"spec\":{\"selector\":{\"app\":\"web-api\",\"track\":\"${{ steps.active_track.outputs.track }}\"}}}"

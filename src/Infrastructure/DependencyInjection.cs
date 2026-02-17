@@ -1,12 +1,18 @@
 using System.Security.Claims;
 using System.Text;
 using Application.Abstractions.Authentication;
+using Application.Abstractions.Authorization;
 using Application.Abstractions.Data;
 using Infrastructure.Authentication;
+using Infrastructure.Auditing;
+using Infrastructure.Caching;
 using Infrastructure.Authorization;
 using Infrastructure.Database;
 using Infrastructure.DomainEvents;
+using Infrastructure.Integration;
 using Infrastructure.Logging;
+using Infrastructure.Messaging;
+using Infrastructure.Monitoring;
 using Infrastructure.Time;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
@@ -27,6 +33,8 @@ public static class DependencyInjection
         services
             .AddServices()
             .AddDatabase(configuration)
+            .AddCaching(configuration)
+            .AddIntegration(configuration)
             .AddHealthChecks(configuration)
             .AddLoggingPlatform(configuration)
             .AddAuthenticationInternal(configuration)
@@ -36,6 +44,8 @@ public static class DependencyInjection
     {
         services.AddSingleton<IDateTimeProvider, DateTimeProvider>();
         services.AddTransient<IDomainEventsDispatcher, DomainEventsDispatcher>();
+        services.AddScoped<IAuditTrailService, AuditTrailService>();
+        services.AddScoped<OperationalMetricsService>();
         return services;
     }
 
@@ -47,9 +57,15 @@ public static class DependencyInjection
 
         services.AddDbContext<ApplicationDbContext>(options =>
             options.UseSqlServer(connectionString, sqlOptions =>
+            {
                 sqlOptions.MigrationsHistoryTable(
                     HistoryRepository.DefaultTableName,
-                    Schemas.Default)));
+                    Schemas.Default);
+                sqlOptions.EnableRetryOnFailure(
+                    maxRetryCount: 5,
+                    maxRetryDelay: TimeSpan.FromSeconds(15),
+                    errorNumbersToAdd: null);
+            }));
 
         services.AddScoped<IApplicationDbContext>(sp =>
             sp.GetRequiredService<ApplicationDbContext>());
@@ -58,11 +74,67 @@ public static class DependencyInjection
         return services;
     }
 
+    private static IServiceCollection AddCaching(this IServiceCollection services, IConfiguration configuration)
+    {
+        RedisCacheOptions redisOptions = configuration
+            .GetSection(RedisCacheOptions.SectionName)
+            .Get<RedisCacheOptions>() ?? new RedisCacheOptions();
+
+        PermissionCacheOptions permissionCacheOptions = configuration
+            .GetSection(PermissionCacheOptions.SectionName)
+            .Get<PermissionCacheOptions>() ?? new PermissionCacheOptions();
+
+        services.AddSingleton(redisOptions);
+        services.AddSingleton(permissionCacheOptions);
+
+        if (redisOptions.Enabled && !string.IsNullOrWhiteSpace(redisOptions.ConnectionString))
+        {
+            services.AddStackExchangeRedisCache(options =>
+            {
+                options.Configuration = redisOptions.ConnectionString;
+                options.InstanceName = redisOptions.InstanceName;
+            });
+        }
+        else
+        {
+            services.AddDistributedMemoryCache();
+        }
+
+        services.AddSingleton<IPermissionCacheVersionService, PermissionCacheVersionService>();
+
+        return services;
+    }
+
     private static IServiceCollection AddHealthChecks(this IServiceCollection services, IConfiguration configuration)
     {
         services
             .AddHealthChecks()
-            .AddSqlServer(configuration.GetConnectionString("Database")!);
+            .AddSqlServer(configuration.GetConnectionString("Database")!)
+            .AddCheck<OutboxHealthCheck>("outbox");
+
+        return services;
+    }
+
+    private static IServiceCollection AddIntegration(
+        this IServiceCollection services,
+        IConfiguration configuration)
+    {
+        OutboxOptions outboxOptions = configuration
+            .GetSection(OutboxOptions.SectionName)
+            .Get<OutboxOptions>() ?? new OutboxOptions();
+
+        RabbitMqOptions rabbitMqOptions = configuration
+            .GetSection(RabbitMqOptions.SectionName)
+            .Get<RabbitMqOptions>() ?? new RabbitMqOptions();
+
+        services.AddSingleton(outboxOptions);
+        services.AddSingleton(rabbitMqOptions);
+        services.AddSingleton<IntegrationEventSerializer>();
+        services.AddSingleton<IIntegrationEventSerializer>(sp => sp.GetRequiredService<IntegrationEventSerializer>());
+        services.AddSingleton<IIntegrationEventPublisher, RabbitMqIntegrationEventPublisher>();
+        services.AddScoped<IInboxStore, InboxStore>();
+        services.AddHostedService<OutboxProcessorWorker>();
+        services.AddHostedService<RabbitMqInboxWorker>();
 
         return services;
     }
@@ -118,11 +190,21 @@ public static class DependencyInjection
         services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             .AddJwtBearer(o =>
             {
+                List<SecurityKey> signingKeys =
+                [
+                    new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtOptions.Secret))
+                ];
+
+                foreach (string previousSecret in jwtOptions.PreviousSecrets.Where(x => !string.IsNullOrWhiteSpace(x)))
+                {
+                    signingKeys.Add(new SymmetricSecurityKey(Encoding.UTF8.GetBytes(previousSecret)));
+                }
+
                 o.RequireHttpsMetadata = false;
                 o.TokenValidationParameters = new TokenValidationParameters
                 {
                     ValidateIssuerSigningKey = true,
-                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtOptions.Secret)),
+                    IssuerSigningKeys = signingKeys,
                     ValidateIssuer = true,
                     ValidIssuer = jwtOptions.Issuer,
                     ValidateAudience = true,
@@ -167,6 +249,14 @@ public static class DependencyInjection
         if (string.IsNullOrWhiteSpace(options.Secret) || options.Secret.Length < 32)
         {
             throw new InvalidOperationException("Jwt:Secret must be at least 32 characters.");
+        }
+
+        foreach (string previousSecret in options.PreviousSecrets.Where(x => !string.IsNullOrWhiteSpace(x)))
+        {
+            if (previousSecret.Length < 32)
+            {
+                throw new InvalidOperationException("Jwt:PreviousSecrets items must be at least 32 characters.");
+            }
         }
 
         if (string.IsNullOrWhiteSpace(options.Issuer))

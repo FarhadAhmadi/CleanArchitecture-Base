@@ -1,4 +1,5 @@
-﻿using Application.Abstractions.Messaging;
+using System.Diagnostics;
+using Application.Abstractions.Messaging;
 using Microsoft.Extensions.Logging;
 using Serilog.Context;
 using SharedKernel;
@@ -16,32 +17,30 @@ internal static class LoggingDecorator
         public async Task<Result<TResponse>> Handle(TCommand command, CancellationToken cancellationToken)
         {
             string commandName = typeof(TCommand).Name;
-
             if (logger.IsEnabled(LogLevel.Information))
             {
                 logger.LogInformation("Processing command {Command}", commandName);
             }
-                
 
+            var stopwatch = Stopwatch.StartNew();
             Result<TResponse> result = await innerHandler.Handle(command, cancellationToken);
+            stopwatch.Stop();
 
             if (result.IsSuccess)
             {
                 if (logger.IsEnabled(LogLevel.Information))
                 {
-                    logger.LogInformation("Completed command {Command}", commandName);
+                    logger.LogInformation("Completed command {Command} DurationMs={DurationMs}", commandName, stopwatch.ElapsedMilliseconds);
                 }
-                    
             }
             else
             {
-                if (logger.IsEnabled(LogLevel.Error))
+                using (LogContext.PushProperty("Error", result.Error, true))
                 {
-                    using (LogContext.PushProperty("Error", result.Error, true))
+                    if (logger.IsEnabled(LogLevel.Error))
                     {
-                        logger.LogError("Completed command {Command} with error", commandName);
+                        logger.LogError("Command failed {Command} DurationMs={DurationMs}", commandName, stopwatch.ElapsedMilliseconds);
                     }
-                        
                 }
             }
 
@@ -58,28 +57,29 @@ internal static class LoggingDecorator
         public async Task<Result> Handle(TCommand command, CancellationToken cancellationToken)
         {
             string commandName = typeof(TCommand).Name;
-
             if (logger.IsEnabled(LogLevel.Information))
             {
                 logger.LogInformation("Processing command {Command}", commandName);
             }
 
+            var stopwatch = Stopwatch.StartNew();
             Result result = await innerHandler.Handle(command, cancellationToken);
+            stopwatch.Stop();
 
             if (result.IsSuccess)
             {
                 if (logger.IsEnabled(LogLevel.Information))
                 {
-                    logger.LogInformation("Completed command {Command}", commandName);
+                    logger.LogInformation("Completed command {Command} DurationMs={DurationMs}", commandName, stopwatch.ElapsedMilliseconds);
                 }
             }
             else
             {
-                if (logger.IsEnabled(LogLevel.Error))
+                using (LogContext.PushProperty("Error", result.Error, true))
                 {
-                    using (LogContext.PushProperty("Error", result.Error, true))
+                    if (logger.IsEnabled(LogLevel.Error))
                     {
-                        logger.LogError("Completed command {Command} with error", commandName);
+                        logger.LogError("Command failed {Command} DurationMs={DurationMs}", commandName, stopwatch.ElapsedMilliseconds);
                     }
                 }
             }
@@ -97,28 +97,29 @@ internal static class LoggingDecorator
         public async Task<Result<TResponse>> Handle(TQuery query, CancellationToken cancellationToken)
         {
             string queryName = typeof(TQuery).Name;
-
             if (logger.IsEnabled(LogLevel.Information))
             {
                 logger.LogInformation("Processing query {Query}", queryName);
             }
 
+            var stopwatch = Stopwatch.StartNew();
             Result<TResponse> result = await innerHandler.Handle(query, cancellationToken);
+            stopwatch.Stop();
 
             if (result.IsSuccess)
             {
                 if (logger.IsEnabled(LogLevel.Information))
                 {
-                    logger.LogInformation("Completed query {Query}", queryName);
+                    logger.LogInformation("Completed query {Query} DurationMs={DurationMs}", queryName, stopwatch.ElapsedMilliseconds);
                 }
             }
             else
             {
-                if (logger.IsEnabled(LogLevel.Error))
+                using (LogContext.PushProperty("Error", result.Error, true))
                 {
-                    using (LogContext.PushProperty("Error", result.Error, true))
+                    if (logger.IsEnabled(LogLevel.Error))
                     {
-                        logger.LogError("Completed query {Query} with error", queryName);
+                        logger.LogError("Query failed {Query} DurationMs={DurationMs}", queryName, stopwatch.ElapsedMilliseconds);
                     }
                 }
             }

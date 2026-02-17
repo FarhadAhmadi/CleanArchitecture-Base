@@ -1,0 +1,26 @@
+name: Performance
+
+on:
+  workflow_dispatch:
+    inputs:
+      target:
+        description: "Target URL"
+        required: true
+      profile:
+        description: "load or soak"
+        required: true
+        type: choice
+        options: [ "load", "soak" ]
+
+jobs:
+  k6:
+    runs-on: ubuntu-latest
+    timeout-minutes: 180
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Run k6
+        uses: grafana/run-k6-action@v1
+        with:
+          path: ${{ inputs.profile == 'soak' && 'tests/Performance/k6/soak-test.js' || 'tests/Performance/k6/load-test.js' }}
+          flags: -e BASE_URL=${{ inputs.target }}

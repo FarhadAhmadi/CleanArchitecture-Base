@@ -35,7 +35,10 @@ public sealed class AuthorizationSeeder(
             [PermissionCodes.LoggingEventsDelete] = "Delete logging events",
             [PermissionCodes.LoggingAlertsManage] = "Manage logging alert rules",
             [PermissionCodes.LoggingAccessManage] = "Manage logging access control",
-            [PermissionCodes.LoggingExportRead] = "Export or read sensitive log reports"
+            [PermissionCodes.LoggingExportRead] = "Export or read sensitive log reports",
+            [PermissionCodes.ObservabilityRead] = "Read operational metrics and SLO dashboards",
+            [PermissionCodes.AuditRead] = "Read audit trail data",
+            [PermissionCodes.AuditManage] = "Manage audit controls"
         };
 
         List<string> existingCodes = await dbContext.Permissions
@@ -104,7 +107,10 @@ public sealed class AuthorizationSeeder(
                 PermissionCodes.LoggingEventsDelete,
                 PermissionCodes.LoggingAlertsManage,
                 PermissionCodes.LoggingAccessManage,
-                PermissionCodes.LoggingExportRead
+                PermissionCodes.LoggingExportRead,
+                PermissionCodes.ObservabilityRead,
+                PermissionCodes.AuditRead,
+                PermissionCodes.AuditManage
             ]
         };
 

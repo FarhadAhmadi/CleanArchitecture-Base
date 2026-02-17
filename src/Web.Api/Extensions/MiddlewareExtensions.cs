@@ -10,4 +10,10 @@ public static class MiddlewareExtensions
 
         return app;
     }
+
+    public static IApplicationBuilder UseSecurityHeaders(this IApplicationBuilder app)
+    {
+        app.UseMiddleware<SecurityHeadersMiddleware>();
+        return app;
+    }
 }

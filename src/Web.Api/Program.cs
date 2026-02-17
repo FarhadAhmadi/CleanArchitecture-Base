@@ -1,4 +1,6 @@
 using System.Reflection;
+using System.Security.Claims;
+using Azure.Identity;
 using Application;
 using HealthChecks.UI.Client;
 using Infrastructure;
@@ -11,9 +13,25 @@ using Web.Api.Infrastructure;
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
+SecretManagementOptions secretManagementOptions = builder.Configuration
+    .GetSection(SecretManagementOptions.SectionName)
+    .Get<SecretManagementOptions>() ?? new SecretManagementOptions();
+
+if (secretManagementOptions.UseAzureKeyVault &&
+    !string.IsNullOrWhiteSpace(secretManagementOptions.KeyVaultUri))
+{
+    builder.Configuration.AddAzureKeyVault(
+        new Uri(secretManagementOptions.KeyVaultUri),
+        new DefaultAzureCredential());
+}
+
 ApiSecurityOptions apiSecurityOptions = builder.Configuration
     .GetSection(ApiSecurityOptions.SectionName)
     .Get<ApiSecurityOptions>() ?? new ApiSecurityOptions();
+
+DatabaseMigrationOptions migrationOptions = builder.Configuration
+    .GetSection(DatabaseMigrationOptions.SectionName)
+    .Get<DatabaseMigrationOptions>() ?? new DatabaseMigrationOptions();
 
 builder.WebHost.ConfigureKestrel(options =>
 {
@@ -42,8 +60,8 @@ app.MapLoggingEndpoints();
 if (app.Environment.IsDevelopment())
 {
     app.UseSwaggerWithUi();
-    app.ApplyMigrations();
 }
+app.ApplyMigrationsIfEnabled(migrationOptions);
 
 app.MapHealthChecks("health", new HealthCheckOptions
 {
@@ -51,7 +69,27 @@ app.MapHealthChecks("health", new HealthCheckOptions
 });
 
 app.UseRequestContextLogging();
-app.UseSerilogRequestLogging();
+app.UseSerilogRequestLogging(options =>
+{
+    options.EnrichDiagnosticContext = (diagnosticContext, httpContext) =>
+    {
+        diagnosticContext.Set("UserId", httpContext.User.FindFirstValue(ClaimTypes.NameIdentifier) ?? "anonymous");
+        diagnosticContext.Set("ClientIp", httpContext.Connection.RemoteIpAddress?.ToString() ?? string.Empty);
+        diagnosticContext.Set("RequestPath", httpContext.Request.Path.Value ?? string.Empty);
+        diagnosticContext.Set("RequestMethod", httpContext.Request.Method);
+        diagnosticContext.Set("StatusCode", httpContext.Response.StatusCode);
+    };
+});
+if (apiSecurityOptions.EnableSecurityHeaders)
+{
+    app.UseSecurityHeaders();
+}
+
+if (!app.Environment.IsDevelopment() && apiSecurityOptions.UseHsts)
+{
+    app.UseHsts();
+}
+
 app.UseExceptionHandler();
 app.UseStatusCodePages(StatusCodePageExtensions.WriteProblemDetails);
 app.UseRequestTimeouts();

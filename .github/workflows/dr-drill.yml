@@ -1,0 +1,42 @@
+name: DR Drill
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 4 * * 0"
+
+jobs:
+  dr-drill:
+    runs-on: ubuntu-latest
+    environment: production
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Install SQLCMD
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y curl gnupg
+          curl https://packages.microsoft.com/keys/microsoft.asc | sudo apt-key add -
+          curl https://packages.microsoft.com/config/ubuntu/22.04/prod.list | sudo tee /etc/apt/sources.list.d/msprod.list
+          sudo apt-get update
+          sudo ACCEPT_EULA=Y apt-get install -y mssql-tools18 unixodbc-dev
+          echo "/opt/mssql-tools18/bin" >> $GITHUB_PATH
+
+      - name: Execute DR Drill
+        shell: pwsh
+        env:
+          SQL_SERVER: ${{ secrets.DR_SQL_SERVER }}
+          SQL_USER: ${{ secrets.DR_SQL_USER }}
+          SQL_PASSWORD: ${{ secrets.DR_SQL_PASSWORD }}
+          SOURCE_DB: ${{ secrets.DR_SOURCE_DB }}
+          DRILL_DB: ${{ secrets.DR_DRILL_DB }}
+          BACKUP_PATH: ${{ secrets.DR_BACKUP_PATH }}
+        run: |
+          ./scripts/dr/drill.ps1 `
+            -SqlServer $env:SQL_SERVER `
+            -SourceDatabase $env:SOURCE_DB `
+            -DrillDatabase $env:DRILL_DB `
+            -User $env:SQL_USER `
+            -Password $env:SQL_PASSWORD `
+            -BackupPath $env:BACKUP_PATH

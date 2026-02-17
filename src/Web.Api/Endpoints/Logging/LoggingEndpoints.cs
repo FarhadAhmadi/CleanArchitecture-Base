@@ -1,9 +1,12 @@
 using Application.Abstractions.Data;
 using Domain.Authorization;
 using Domain.Logging;
+using Infrastructure.Auditing;
 using Infrastructure.Logging;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using SharedKernel;
+using System.Security.Claims;
 using Web.Api.Extensions;
 using Web.Api.Infrastructure;
 
@@ -51,7 +54,9 @@ public static class LoggingEndpoints
         ILogIngestionService ingestionService,
         CancellationToken cancellationToken)
     {
-        string? idempotencyKey = httpContext.Request.Headers["Idempotency-Key"].FirstOrDefault();
+        string? idempotencyKey = InputSanitizer.SanitizeIdentifier(
+            httpContext.Request.Headers["Idempotency-Key"].FirstOrDefault(),
+            120);
         IngestResult result = await ingestionService.IngestAsync(request, idempotencyKey, cancellationToken);
         return Results.Ok(result);
     }
@@ -72,7 +77,9 @@ public static class LoggingEndpoints
         List<IngestResult> results = [];
         for (int i = 0; i < request.Events.Count; i++)
         {
-            string? key = httpContext.Request.Headers["Idempotency-Key"].FirstOrDefault();
+            string? key = InputSanitizer.SanitizeIdentifier(
+                httpContext.Request.Headers["Idempotency-Key"].FirstOrDefault(),
+                100);
             if (!string.IsNullOrWhiteSpace(key))
             {
                 key = $"{key}:{i}";
@@ -87,7 +94,9 @@ public static class LoggingEndpoints
 
     private static async Task<IResult> GetEvents(
         IApplicationReadDbContext readContext,
+        IApplicationDbContext writeContext,
         ILogIntegrityService integrityService,
+        ILoggerFactory loggerFactory,
         LogLevelType? level,
         DateTime? from,
         DateTime? to,
@@ -101,10 +110,25 @@ public static class LoggingEndpoints
         int pageSize,
         string? sortBy,
         string? sortOrder,
+        bool recalculateIntegrity,
         CancellationToken cancellationToken)
     {
-        int normalizedPage = page <= 0 ? 1 : page;
-        int normalizedPageSize = pageSize is <= 0 or > 200 ? 50 : pageSize;
+        ILogger logger = loggerFactory.CreateLogger("LoggingEndpoints.GetEvents");
+
+        actorId = InputSanitizer.SanitizeIdentifier(actorId, 100);
+        service = InputSanitizer.SanitizeIdentifier(service, 150);
+        module = InputSanitizer.SanitizeIdentifier(module, 150);
+        traceId = InputSanitizer.SanitizeIdentifier(traceId, 150);
+        outcome = InputSanitizer.SanitizeIdentifier(outcome, 50);
+        text = InputSanitizer.SanitizeText(text, 500);
+        sortBy = InputSanitizer.SanitizeIdentifier(sortBy, 50);
+        sortOrder = InputSanitizer.SanitizeIdentifier(sortOrder, 10);
+
+        (int normalizedPage, int normalizedPageSize) = QueryableExtensions.NormalizePaging(
+            page,
+            pageSize,
+            defaultPageSize: 50,
+            maxPageSize: 200);
 
         IQueryable<LogEvent> query = readContext.LogEvents.Where(x => !x.IsDeleted);
 
@@ -148,10 +172,7 @@ public static class LoggingEndpoints
             query = query.Where(x => x.Outcome == outcome);
         }
 
-        if (!string.IsNullOrWhiteSpace(text))
-        {
-            query = query.Where(x => x.Message.Contains(text));
-        }
+        query = query.ApplyContainsSearch(text, x => x.Message, x => x.PayloadJson, x => x.TagsCsv);
 
         query = ApplySorting(query, sortBy, sortOrder);
 
@@ -160,9 +181,44 @@ public static class LoggingEndpoints
             .ApplyPaging(normalizedPage, normalizedPageSize)
             .ToListAsync(cancellationToken);
 
-        var resultItems = items
-            .Select(item => item.ToView(integrityService.IsCorrupted(item)))
-            .ToList();
+        List<Guid> corruptedIds = [];
+        List<LogEventView> resultItems = [];
+
+        foreach (LogEvent item in items)
+        {
+            bool isCorrupted = integrityService.IsCorrupted(item) || item.HasIntegrityIssue;
+            if (isCorrupted && !item.HasIntegrityIssue)
+            {
+                corruptedIds.Add(item.Id);
+            }
+
+            resultItems.Add(item.ToView(isCorrupted));
+        }
+
+        if (recalculateIntegrity && corruptedIds.Count != 0)
+        {
+            List<LogEvent> trackedItems = await writeContext.LogEvents
+                .Where(x => corruptedIds.Contains(x.Id) && !x.HasIntegrityIssue)
+                .ToListAsync(cancellationToken);
+
+            foreach (LogEvent trackedItem in trackedItems)
+            {
+                trackedItem.HasIntegrityIssue = true;
+            }
+
+            await writeContext.SaveChangesAsync(cancellationToken);
+        }
+
+        if (logger.IsEnabled(LogLevel.Information))
+        {
+            logger.LogInformation(
+                "Log events queried. Total={Total} Returned={Returned} Page={Page} PageSize={PageSize} Level={Level}",
+                total,
+                resultItems.Count,
+                normalizedPage,
+                normalizedPageSize,
+                level);
+        }
 
         return Results.Ok(new
         {
@@ -177,9 +233,12 @@ public static class LoggingEndpoints
         IApplicationReadDbContext readContext,
         IApplicationDbContext writeContext,
         ILogIntegrityService integrityService,
+        ILoggerFactory loggerFactory,
         bool recalculate,
         CancellationToken cancellationToken)
     {
+        ILogger logger = loggerFactory.CreateLogger("LoggingEndpoints.GetCorruptedEvents");
+
         List<LogEvent> events = await readContext.LogEvents
             .Where(x => !x.IsDeleted)
             .OrderByDescending(x => x.TimestampUtc)
@@ -212,13 +271,24 @@ public static class LoggingEndpoints
             await writeContext.SaveChangesAsync(cancellationToken);
         }
 
+        if (logger.IsEnabled(LogLevel.Warning))
+        {
+            logger.LogWarning(
+                "Corrupted log events queried. TotalChecked={TotalChecked} Corrupted={Corrupted} Recalculated={Recalculated}",
+                events.Count,
+                corrupted.Count,
+                recalculate);
+        }
+
         return Results.Ok(new { total = corrupted.Count, items = corrupted });
     }
 
     private static async Task<IResult> GetEventById(
         Guid eventId,
         IApplicationReadDbContext readContext,
+        IApplicationDbContext writeContext,
         ILogIntegrityService integrityService,
+        bool recalculateIntegrity,
         CancellationToken cancellationToken)
     {
         LogEvent? item = await readContext.LogEvents
@@ -229,11 +299,24 @@ public static class LoggingEndpoints
             return Results.NotFound();
         }
 
-        return Results.Ok(item.ToView(integrityService.IsCorrupted(item)));
+        bool isCorrupted = integrityService.IsCorrupted(item) || item.HasIntegrityIssue;
+        if (recalculateIntegrity && isCorrupted && !item.HasIntegrityIssue)
+        {
+            LogEvent? tracked = await writeContext.LogEvents.SingleOrDefaultAsync(x => x.Id == item.Id, cancellationToken);
+            if (tracked is not null)
+            {
+                tracked.HasIntegrityIssue = true;
+                await writeContext.SaveChangesAsync(cancellationToken);
+            }
+        }
+
+        return Results.Ok(item.ToView(isCorrupted));
     }
 
     private static async Task<IResult> DeleteEvent(
         Guid eventId,
+        HttpContext httpContext,
+        IAuditTrailService auditTrailService,
         IApplicationDbContext writeContext,
         CancellationToken cancellationToken)
     {
@@ -246,6 +329,17 @@ public static class LoggingEndpoints
         item.IsDeleted = true;
         item.DeletedAtUtc = DateTime.UtcNow;
         await writeContext.SaveChangesAsync(cancellationToken);
+
+        string actorId = httpContext.User.FindFirstValue(ClaimTypes.NameIdentifier) ?? "system";
+        await auditTrailService.RecordAsync(
+            new AuditRecordRequest(
+                actorId,
+                "logging.event.delete",
+                "LogEvent",
+                eventId.ToString("N"),
+                "{\"softDelete\":true}"),
+            cancellationToken);
+
         return Results.NoContent();
     }
 
@@ -281,12 +375,26 @@ public static class LoggingEndpoints
 
     private static async Task<IResult> CreateRule(
         CreateAlertRuleRequest request,
+        HttpContext httpContext,
+        IAuditTrailService auditTrailService,
         IApplicationDbContext writeContext,
         CancellationToken cancellationToken)
     {
+        request.Sanitize();
         AlertRule entity = request.ToEntity();
         writeContext.AlertRules.Add(entity);
         await writeContext.SaveChangesAsync(cancellationToken);
+
+        string actorId = httpContext.User.FindFirstValue(ClaimTypes.NameIdentifier) ?? "system";
+        await auditTrailService.RecordAsync(
+            new AuditRecordRequest(
+                actorId,
+                "logging.alert-rule.create",
+                "AlertRule",
+                entity.Id.ToString("N"),
+                $"{{\"name\":\"{entity.Name}\",\"minimumLevel\":\"{entity.MinimumLevel}\"}}"),
+            cancellationToken);
+
         return Results.Ok(entity);
     }
 
@@ -301,9 +409,12 @@ public static class LoggingEndpoints
     private static async Task<IResult> UpdateRule(
         Guid id,
         CreateAlertRuleRequest request,
+        HttpContext httpContext,
+        IAuditTrailService auditTrailService,
         IApplicationDbContext writeContext,
         CancellationToken cancellationToken)
     {
+        request.Sanitize();
         AlertRule? rule = await writeContext.AlertRules.SingleOrDefaultAsync(x => x.Id == id, cancellationToken);
         if (rule is null)
         {
@@ -312,11 +423,24 @@ public static class LoggingEndpoints
 
         request.Update(rule);
         await writeContext.SaveChangesAsync(cancellationToken);
+
+        string actorId = httpContext.User.FindFirstValue(ClaimTypes.NameIdentifier) ?? "system";
+        await auditTrailService.RecordAsync(
+            new AuditRecordRequest(
+                actorId,
+                "logging.alert-rule.update",
+                "AlertRule",
+                rule.Id.ToString("N"),
+                $"{{\"name\":\"{rule.Name}\",\"minimumLevel\":\"{rule.MinimumLevel}\"}}"),
+            cancellationToken);
+
         return Results.Ok(rule);
     }
 
     private static async Task<IResult> DeleteRule(
         Guid id,
+        HttpContext httpContext,
+        IAuditTrailService auditTrailService,
         IApplicationDbContext writeContext,
         CancellationToken cancellationToken)
     {
@@ -328,6 +452,17 @@ public static class LoggingEndpoints
 
         writeContext.AlertRules.Remove(rule);
         await writeContext.SaveChangesAsync(cancellationToken);
+
+        string actorId = httpContext.User.FindFirstValue(ClaimTypes.NameIdentifier) ?? "system";
+        await auditTrailService.RecordAsync(
+            new AuditRecordRequest(
+                actorId,
+                "logging.alert-rule.delete",
+                "AlertRule",
+                id.ToString("N"),
+                "{}"),
+            cancellationToken);
+
         return Results.NoContent();
     }
 
@@ -358,25 +493,45 @@ public static class LoggingEndpoints
 
     private static async Task<IResult> CreateRole(
         CreateRoleRequest request,
+        HttpContext httpContext,
+        IAuditTrailService auditTrailService,
         IApplicationDbContext writeContext,
         CancellationToken cancellationToken)
     {
+        request.RoleName = InputSanitizer.SanitizeIdentifier(request.RoleName, 100) ?? string.Empty;
         bool exists = await writeContext.Roles.AnyAsync(x => x.Name == request.RoleName, cancellationToken);
         if (exists)
         {
             return Results.Ok();
         }
 
-        writeContext.Roles.Add(request.ToEntity());
+        Role role = request.ToEntity();
+        writeContext.Roles.Add(role);
         await writeContext.SaveChangesAsync(cancellationToken);
+
+        string actorId = httpContext.User.FindFirstValue(ClaimTypes.NameIdentifier) ?? "system";
+        await auditTrailService.RecordAsync(
+            new AuditRecordRequest(
+                actorId,
+                "logging.access-role.create",
+                "Role",
+                role.Id.ToString("N"),
+                $"{{\"name\":\"{role.Name}\"}}"),
+            cancellationToken);
+
         return Results.NoContent();
     }
 
     private static async Task<IResult> AssignAccess(
         AssignAccessRequest request,
+        HttpContext httpContext,
+        IAuditTrailService auditTrailService,
         IApplicationDbContext writeContext,
         CancellationToken cancellationToken)
     {
+        request.RoleName = InputSanitizer.SanitizeIdentifier(request.RoleName, 100) ?? string.Empty;
+        request.PermissionCode = InputSanitizer.SanitizeIdentifier(request.PermissionCode, 200) ?? string.Empty;
+
         Role? role = await writeContext.Roles.SingleOrDefaultAsync(x => x.Name == request.RoleName, cancellationToken);
         if (role is null)
         {
@@ -395,8 +550,18 @@ public static class LoggingEndpoints
 
         if (!exists)
         {
-            writeContext.RolePermissions.Add(new RolePermission { RoleId = role.Id, PermissionId = permission.Id });
+            writeContext.RolePermissions.Add(request.ToEntity(role.Id, permission.Id));
             await writeContext.SaveChangesAsync(cancellationToken);
+
+            string actorId = httpContext.User.FindFirstValue(ClaimTypes.NameIdentifier) ?? "system";
+            await auditTrailService.RecordAsync(
+                new AuditRecordRequest(
+                    actorId,
+                    "logging.access.assign",
+                    "RolePermission",
+                    role.Id.ToString("N"),
+                    $"{{\"permission\":\"{permission.Code}\"}}"),
+                cancellationToken);
         }
 
         return Results.NoContent();
@@ -427,7 +592,8 @@ public static class LoggingEndpoints
             TraceId = item.TraceId,
             ActorId = item.ActorId,
             Outcome = item.Outcome,
-            IsCorrupted = isCorrupted
+            IsCorrupted = isCorrupted,
+            HasIntegrityIssue = item.HasIntegrityIssue
         };
     }
 
@@ -443,6 +609,7 @@ public static class LoggingEndpoints
         public string? ActorId { get; set; }
         public string Outcome { get; set; }
         public bool IsCorrupted { get; set; }
+        public bool HasIntegrityIssue { get; set; }
     }
 
     public sealed class BulkIngestRequest
@@ -500,6 +667,18 @@ public static class LoggingEndpoints
         rule.UpdatedAtUtc = DateTime.UtcNow;
     }
 
+    private static void Sanitize(this CreateAlertRuleRequest request)
+    {
+        request.Name = InputSanitizer.SanitizeText(request.Name, 200) ?? string.Empty;
+        request.ContainsText = InputSanitizer.SanitizeText(request.ContainsText, 500);
+        request.Action = InputSanitizer.SanitizeIdentifier(request.Action, 100) ?? "notification";
+        request.WindowSeconds = Math.Max(1, request.WindowSeconds);
+        request.ThresholdCount = Math.Max(1, request.ThresholdCount);
+    }
+
     private static Role ToEntity(this CreateRoleRequest request) =>
         new() { Id = Guid.NewGuid(), Name = request.RoleName };
+
+    private static RolePermission ToEntity(this AssignAccessRequest _, Guid roleId, Guid permissionId) =>
+        new() { RoleId = roleId, PermissionId = permissionId };
 }

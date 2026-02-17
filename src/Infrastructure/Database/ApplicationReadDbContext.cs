@@ -1,4 +1,5 @@
 using Application.Abstractions.Data;
+using Domain.Auditing;
 using Domain.Authorization;
 using Domain.Logging;
 using Domain.Todos;
@@ -20,4 +21,5 @@ internal sealed class ApplicationReadDbContext(ApplicationDbContext dbContext) :
     public IQueryable<RolePermission> RolePermissions => dbContext.RolePermissions.AsNoTracking();
     public IQueryable<UserPermission> UserPermissions => dbContext.UserPermissions.AsNoTracking();
     public IQueryable<TodoItem> TodoItems => dbContext.TodoItems.AsNoTracking();
+    public IQueryable<AuditEntry> AuditEntries => dbContext.AuditEntries.AsNoTracking();
 }

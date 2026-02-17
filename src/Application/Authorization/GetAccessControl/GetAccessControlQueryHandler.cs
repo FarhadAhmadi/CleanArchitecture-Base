@@ -5,7 +5,7 @@ using SharedKernel;
 
 namespace Application.Authorization.GetAccessControl;
 
-internal sealed class GetAccessControlQueryHandler(IApplicationDbContext context)
+internal sealed class GetAccessControlQueryHandler(IApplicationReadDbContext context)
     : IQueryHandler<GetAccessControlQuery, AccessControlResponse>
 {
     public async Task<Result<AccessControlResponse>> Handle(GetAccessControlQuery query, CancellationToken cancellationToken)

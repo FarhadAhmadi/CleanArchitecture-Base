@@ -1,3 +1,4 @@
+using Domain.Auditing;
 using Domain.Authorization;
 using Domain.Logging;
 using Domain.Todos;
@@ -18,4 +19,5 @@ public interface IApplicationReadDbContext
     IQueryable<RolePermission> RolePermissions { get; }
     IQueryable<UserPermission> UserPermissions { get; }
     IQueryable<TodoItem> TodoItems { get; }
+    IQueryable<AuditEntry> AuditEntries { get; }
 }

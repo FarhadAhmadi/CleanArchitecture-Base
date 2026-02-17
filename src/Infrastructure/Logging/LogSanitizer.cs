@@ -7,15 +7,32 @@ internal sealed partial class LogSanitizer : ILogSanitizer
     public IngestLogRequest Sanitize(IngestLogRequest input)
     {
         input.Message = SanitizeText(input.Message) ?? string.Empty;
+        input.SourceService = SanitizeIdentifier(input.SourceService) ?? "Web.Api";
+        input.SourceModule = SanitizeIdentifier(input.SourceModule) ?? "unknown";
+        input.TraceId = SanitizeIdentifier(input.TraceId);
+        input.RequestId = SanitizeIdentifier(input.RequestId);
+        input.TenantId = SanitizeIdentifier(input.TenantId);
+        input.ActorType = SanitizeIdentifier(input.ActorType) ?? "system";
+        input.ActorId = SanitizeIdentifier(input.ActorId);
+        input.Outcome = SanitizeIdentifier(input.Outcome) ?? "unknown";
+        input.SessionId = SanitizeIdentifier(input.SessionId);
+        input.Ip = SanitizeIdentifier(input.Ip);
         input.PayloadJson = SanitizeText(input.PayloadJson);
         input.UserAgent = SanitizeText(input.UserAgent);
         input.DeviceInfo = SanitizeText(input.DeviceInfo);
+        input.HttpMethod = SanitizeIdentifier(input.HttpMethod);
         input.HttpPath = SanitizeText(input.HttpPath);
         input.ErrorCode = SanitizeText(input.ErrorCode);
         input.Tags = [.. input.Tags
             .Select(SanitizeText)
             .Where(x => !string.IsNullOrWhiteSpace(x))
             .Select(x => x!)];
+
+        if (input.HttpStatusCode is < 100 or > 599)
+        {
+            input.HttpStatusCode = null;
+        }
+
         return input;
     }
 
@@ -38,6 +55,14 @@ internal sealed partial class LogSanitizer : ILogSanitizer
         sanitized = EmailRegex().Replace(sanitized, MaskEmail);
 
         return sanitized.Trim();
+    }
+
+    private static string? SanitizeIdentifier(string? value)
+    {
+        string? sanitized = SanitizeText(value);
+        return string.IsNullOrWhiteSpace(sanitized)
+            ? sanitized
+            : IdentifierRegex().Replace(sanitized, string.Empty);
     }
 
     private static string MaskEmail(Match match)
@@ -68,4 +93,7 @@ internal sealed partial class LogSanitizer : ILogSanitizer
 
     [GeneratedRegex(@"\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}\b", RegexOptions.IgnoreCase)]
     private static partial Regex EmailRegex();
+
+    [GeneratedRegex(@"[^a-zA-Z0-9_\-.:@/\s]")]
+    private static partial Regex IdentifierRegex();
 }

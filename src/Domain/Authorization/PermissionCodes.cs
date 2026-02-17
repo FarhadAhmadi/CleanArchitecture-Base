@@ -12,4 +12,7 @@ public static class PermissionCodes
     public const string LoggingAlertsManage = "logging.alerts.manage";
     public const string LoggingAccessManage = "logging.access.manage";
     public const string LoggingExportRead = "logging.export.read";
+    public const string ObservabilityRead = "observability.read";
+    public const string AuditRead = "audit.read";
+    public const string AuditManage = "audit.manage";
 }

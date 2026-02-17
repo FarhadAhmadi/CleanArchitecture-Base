@@ -1,6 +1,7 @@
 using Application.Abstractions.Authentication;
 using Application.Abstractions.Messaging;
 using Application.Users.Login;
+using Infrastructure.Auditing;
 using SharedKernel;
 using Web.Api.Endpoints.Mappings;
 using Web.Api.Extensions;
@@ -16,12 +17,22 @@ internal sealed class Login : IEndpoint
     {
         app.MapPost("users/login", async (
             Request request,
+            IAuditTrailService auditTrailService,
             ICommandHandler<LoginUserCommand, TokenResponse> handler,
             CancellationToken cancellationToken) =>
         {
             LoginUserCommand command = request.ToCommand();
 
             Result<TokenResponse> result = await handler.Handle(command, cancellationToken);
+
+            await auditTrailService.RecordAsync(
+                new AuditRecordRequest(
+                    request.Email,
+                    result.IsSuccess ? "auth.login.success" : "auth.login.failed",
+                    "AuthSession",
+                    request.Email,
+                    "{\"scope\":\"user-login\"}"),
+                cancellationToken);
 
             return result.Match(Results.Ok, CustomResults.Problem);
         })

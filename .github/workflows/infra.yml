@@ -1,0 +1,40 @@
+name: Infrastructure
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: "Terraform environment"
+        required: true
+        type: choice
+        options: [ "dev", "staging", "prod" ]
+  pull_request:
+    paths:
+      - "infra/terraform/**"
+
+jobs:
+  terraform-plan:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: infra/terraform
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+
+      - name: Terraform Init
+        run: terraform init
+
+      - name: Terraform Validate
+        run: terraform validate
+
+      - name: Terraform Plan
+        if: ${{ github.event_name == 'workflow_dispatch' }}
+        env:
+          TF_VAR_tenant_id: ${{ secrets.AZURE_TENANT_ID }}
+          TF_VAR_admin_object_id: ${{ secrets.AZURE_ADMIN_OBJECT_ID }}
+          TF_VAR_sql_admin_login: ${{ secrets.SQL_ADMIN_LOGIN }}
+          TF_VAR_sql_admin_password: ${{ secrets.SQL_ADMIN_PASSWORD }}
+        run: terraform plan -var-file="environments/${{ inputs.environment }}.tfvars"

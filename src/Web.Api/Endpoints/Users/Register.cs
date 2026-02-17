@@ -1,5 +1,6 @@
 using Application.Abstractions.Messaging;
 using Application.Users.Register;
+using Infrastructure.Auditing;
 using SharedKernel;
 using Web.Api.Endpoints.Mappings;
 using Web.Api.Extensions;
@@ -15,12 +16,22 @@ internal sealed class Register : IEndpoint
     {
         app.MapPost("users/register", async (
             Request request,
+            IAuditTrailService auditTrailService,
             ICommandHandler<RegisterUserCommand, Guid> handler,
             CancellationToken cancellationToken) =>
         {
             RegisterUserCommand command = request.ToCommand();
 
             Result<Guid> result = await handler.Handle(command, cancellationToken);
+
+            await auditTrailService.RecordAsync(
+                new AuditRecordRequest(
+                    request.Email,
+                    result.IsSuccess ? "auth.register.success" : "auth.register.failed",
+                    "User",
+                    result.IsSuccess ? result.Value.ToString("N") : request.Email,
+                    "{\"scope\":\"user-register\"}"),
+                cancellationToken);
 
             return result.Match(Results.Ok, CustomResults.Problem);
         })

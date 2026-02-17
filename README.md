@@ -11,10 +11,14 @@ What's included in the template?
 - Infrastructure layer with:
   - Authentication
   - Permission authorization
-  - EF Core, PostgreSQL
+  - EF Core, SQL Server
   - Serilog
+  - Outbox/Inbox reliability primitives
 - Seq for searching and analyzing structured logs
   - Seq is available at http://localhost:8081 by default
+- Observability stack:
+  - Elasticsearch at http://localhost:9200
+  - Kibana at http://localhost:5601
 - Testing projects
   - Architecture testing
 
@@ -34,3 +38,36 @@ If you're ready to learn more, check out [**Pragmatic Clean Architecture**](http
 - Integration testing
 
 Stay awesome!
+
+## Operational baseline added
+
+- Secret management via `SecretManagement` section, optional Azure Key Vault provider.
+- JWT key rotation support via `Jwt:PreviousSecrets`.
+- Controlled migration strategy via `DatabaseMigrations` options and CI artifact (`migrations.sql`).
+- Outbox/Inbox infrastructure with:
+  - background outbox processor
+  - RabbitMQ publisher and inbox consumer worker
+- Resilience policies:
+  - SQL retry strategy (`EnableRetryOnFailure`)
+  - Polly retry pipelines in background workers
+  - HTTP standard resilience handler
+- Redis distributed caching for authorization permissions with versioned invalidation.
+- Security hardening:
+  - security headers middleware
+  - HSTS in production
+  - per-user/per-IP rate limiting
+  - CI security workflow (`.github/workflows/security.yml`)
+- Audit trail (tamper-evident checksum chain):
+  - `GET /api/v1/audit`
+  - `GET /api/v1/audit/integrity`
+- Operational metrics endpoint: `GET /api/v1/observability/metrics` (permission: `observability.read`).
+- Operational alerting worker with webhook/PagerDuty support (`OperationalAlerting` section).
+- Blue/green release strategy assets:
+  - Kubernetes manifests under `deploy/k8s`
+  - deployment switch script `deploy/k8s/blue-green-deploy.sh`
+- Infrastructure as code (Azure Terraform) under `infra/terraform` with `dev/staging/prod` tfvars.
+- DR readiness:
+  - backup/restore/drill scripts under `scripts/dr`
+  - runbook at `docs/operations/backup-restore-runbook.md`
+  - scheduled drill workflow `.github/workflows/dr-drill.yml`
+- Performance test assets with k6 under `tests/Performance` and workflow `.github/workflows/performance.yml`.

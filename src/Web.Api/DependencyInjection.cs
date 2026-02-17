@@ -1,5 +1,7 @@
 using System.Threading.RateLimiting;
 using Asp.Versioning;
+using System.Security.Claims;
+using Microsoft.Extensions.Http.Resilience;
 using Microsoft.AspNetCore.RateLimiting;
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Resources;
@@ -24,8 +26,18 @@ public static class DependencyInjection
             .GetSection(TelemetryOptions.SectionName)
             .Get<TelemetryOptions>() ?? new TelemetryOptions();
 
+        OperationalSloOptions operationalSloOptions = configuration
+            .GetSection(OperationalSloOptions.SectionName)
+            .Get<OperationalSloOptions>() ?? new OperationalSloOptions();
+
+        OperationalAlertingOptions operationalAlertingOptions = configuration
+            .GetSection(OperationalAlertingOptions.SectionName)
+            .Get<OperationalAlertingOptions>() ?? new OperationalAlertingOptions();
+
         services.AddSingleton(apiSecurityOptions);
         services.AddSingleton(telemetryOptions);
+        services.AddSingleton(operationalSloOptions);
+        services.AddSingleton(operationalAlertingOptions);
 
         services.AddEndpointsApiExplorer();
         services.AddApiVersioning(options =>
@@ -61,6 +73,25 @@ public static class DependencyInjection
         services.AddRateLimiter(options =>
         {
             options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+
+            options.GlobalLimiter = PartitionedRateLimiter.Create<HttpContext, string>(httpContext =>
+            {
+                string userId = httpContext.User.FindFirstValue(ClaimTypes.NameIdentifier) ?? string.Empty;
+                string ip = httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown";
+                string key = string.IsNullOrWhiteSpace(userId) ? $"ip:{ip}" : $"user:{userId}";
+                int permitLimit = string.IsNullOrWhiteSpace(userId)
+                    ? apiSecurityOptions.PerIpRateLimitPermitLimit
+                    : apiSecurityOptions.PerUserRateLimitPermitLimit;
+
+                return RateLimitPartition.GetFixedWindowLimiter(key, _ => new FixedWindowRateLimiterOptions
+                {
+                    PermitLimit = Math.Max(1, permitLimit),
+                    Window = TimeSpan.FromSeconds(apiSecurityOptions.RateLimitWindowSeconds),
+                    QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
+                    QueueLimit = 0
+                });
+            });
+
             options.AddFixedWindowLimiter(DefaultRateLimiterPolicy, limiterOptions =>
             {
                 limiterOptions.PermitLimit = apiSecurityOptions.RateLimitPermitLimit;
@@ -113,6 +144,16 @@ public static class DependencyInjection
                     });
                 }
             });
+
+        services.AddHttpClient("default")
+            .AddStandardResilienceHandler(handler =>
+            {
+                handler.Retry.MaxRetryAttempts = 3;
+                handler.TotalRequestTimeout.Timeout = TimeSpan.FromSeconds(30);
+                handler.CircuitBreaker.SamplingDuration = TimeSpan.FromSeconds(30);
+            });
+
+        services.AddHostedService<OperationalAlertWorker>();
 
         return services;
     }

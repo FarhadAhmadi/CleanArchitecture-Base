@@ -20,10 +20,7 @@ internal sealed class GetTodosQueryHandler(IApplicationReadDbContext context, IU
 
         IQueryable<TodoItem> todoQuery = context.TodoItems.Where(todoItem => todoItem.UserId == query.UserId);
 
-        if (!string.IsNullOrWhiteSpace(query.Search))
-        {
-            todoQuery = todoQuery.Where(x => x.Description.Contains(query.Search));
-        }
+        todoQuery = todoQuery.ApplyContainsSearch(query.Search, x => x.Description);
 
         if (query.IsCompleted.HasValue)
         {
@@ -32,14 +29,20 @@ internal sealed class GetTodosQueryHandler(IApplicationReadDbContext context, IU
 
         todoQuery = ApplySorting(todoQuery, query.SortBy, query.SortOrder);
 
+        (int page, int pageSize) = QueryableExtensions.NormalizePaging(
+            query.Page,
+            query.PageSize,
+            defaultPageSize: 20,
+            maxPageSize: 100);
+
         int totalCount = await todoQuery.CountAsync(cancellationToken);
 
         List<TodoResponse> items = await todoQuery
-            .ApplyPaging(query.Page, query.PageSize)
+            .ApplyPaging(page, pageSize)
             .Select(TodoMappings.ToModel)
             .ToListAsync(cancellationToken);
 
-        return new PagedResponse<TodoResponse>(items, query.Page, query.PageSize, totalCount);
+        return new PagedResponse<TodoResponse>(items, page, pageSize, totalCount);
     }
 
     private static IQueryable<TodoItem> ApplySorting(

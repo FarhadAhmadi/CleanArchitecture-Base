@@ -13,4 +13,12 @@ internal sealed class ApiSecurityOptions
     public int RateLimitPermitLimit { get; init; } = 100;
 
     public int RateLimitWindowSeconds { get; init; } = 60;
+
+    public int PerUserRateLimitPermitLimit { get; init; } = 60;
+
+    public int PerIpRateLimitPermitLimit { get; init; } = 120;
+
+    public bool EnableSecurityHeaders { get; init; } = true;
+
+    public bool UseHsts { get; init; } = true;
 }

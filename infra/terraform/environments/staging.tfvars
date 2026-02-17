@@ -1,0 +1,7 @@
+project_name      = "cleanarch"
+environment       = "staging"
+location          = "East US 2"
+tenant_id         = "00000000-0000-0000-0000-000000000000"
+admin_object_id   = "00000000-0000-0000-0000-000000000000"
+sql_admin_login   = "sqladminuser"
+sql_admin_password = "ReplaceWithStrongPassword!"

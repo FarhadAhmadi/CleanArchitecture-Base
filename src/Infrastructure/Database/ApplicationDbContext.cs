@@ -1,9 +1,10 @@
 using Application.Abstractions.Data;
+using Domain.Auditing;
 using Domain.Authorization;
 using Domain.Logging;
 using Domain.Todos;
 using Domain.Users;
-using Infrastructure.DomainEvents;
+using Infrastructure.Integration;
 using Microsoft.EntityFrameworkCore;
 using SharedKernel;
 
@@ -11,7 +12,7 @@ namespace Infrastructure.Database;
 
 public sealed class ApplicationDbContext(
     DbContextOptions<ApplicationDbContext> options,
-    IDomainEventsDispatcher domainEventsDispatcher)
+    IntegrationEventSerializer integrationEventSerializer)
     : DbContext(options), IApplicationDbContext
 {
     public DbSet<User> Users { get; set; }
@@ -25,6 +26,9 @@ public sealed class ApplicationDbContext(
     public DbSet<RolePermission> RolePermissions { get; set; }
     public DbSet<UserPermission> UserPermissions { get; set; }
     public DbSet<TodoItem> TodoItems { get; set; }
+    public DbSet<AuditEntry> AuditEntries { get; set; }
+    internal DbSet<OutboxMessage> OutboxMessages => Set<OutboxMessage>();
+    internal DbSet<InboxMessage> InboxMessages => Set<InboxMessage>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -34,26 +38,34 @@ public sealed class ApplicationDbContext(
 
     public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
     {
+        List<IDomainEvent> domainEvents = CollectDomainEvents();
+
         int result = await base.SaveChangesAsync(cancellationToken);
 
-        await PublishDomainEventsAsync();
+        if (domainEvents.Count != 0)
+        {
+            List<OutboxMessage> outboxMessages = [.. domainEvents.Select(integrationEventSerializer.ToOutboxMessage)];
+            OutboxMessages.AddRange(outboxMessages);
+            await base.SaveChangesAsync(cancellationToken);
+            ClearDomainEvents();
+        }
 
         return result;
     }
 
-    private async Task PublishDomainEventsAsync()
+    private List<IDomainEvent> CollectDomainEvents()
     {
-        var domainEvents = ChangeTracker
+        return [.. ChangeTracker
             .Entries<Entity>()
             .Select(entry => entry.Entity)
-            .SelectMany(entity =>
-            {
-                List<IDomainEvent> domainEvents = entity.DomainEvents;
-                entity.ClearDomainEvents();
-                return domainEvents;
-            })
-            .ToList();
+            .SelectMany(entity => entity.DomainEvents)];
+    }
 
-        await domainEventsDispatcher.DispatchAsync(domainEvents);
+    private void ClearDomainEvents()
+    {
+        foreach (Entity entity in ChangeTracker.Entries<Entity>().Select(entry => entry.Entity))
+        {
+            entity.ClearDomainEvents();
+        }
     }
 }

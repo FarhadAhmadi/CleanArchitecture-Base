@@ -5,6 +5,9 @@
     <PackageReference Include="EFCore.NamingConventions" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" />
     <PackageReference Include="Microsoft.Extensions.Diagnostics.HealthChecks" />
+    <PackageReference Include="Microsoft.Extensions.Caching.StackExchangeRedis" />
+    <PackageReference Include="RabbitMQ.Client" />
+    <PackageReference Include="Polly" />
     <PackageReference Include="Newtonsoft.Json" />
 	<PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" />
   </ItemGroup>

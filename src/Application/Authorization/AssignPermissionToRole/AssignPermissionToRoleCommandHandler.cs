@@ -1,3 +1,4 @@
+using Application.Abstractions.Authorization;
 using Application.Abstractions.Data;
 using Application.Abstractions.Messaging;
 using Domain.Authorization;
@@ -6,7 +7,9 @@ using SharedKernel;
 
 namespace Application.Authorization.AssignPermissionToRole;
 
-internal sealed class AssignPermissionToRoleCommandHandler(IApplicationDbContext context)
+internal sealed class AssignPermissionToRoleCommandHandler(
+    IApplicationDbContext context,
+    IPermissionCacheVersionService permissionCacheVersionService)
     : ICommandHandler<AssignPermissionToRoleCommand>
 {
     public async Task<Result> Handle(AssignPermissionToRoleCommand command, CancellationToken cancellationToken)
@@ -42,6 +45,7 @@ internal sealed class AssignPermissionToRoleCommandHandler(IApplicationDbContext
         });
 
         await context.SaveChangesAsync(cancellationToken);
+        await permissionCacheVersionService.BumpVersionAsync(cancellationToken);
 
         return Result.Success();
     }

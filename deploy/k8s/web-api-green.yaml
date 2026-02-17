@@ -1,0 +1,29 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: web-api-green
+  labels:
+    app: web-api
+    track: green
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: web-api
+      track: green
+  template:
+    metadata:
+      labels:
+        app: web-api
+        track: green
+    spec:
+      containers:
+        - name: web-api
+          image: ghcr.io/owner/repo:latest
+          ports:
+            - containerPort: 8080
+          env:
+            - name: ASPNETCORE_URLS
+              value: http://+:8080
+            - name: ASPNETCORE_ENVIRONMENT
+              value: Production
