@@ -1,7 +1,7 @@
+using System.Globalization;
 using System.Text;
 using Application.Abstractions.Authorization;
 using Microsoft.Extensions.Caching.Distributed;
-using System.Globalization;
 
 namespace Infrastructure.Authorization;
 

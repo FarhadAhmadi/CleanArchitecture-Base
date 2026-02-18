@@ -23,7 +23,7 @@ internal sealed class UpdateTodoCommandHandler(
         todoItem.Description = command.Description;
 
         await context.SaveChangesAsync(cancellationToken);
-        
+
         return Result.Success();
     }
 }

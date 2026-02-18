@@ -1,6 +1,7 @@
 using Application.Abstractions.Data;
 using Domain.Auditing;
 using Domain.Authorization;
+using Domain.Files;
 using Domain.Logging;
 using Domain.Todos;
 using Domain.Users;
@@ -28,6 +29,10 @@ public sealed class ApplicationDbContext(
     public DbSet<TodoItem> TodoItems { get; set; }
     public DbSet<UserExternalLogin> UserExternalLogins { get; set; }
     public DbSet<AuditEntry> AuditEntries { get; set; }
+    public DbSet<FileAsset> FileAssets { get; set; }
+    public DbSet<FileTag> FileTags { get; set; }
+    public DbSet<FileAccessAudit> FileAccessAudits { get; set; }
+    public DbSet<FilePermissionEntry> FilePermissionEntries { get; set; }
     internal DbSet<OutboxMessage> OutboxMessages => Set<OutboxMessage>();
     internal DbSet<InboxMessage> InboxMessages => Set<InboxMessage>();
 

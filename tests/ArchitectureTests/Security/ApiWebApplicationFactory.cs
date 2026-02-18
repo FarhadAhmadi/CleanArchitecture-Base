@@ -24,13 +24,19 @@ public sealed class ApiWebApplicationFactory : WebApplicationFactory<Web.Api.Pro
         {
             services.RemoveAll<DbContextOptions<ApplicationDbContext>>();
             services.RemoveAll<IDbContextOptionsConfiguration<ApplicationDbContext>>();
+            services.RemoveAll<DbContextOptions<ApplicationReadDbContext>>();
+            services.RemoveAll<IDbContextOptionsConfiguration<ApplicationReadDbContext>>();
             services.RemoveAll<ApplicationDbContext>();
+            services.RemoveAll<ApplicationReadDbContext>();
             services.RemoveAll<Application.Abstractions.Data.IApplicationDbContext>();
+            services.RemoveAll<Application.Abstractions.Data.IApplicationReadDbContext>();
 
             _connection.Open();
 
             services.AddDbContext<ApplicationDbContext>(options => options.UseSqlite(_connection));
+            services.AddDbContext<ApplicationReadDbContext>(options => options.UseSqlite(_connection));
             services.AddScoped<Application.Abstractions.Data.IApplicationDbContext>(sp => sp.GetRequiredService<ApplicationDbContext>());
+            services.AddScoped<Application.Abstractions.Data.IApplicationReadDbContext>(sp => sp.GetRequiredService<ApplicationReadDbContext>());
 
             using IServiceScope scope = services.BuildServiceProvider().CreateScope();
             ApplicationDbContext dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();

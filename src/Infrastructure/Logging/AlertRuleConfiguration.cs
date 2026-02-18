@@ -11,6 +11,7 @@ internal sealed class AlertRuleConfiguration : IEntityTypeConfiguration<AlertRul
     {
         builder.ToTable("AlertRules", Schemas.Default);
         builder.HasKey(x => x.Id);
+        builder.Property(x => x.Id).ValueGeneratedNever();
 
         builder.Property(x => x.Name).HasMaxLength(200).IsRequired();
         builder.Property(x => x.ContainsText).HasMaxLength(500);

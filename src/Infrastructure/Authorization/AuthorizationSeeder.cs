@@ -38,7 +38,12 @@ public sealed class AuthorizationSeeder(
             [PermissionCodes.LoggingExportRead] = "Export or read sensitive log reports",
             [PermissionCodes.ObservabilityRead] = "Read operational metrics and SLO dashboards",
             [PermissionCodes.AuditRead] = "Read audit trail data",
-            [PermissionCodes.AuditManage] = "Manage audit controls"
+            [PermissionCodes.AuditManage] = "Manage audit controls",
+            [PermissionCodes.FilesRead] = "Read file metadata and file content",
+            [PermissionCodes.FilesWrite] = "Upload and update files",
+            [PermissionCodes.FilesDelete] = "Delete files",
+            [PermissionCodes.FilesShare] = "Generate secure temporary links for file sharing",
+            [PermissionCodes.FilesPermissionsManage] = "Manage per-file ACL permissions"
         };
 
         List<string> existingCodes = await dbContext.Permissions
@@ -110,7 +115,12 @@ public sealed class AuthorizationSeeder(
                 PermissionCodes.LoggingExportRead,
                 PermissionCodes.ObservabilityRead,
                 PermissionCodes.AuditRead,
-                PermissionCodes.AuditManage
+                PermissionCodes.AuditManage,
+                PermissionCodes.FilesRead,
+                PermissionCodes.FilesWrite,
+                PermissionCodes.FilesDelete,
+                PermissionCodes.FilesShare,
+                PermissionCodes.FilesPermissionsManage
             ]
         };
 

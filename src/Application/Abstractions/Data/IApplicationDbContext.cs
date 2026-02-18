@@ -1,5 +1,6 @@
 using Domain.Auditing;
 using Domain.Authorization;
+using Domain.Files;
 using Domain.Logging;
 using Domain.Todos;
 using Domain.Users;
@@ -22,6 +23,10 @@ public interface IApplicationDbContext
     DbSet<TodoItem> TodoItems { get; }
     DbSet<UserExternalLogin> UserExternalLogins { get; }
     DbSet<AuditEntry> AuditEntries { get; }
+    DbSet<FileAsset> FileAssets { get; }
+    DbSet<FileTag> FileTags { get; }
+    DbSet<FileAccessAudit> FileAccessAudits { get; }
+    DbSet<FilePermissionEntry> FilePermissionEntries { get; }
 
     Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
 }

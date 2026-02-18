@@ -15,4 +15,9 @@ public static class PermissionCodes
     public const string ObservabilityRead = "observability.read";
     public const string AuditRead = "audit.read";
     public const string AuditManage = "audit.manage";
+    public const string FilesRead = "files.read";
+    public const string FilesWrite = "files.write";
+    public const string FilesDelete = "files.delete";
+    public const string FilesShare = "files.share";
+    public const string FilesPermissionsManage = "files.permissions.manage";
 }

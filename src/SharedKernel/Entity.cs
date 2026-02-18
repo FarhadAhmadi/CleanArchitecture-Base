@@ -3,6 +3,7 @@
 public abstract class Entity
 {
     private readonly List<IDomainEvent> _domainEvents = [];
+    public Guid Id { get; set; }
 
     public List<IDomainEvent> DomainEvents => [.. _domainEvents];
 

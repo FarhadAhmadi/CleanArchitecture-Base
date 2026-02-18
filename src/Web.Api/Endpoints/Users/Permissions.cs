@@ -11,4 +11,9 @@ internal static class Permissions
     internal const string ObservabilityRead = PermissionCodes.ObservabilityRead;
     internal const string AuditRead = PermissionCodes.AuditRead;
     internal const string AuditManage = PermissionCodes.AuditManage;
+    internal const string FilesRead = PermissionCodes.FilesRead;
+    internal const string FilesWrite = PermissionCodes.FilesWrite;
+    internal const string FilesDelete = PermissionCodes.FilesDelete;
+    internal const string FilesShare = PermissionCodes.FilesShare;
+    internal const string FilesPermissionsManage = PermissionCodes.FilesPermissionsManage;
 }

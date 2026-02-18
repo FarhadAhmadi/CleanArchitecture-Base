@@ -1,8 +1,9 @@
+using SharedKernel;
+
 namespace Domain.Logging;
 
-public sealed class LogEvent
+public sealed class LogEvent : Entity
 {
-    public Guid Id { get; set; }
     public string? IdempotencyKey { get; set; }
     public DateTime TimestampUtc { get; set; }
     public LogLevelType Level { get; set; }

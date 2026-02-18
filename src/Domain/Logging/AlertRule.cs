@@ -1,8 +1,9 @@
+using SharedKernel;
+
 namespace Domain.Logging;
 
-public sealed class AlertRule
+public sealed class AlertRule : Entity
 {
-    public Guid Id { get; set; }
     public string Name { get; set; }
     public bool IsEnabled { get; set; }
     public LogLevelType MinimumLevel { get; set; }

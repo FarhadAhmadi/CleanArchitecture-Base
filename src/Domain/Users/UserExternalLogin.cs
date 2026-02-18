@@ -1,8 +1,9 @@
+using SharedKernel;
+
 namespace Domain.Users;
 
-public sealed class UserExternalLogin
+public sealed class UserExternalLogin : Entity
 {
-    public Guid Id { get; set; }
     public Guid UserId { get; set; }
     public string Provider { get; set; }
     public string ProviderUserId { get; set; }

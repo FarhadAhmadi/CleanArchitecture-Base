@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+SOLUTION_PATH="CleanArchitecture.slnx"
+
+echo "[pre-commit] dotnet format --verify-no-changes"
+dotnet format "$SOLUTION_PATH" --verify-no-changes
+
+echo "[pre-commit] dotnet build"
+dotnet build "$SOLUTION_PATH"
+
+echo "[pre-commit] dotnet test --no-build"
+dotnet test "$SOLUTION_PATH" --no-build

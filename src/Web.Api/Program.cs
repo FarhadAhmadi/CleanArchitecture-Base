@@ -1,13 +1,13 @@
 using System.Reflection;
 using System.Security.Claims;
-using Azure.Identity;
 using Application;
+using Azure.Identity;
 using HealthChecks.UI.Client;
 using Infrastructure;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Serilog;
-using Web.Api.Endpoints.Logging;
 using Web.Api;
+using Web.Api.Endpoints.Logging;
 using Web.Api.Extensions;
 using Web.Api.Infrastructure;
 
@@ -57,7 +57,7 @@ RouteGroupBuilder v1 = app
 app.MapEndpoints(v1);
 app.MapLoggingEndpoints();
 
-if (app.Environment.IsDevelopment())
+if (app.Environment.IsDevelopment() || app.Environment.IsEnvironment("Testing"))
 {
     app.UseSwaggerWithUi();
 }

@@ -12,6 +12,7 @@ internal sealed class AuditEntryConfiguration : IEntityTypeConfiguration<AuditEn
         builder.ToTable("AuditEntries", Schemas.Default);
         builder.HasKey(x => x.Id);
 
+        builder.Property(x => x.Id).ValueGeneratedNever();
         builder.Property(x => x.ActorId).HasMaxLength(100).IsRequired();
         builder.Property(x => x.Action).HasMaxLength(150).IsRequired();
         builder.Property(x => x.ResourceType).HasMaxLength(100).IsRequired();
@@ -23,5 +24,6 @@ internal sealed class AuditEntryConfiguration : IEntityTypeConfiguration<AuditEn
         builder.HasIndex(x => x.TimestampUtc);
         builder.HasIndex(x => x.ActorId);
         builder.HasIndex(x => x.Action);
+        builder.HasIndex(x => x.Checksum).IsUnique();
     }
 }

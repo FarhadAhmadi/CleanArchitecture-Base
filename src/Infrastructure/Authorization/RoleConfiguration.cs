@@ -11,6 +11,7 @@ internal sealed class RoleConfiguration : IEntityTypeConfiguration<Role>
     {
         builder.ToTable("Roles", Schemas.Default);
         builder.HasKey(x => x.Id);
+        builder.Property(x => x.Id).ValueGeneratedNever();
         builder.Property(x => x.Name).HasMaxLength(100).IsRequired();
         builder.HasIndex(x => x.Name).IsUnique();
     }

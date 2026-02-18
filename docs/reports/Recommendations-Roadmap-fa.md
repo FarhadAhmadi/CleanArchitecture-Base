@@ -28,38 +28,6 @@
 
 ## 3) بک‌لاگ پیشنهادی (گروه‌بندی‌شده)
 
-## 3.1 Developer Experience
-### DX-01 Modular DI Refactor
-**مشکل:** DI مرکزی حجیم است و نگهداری را سخت می‌کند.  
-**اقدام:** برای هر ماژول (`Users`, `Auth`, `Logging`, `Audit`, ...) فایل DI مستقل بساز.  
-**خروجی:**
-1. `AddUsersModule()`, `AddAuthModule()`, ...
-2. `Program.cs` فقط orchestration سطح بالا.
-**DoD:** هیچ registration ماژولی در DI عمومی پراکنده نباشد.
-
-### DX-02 Feature Scaffolding CLI
-**مشکل:** افزودن فیچر جدید زمان‌بر و ناهماهنگ است.  
-**اقدام:** اسکریپت/CLI برای ساخت خودکار:
-1. Endpoint
-2. Command/Query
-3. Validator
-4. Mapping
-5. Test skeleton
-**DoD:** ایجاد فیچر جدید با یک دستور و کمتر از 2 دقیقه.
-
-### DX-03 Pre-commit Quality Gate
-**اقدام:** `pre-commit` با مراحل:
-1. `dotnet format --verify-no-changes`
-2. `dotnet build`
-3. `dotnet test --no-build`
-**DoD:** push بدون رعایت حداقل کیفیت ممکن نباشد.
-
-### DX-04 Contract Tests for API Compatibility
-**اقدام:** اضافه‌کردن تست compatibility برای API versionها.
-**DoD:** هر breaking change در CI fail شود.
-
----
-
 ## 3.2 Security
 ### SEC-01 MFA for Privileged Roles
 **اقدام:** MFA اجباری برای `admin`, `security`, `audit` roles.

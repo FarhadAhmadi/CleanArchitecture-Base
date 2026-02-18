@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore;
 namespace Infrastructure.Monitoring;
 
 public sealed class OperationalMetricsService(
-    ApplicationDbContext dbContext,
+    ApplicationReadDbContext dbContext,
     ILogIngestionQueue ingestionQueue,
     IAlertDispatchQueue alertQueue,
     OutboxOptions outboxOptions)
@@ -18,7 +18,7 @@ public sealed class OperationalMetricsService(
         int totalLogEvents = await logs.CountAsync(cancellationToken);
         int corrupted = await logs.CountAsync(x => x.HasIntegrityIssue, cancellationToken);
 
-        IQueryable<OutboxMessage> outbox = dbContext.Set<OutboxMessage>().AsNoTracking();
+        IQueryable<OutboxMessage> outbox = dbContext.OutboxMessages;
         int pending = await outbox.CountAsync(x => x.ProcessedOnUtc == null && x.RetryCount < outboxOptions.MaxRetryCount, cancellationToken);
         int failed = await outbox.CountAsync(x => x.ProcessedOnUtc == null && x.RetryCount >= outboxOptions.MaxRetryCount, cancellationToken);
 

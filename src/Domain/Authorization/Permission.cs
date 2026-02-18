@@ -1,8 +1,9 @@
+using SharedKernel;
+
 namespace Domain.Authorization;
 
-public sealed class Permission
+public sealed class Permission : Entity
 {
-    public Guid Id { get; set; }
     public string Code { get; set; }
     public string Description { get; set; }
 }

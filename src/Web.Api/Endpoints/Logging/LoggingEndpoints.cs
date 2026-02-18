@@ -1,3 +1,4 @@
+using System.Security.Claims;
 using Application.Abstractions.Data;
 using Domain.Authorization;
 using Domain.Logging;
@@ -6,7 +7,6 @@ using Infrastructure.Logging;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using SharedKernel;
-using System.Security.Claims;
 using Web.Api.Extensions;
 using Web.Api.Infrastructure;
 

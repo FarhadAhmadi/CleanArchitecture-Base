@@ -12,9 +12,12 @@ internal sealed class RefreshTokenConfiguration : IEntityTypeConfiguration<Refre
         builder.ToTable("RefreshTokens", Schemas.Default);
         builder.HasKey(x => x.Id);
 
+        builder.Property(x => x.Id).ValueGeneratedNever();
         builder.Property(x => x.TokenHash).HasMaxLength(256).IsRequired();
         builder.Property(x => x.ReplacedByTokenHash).HasMaxLength(256);
         builder.Property(x => x.RevokedReason).HasMaxLength(200);
+        builder.Property(x => x.CreatedAtUtc).IsRequired();
+        builder.Property(x => x.ExpiresAtUtc).IsRequired();
 
         builder.HasIndex(x => x.TokenHash).IsUnique();
         builder.HasIndex(x => new { x.UserId, x.ExpiresAtUtc });

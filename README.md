@@ -65,6 +65,9 @@ Stay awesome!
 - Blue/green release strategy assets:
   - Kubernetes manifests under `deploy/k8s`
   - deployment switch script `deploy/k8s/blue-green-deploy.sh`
+- Docker assets:
+  - active build file: `src/Web.Api/Dockerfile`
+  - versioned alternatives: `src/Web.Api/docker/Dockerfile.net8`, `src/Web.Api/docker/Dockerfile.net9`
 - Infrastructure as code (Azure Terraform) under `infra/terraform` with `dev/staging/prod` tfvars.
 - DR readiness:
   - backup/restore/drill scripts under `scripts/dr`

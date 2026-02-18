@@ -1,8 +1,9 @@
+using SharedKernel;
+
 namespace Domain.Auditing;
 
-public sealed class AuditEntry
+public sealed class AuditEntry : Entity
 {
-    public Guid Id { get; set; }
     public DateTime TimestampUtc { get; set; }
     public string ActorId { get; set; }
     public string Action { get; set; }

@@ -1,8 +1,9 @@
+using SharedKernel;
+
 namespace Domain.Users;
 
-public sealed class RefreshToken
+public sealed class RefreshToken : Entity
 {
-    public Guid Id { get; set; }
     public Guid UserId { get; set; }
     public string TokenHash { get; set; }
     public DateTime ExpiresAtUtc { get; set; }

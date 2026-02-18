@@ -1,26 +1,41 @@
 using Application.Abstractions.Data;
 using Domain.Auditing;
 using Domain.Authorization;
+using Domain.Files;
 using Domain.Logging;
 using Domain.Todos;
 using Domain.Users;
+using Infrastructure.Integration;
 using Microsoft.EntityFrameworkCore;
 
 namespace Infrastructure.Database;
 
-internal sealed class ApplicationReadDbContext(ApplicationDbContext dbContext) : IApplicationReadDbContext
+public sealed class ApplicationReadDbContext(DbContextOptions<ApplicationReadDbContext> options)
+    : DbContext(options), IApplicationReadDbContext
 {
-    public IQueryable<User> Users => dbContext.Users.AsNoTracking();
-    public IQueryable<LogEvent> LogEvents => dbContext.LogEvents.AsNoTracking();
-    public IQueryable<AlertRule> AlertRules => dbContext.AlertRules.AsNoTracking();
-    public IQueryable<AlertIncident> AlertIncidents => dbContext.AlertIncidents.AsNoTracking();
-    public IQueryable<RefreshToken> RefreshTokens => dbContext.RefreshTokens.AsNoTracking();
-    public IQueryable<Role> Roles => dbContext.Roles.AsNoTracking();
-    public IQueryable<Permission> Permissions => dbContext.Permissions.AsNoTracking();
-    public IQueryable<UserRole> UserRoles => dbContext.UserRoles.AsNoTracking();
-    public IQueryable<RolePermission> RolePermissions => dbContext.RolePermissions.AsNoTracking();
-    public IQueryable<UserPermission> UserPermissions => dbContext.UserPermissions.AsNoTracking();
-    public IQueryable<TodoItem> TodoItems => dbContext.TodoItems.AsNoTracking();
-    public IQueryable<UserExternalLogin> UserExternalLogins => dbContext.UserExternalLogins.AsNoTracking();
-    public IQueryable<AuditEntry> AuditEntries => dbContext.AuditEntries.AsNoTracking();
+    public IQueryable<User> Users => Set<User>().AsNoTracking();
+    public IQueryable<LogEvent> LogEvents => Set<LogEvent>().AsNoTracking();
+    public IQueryable<AlertRule> AlertRules => Set<AlertRule>().AsNoTracking();
+    public IQueryable<AlertIncident> AlertIncidents => Set<AlertIncident>().AsNoTracking();
+    public IQueryable<RefreshToken> RefreshTokens => Set<RefreshToken>().AsNoTracking();
+    public IQueryable<Role> Roles => Set<Role>().AsNoTracking();
+    public IQueryable<Permission> Permissions => Set<Permission>().AsNoTracking();
+    public IQueryable<UserRole> UserRoles => Set<UserRole>().AsNoTracking();
+    public IQueryable<RolePermission> RolePermissions => Set<RolePermission>().AsNoTracking();
+    public IQueryable<UserPermission> UserPermissions => Set<UserPermission>().AsNoTracking();
+    public IQueryable<TodoItem> TodoItems => Set<TodoItem>().AsNoTracking();
+    public IQueryable<UserExternalLogin> UserExternalLogins => Set<UserExternalLogin>().AsNoTracking();
+    public IQueryable<AuditEntry> AuditEntries => Set<AuditEntry>().AsNoTracking();
+    public IQueryable<FileAsset> FileAssets => Set<FileAsset>().AsNoTracking();
+    public IQueryable<FileTag> FileTags => Set<FileTag>().AsNoTracking();
+    public IQueryable<FileAccessAudit> FileAccessAudits => Set<FileAccessAudit>().AsNoTracking();
+    public IQueryable<FilePermissionEntry> FilePermissionEntries => Set<FilePermissionEntry>().AsNoTracking();
+
+    internal IQueryable<OutboxMessage> OutboxMessages => Set<OutboxMessage>().AsNoTracking();
+
+    protected override void OnModelCreating(ModelBuilder modelBuilder)
+    {
+        modelBuilder.ApplyConfigurationsFromAssembly(typeof(ApplicationReadDbContext).Assembly);
+        modelBuilder.HasDefaultSchema(Schemas.Default);
+    }
 }

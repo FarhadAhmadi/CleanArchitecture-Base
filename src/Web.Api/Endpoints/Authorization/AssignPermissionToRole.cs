@@ -1,8 +1,8 @@
+using System.Security.Claims;
 using Application.Abstractions.Messaging;
 using Application.Authorization.AssignPermissionToRole;
 using Infrastructure.Auditing;
 using SharedKernel;
-using System.Security.Claims;
 using Web.Api.Endpoints.Mappings;
 using Web.Api.Endpoints.Users;
 using Web.Api.Extensions;

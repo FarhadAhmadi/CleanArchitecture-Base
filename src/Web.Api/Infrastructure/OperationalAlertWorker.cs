@@ -7,7 +7,7 @@ namespace Web.Api.Infrastructure;
 internal sealed class OperationalAlertWorker(
     OperationalAlertingOptions alertingOptions,
     OperationalSloOptions sloOptions,
-    OperationalMetricsService metricsService,
+    IServiceScopeFactory scopeFactory,
     IHttpClientFactory httpClientFactory,
     ILogger<OperationalAlertWorker> logger) : BackgroundService
 {
@@ -24,6 +24,8 @@ internal sealed class OperationalAlertWorker(
         {
             try
             {
+                using IServiceScope scope = scopeFactory.CreateScope();
+                OperationalMetricsService metricsService = scope.ServiceProvider.GetRequiredService<OperationalMetricsService>();
                 OperationalMetricsSnapshot snapshot = await metricsService.GetSnapshotAsync(stoppingToken);
                 List<string> incidents = Evaluate(snapshot);
 

@@ -5,6 +5,11 @@ services:
       - ASPNETCORE_HTTP_PORTS=8080
       - ASPNETCORE_HTTPS_PORTS=8081
       - ConnectionStrings__Database=Server=sqlserver;Initial Catalog=CleanArchitectureBase;User Id=sa;Password=Your_strong_password123!;TrustServerCertificate=True;MultipleActiveResultSets=True;
+      - FileStorage__Endpoint=minio:9000
+      - FileStorage__AccessKey=minioadmin
+      - FileStorage__SecretKey=minioadmin
+      - FileStorage__Bucket=nextgen-files
+      - FileStorage__UseSsl=false
     ports:
       - "8080"
       - "8081"

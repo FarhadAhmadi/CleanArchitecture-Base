@@ -1,8 +1,9 @@
+using SharedKernel;
+
 namespace Domain.Logging;
 
-public sealed class AlertIncident
+public sealed class AlertIncident : Entity
 {
-    public Guid Id { get; set; }
     public Guid RuleId { get; set; }
     public Guid TriggerEventId { get; set; }
     public DateTime TriggeredAtUtc { get; set; }

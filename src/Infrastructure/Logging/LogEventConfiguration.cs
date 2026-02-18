@@ -11,6 +11,7 @@ internal sealed class LogEventConfiguration : IEntityTypeConfiguration<LogEvent>
     {
         builder.ToTable("LogEvents", Schemas.Default);
         builder.HasKey(x => x.Id);
+        builder.Property(x => x.Id).ValueGeneratedNever();
 
         builder.Property(x => x.IdempotencyKey).HasMaxLength(120);
         builder.Property(x => x.Message).HasMaxLength(4000).IsRequired();

@@ -1,5 +1,6 @@
 using Domain.Auditing;
 using Domain.Authorization;
+using Domain.Files;
 using Domain.Logging;
 using Domain.Todos;
 using Domain.Users;
@@ -21,4 +22,8 @@ public interface IApplicationReadDbContext
     IQueryable<TodoItem> TodoItems { get; }
     IQueryable<UserExternalLogin> UserExternalLogins { get; }
     IQueryable<AuditEntry> AuditEntries { get; }
+    IQueryable<FileAsset> FileAssets { get; }
+    IQueryable<FileTag> FileTags { get; }
+    IQueryable<FileAccessAudit> FileAccessAudits { get; }
+    IQueryable<FilePermissionEntry> FilePermissionEntries { get; }
 }

@@ -1,12 +1,12 @@
+using System.Security.Claims;
 using System.Threading.RateLimiting;
 using Asp.Versioning;
-using System.Security.Claims;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.Facebook;
 using Microsoft.AspNetCore.Authentication.Google;
-using Microsoft.Extensions.Http.Resilience;
 using Microsoft.AspNetCore.RateLimiting;
+using Microsoft.Extensions.Http.Resilience;
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;

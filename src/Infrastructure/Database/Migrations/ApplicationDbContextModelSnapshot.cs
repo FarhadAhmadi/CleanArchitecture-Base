@@ -26,7 +26,6 @@ namespace Infrastructure.Database.Migrations
             modelBuilder.Entity("Domain.Auditing.AuditEntry", b =>
                 {
                     b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("Action")
@@ -76,6 +75,9 @@ namespace Infrastructure.Database.Migrations
 
                     b.HasIndex("ActorId");
 
+                    b.HasIndex("Checksum")
+                        .IsUnique();
+
                     b.HasIndex("TimestampUtc");
 
                     b.ToTable("AuditEntries", "dbo");
@@ -84,7 +86,6 @@ namespace Infrastructure.Database.Migrations
             modelBuilder.Entity("Domain.Authorization.Permission", b =>
                 {
                     b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("Code")
@@ -108,7 +109,6 @@ namespace Infrastructure.Database.Migrations
             modelBuilder.Entity("Domain.Authorization.Role", b =>
                 {
                     b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("Name")
@@ -169,10 +169,185 @@ namespace Infrastructure.Database.Migrations
                     b.ToTable("UserRoles", "dbo");
                 });
 
+            modelBuilder.Entity("Domain.Files.FileAccessAudit", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Action")
+                        .IsRequired()
+                        .HasMaxLength(80)
+                        .HasColumnType("nvarchar(80)");
+
+                    b.Property<Guid>("FileId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("IpAddress")
+                        .HasMaxLength(64)
+                        .HasColumnType("nvarchar(64)");
+
+                    b.Property<DateTime>("TimestampUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("UserAgent")
+                        .HasMaxLength(1024)
+                        .HasColumnType("nvarchar(1024)");
+
+                    b.Property<Guid?>("UserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId");
+
+                    b.HasIndex("FileId", "TimestampUtc");
+
+                    b.ToTable("FileAccessAudits", "dbo");
+                });
+
+            modelBuilder.Entity("Domain.Files.FileAsset", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("ContentType")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("nvarchar(150)");
+
+                    b.Property<DateTime?>("DeletedAtUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<string>("Extension")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<string>("FileName")
+                        .IsRequired()
+                        .HasMaxLength(260)
+                        .HasColumnType("nvarchar(260)");
+
+                    b.Property<string>("Folder")
+                        .HasMaxLength(300)
+                        .HasColumnType("nvarchar(300)");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsEncrypted")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsInfected")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsScanned")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Module")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("ObjectKey")
+                        .IsRequired()
+                        .HasMaxLength(400)
+                        .HasColumnType("nvarchar(400)");
+
+                    b.Property<Guid>("OwnerUserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Sha256")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("nvarchar(64)");
+
+                    b.Property<long>("SizeBytes")
+                        .HasColumnType("bigint");
+
+                    b.Property<DateTime?>("UpdatedAtUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("UploadedAtUtc")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("FileName");
+
+                    b.HasIndex("IsDeleted");
+
+                    b.HasIndex("ObjectKey")
+                        .IsUnique();
+
+                    b.HasIndex("OwnerUserId");
+
+                    b.HasIndex("Module", "UploadedAtUtc");
+
+                    b.ToTable("FileAssets", "dbo");
+                });
+
+            modelBuilder.Entity("Domain.Files.FilePermissionEntry", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<bool>("CanDelete")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("CanRead")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("CanWrite")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid>("FileId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("SubjectType")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<string>("SubjectValue")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("nvarchar(150)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("FileId", "SubjectType", "SubjectValue")
+                        .IsUnique();
+
+                    b.ToTable("FilePermissionEntries", "dbo");
+                });
+
+            modelBuilder.Entity("Domain.Files.FileTag", b =>
+                {
+                    b.Property<Guid>("FileId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Tag")
+                        .HasMaxLength(80)
+                        .HasColumnType("nvarchar(80)");
+
+                    b.HasKey("FileId", "Tag");
+
+                    b.HasIndex("Tag");
+
+                    b.ToTable("FileTags", "dbo");
+                });
+
             modelBuilder.Entity("Domain.Logging.AlertIncident", b =>
                 {
                     b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("LastError")
@@ -205,6 +380,8 @@ namespace Infrastructure.Database.Migrations
 
                     b.HasIndex("Status");
 
+                    b.HasIndex("TriggerEventId");
+
                     b.HasIndex("TriggeredAtUtc");
 
                     b.ToTable("AlertIncidents", "dbo");
@@ -213,7 +390,6 @@ namespace Infrastructure.Database.Migrations
             modelBuilder.Entity("Domain.Logging.AlertRule", b =>
                 {
                     b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("Action")
@@ -259,7 +435,6 @@ namespace Infrastructure.Database.Migrations
             modelBuilder.Entity("Domain.Logging.LogEvent", b =>
                 {
                     b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("ActorId")
@@ -392,7 +567,6 @@ namespace Infrastructure.Database.Migrations
             modelBuilder.Entity("Domain.Todos.TodoItem", b =>
                 {
                     b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTime?>("CompletedAt")
@@ -403,7 +577,8 @@ namespace Infrastructure.Database.Migrations
 
                     b.Property<string>("Description")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
 
                     b.Property<DateTime?>("DueDate")
                         .HasColumnType("datetime2");
@@ -423,7 +598,9 @@ namespace Infrastructure.Database.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("UserId");
+                    b.HasIndex("CreatedAt");
+
+                    b.HasIndex("UserId", "IsCompleted");
 
                     b.ToTable("TodoItems", "dbo");
                 });
@@ -431,7 +608,6 @@ namespace Infrastructure.Database.Migrations
             modelBuilder.Entity("Domain.Users.RefreshToken", b =>
                 {
                     b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTime>("CreatedAtUtc")
@@ -474,7 +650,6 @@ namespace Infrastructure.Database.Migrations
             modelBuilder.Entity("Domain.Users.User", b =>
                 {
                     b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("Email")
@@ -514,7 +689,6 @@ namespace Infrastructure.Database.Migrations
             modelBuilder.Entity("Domain.Users.UserExternalLogin", b =>
                 {
                     b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("Email")
@@ -539,9 +713,10 @@ namespace Infrastructure.Database.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("UserId");
-
                     b.HasIndex("Provider", "ProviderUserId")
+                        .IsUnique();
+
+                    b.HasIndex("UserId", "Provider")
                         .IsUnique();
 
                     b.ToTable("UserExternalLogins", "dbo");
@@ -670,6 +845,57 @@ namespace Infrastructure.Database.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("Domain.Files.FileAccessAudit", b =>
+                {
+                    b.HasOne("Domain.Files.FileAsset", null)
+                        .WithMany()
+                        .HasForeignKey("FileId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Domain.Files.FileAsset", b =>
+                {
+                    b.HasOne("Domain.Users.User", null)
+                        .WithMany()
+                        .HasForeignKey("OwnerUserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Domain.Files.FilePermissionEntry", b =>
+                {
+                    b.HasOne("Domain.Files.FileAsset", null)
+                        .WithMany()
+                        .HasForeignKey("FileId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Domain.Files.FileTag", b =>
+                {
+                    b.HasOne("Domain.Files.FileAsset", null)
+                        .WithMany()
+                        .HasForeignKey("FileId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Domain.Logging.AlertIncident", b =>
+                {
+                    b.HasOne("Domain.Logging.AlertRule", null)
+                        .WithMany()
+                        .HasForeignKey("RuleId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Domain.Logging.LogEvent", null)
+                        .WithMany()
+                        .HasForeignKey("TriggerEventId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("Domain.Todos.TodoItem", b =>
                 {
                     b.HasOne("Domain.Users.User", null)
@@ -680,6 +906,15 @@ namespace Infrastructure.Database.Migrations
                 });
 
             modelBuilder.Entity("Domain.Users.RefreshToken", b =>
+                {
+                    b.HasOne("Domain.Users.User", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Domain.Users.UserExternalLogin", b =>
                 {
                     b.HasOne("Domain.Users.User", null)
                         .WithMany()
