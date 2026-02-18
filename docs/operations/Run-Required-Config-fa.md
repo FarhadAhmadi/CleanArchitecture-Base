@@ -1,35 +1,18 @@
-# کانفیگ‌های ضروری برای اجرای پروژه
+﻿# کانفیگ‌های ضروری برای اجرای پروژه
 
-این فایل فقط روی «چیزهایی که باید تنظیم کنی تا پروژه بالا بیاید» تمرکز دارد.
+## 1) اجرای Docker (پیشنهادی)
+اگر از `scripts/dev/dev-stack.ps1` استفاده می‌کنی، برای بالا آمدن اولیه معمولاً کانفیگ اضافه لازم نیست چون مقادیر پایه در `appsettings.Development.json` و `docker-compose*.yml` وجود دارد.
 
-## سناریو 1: اجرای راحت با Docker (پیشنهادی)
-اگر از دستور زیر استفاده می‌کنی:
+## 2) حداقل کانفیگ برای اجرای دستی API
 
-```powershell
-.\scripts\dev\dev-stack.ps1 up
-```
-
-برای بالا آمدن اولیه، عملاً کانفیگ اجباری اضافه نداری چون مقادیر اصلی در:
-- `docker-compose.yml`
-- `docker-compose.override.yml`
-- `src/Web.Api/appsettings.Development.json`
-از قبل تنظیم شده‌اند.
-
-فقط این پیش‌نیازها را داشته باش:
-- Docker Desktop
-- .NET SDK
-
-## سناریو 2: اجرای دستی API با `dotnet run`
-اگر API را دستی اجرا می‌کنی (بدون `dev-stack.ps1`)، این‌ها حداقل تنظیمات اجباری هستند:
-
+### ضروری
 1. `ConnectionStrings:Database`
 2. `Jwt:Secret`
 3. `Jwt:Issuer`
 4. `Jwt:Audience`
 5. `Notifications:SensitiveDataEncryptionKey`
 
-حداقل نمونه:
-
+### نمونه حداقلی
 ```json
 {
   "ConnectionStrings": {
@@ -47,90 +30,37 @@
 }
 ```
 
-## کانفیگ‌های ضروری هر ماژول
+## 3) کانفیگ ماژول Files
+1. `FileStorage:Enabled`
+2. `FileStorage:Endpoint`
+3. `FileStorage:AccessKey`
+4. `FileStorage:SecretKey`
+5. `FileStorage:Bucket`
 
-### 1) Core API
-- `ConnectionStrings:Database` (اجباری)
-- `ApiSecurity:*` (پیشنهادی، برای امنیت/ریت‌لیمیت)
+## 4) کانفیگ ماژول Notifications
 
-### 2) Auth
-- `Jwt:Secret` (اجباری)
-- `Jwt:Issuer` (اجباری)
-- `Jwt:Audience` (اجباری)
-- `Jwt:ExpirationInMinutes` (پیشنهادی)
+### هسته ماژول
+1. `Notifications:Enabled`
+2. `Notifications:MaxRetries`
+3. `Notifications:DispatchBatchSize`
+4. `Notifications:DispatchPollingSeconds`
+5. `Notifications:SensitiveDataEncryptionKey`
 
-### 3) File Module (MinIO)
-برای فعال بودن ماژول فایل:
-- `FileStorage:Enabled=true`
-- `FileStorage:Endpoint`
-- `FileStorage:AccessKey`
-- `FileStorage:SecretKey`
-- `FileStorage:Bucket`
-- `FileValidation:MaxFileSizeMb`
-- `FileValidation:AllowedExtensions`
+### providerها (برای ارسال واقعی)
+1. Email: `Notifications:Email:*`
+2. SMS: `Notifications:Sms:*`
+3. Slack: `Notifications:Slack:*`
+4. Teams: `Notifications:Teams:*`
+5. Push: `Notifications:Push:*`
+6. InApp: `Notifications:InApp:Enabled`
 
-### 4) Notification Module (هسته)
-برای کارکرد خود ماژول اعلان:
-- `Notifications:Enabled=true`
-- `Notifications:SensitiveDataEncryptionKey` (اجباری)
-- `Notifications:MaxRetries`
-- `Notifications:BaseRetryDelaySeconds`
-- `Notifications:DispatchBatchSize`
-- `Notifications:DispatchPollingSeconds`
+## 5) سرویس‌های جانبی
+1. RabbitMQ: `RabbitMq:*`
+2. Redis: `RedisCache:*`
+3. Logging/Alerting: `Serilog:*`, `OperationalAlerting:*`
 
-## کانفیگ ارسال واقعی اعلان‌ها (اختیاری اما لازم برای Provider واقعی)
-اگر می‌خواهی واقعاً پیام ارسال شود (نه فقط ثبت/dispatch داخلی)، باید provider هر کانال را تنظیم کنی:
-
-### Email
-- `Notifications:Email:Enabled=true`
-- `Notifications:Email:Host`
-- `Notifications:Email:Port`
-- `Notifications:Email:UseSsl`
-- `Notifications:Email:UserName`
-- `Notifications:Email:Password`
-- `Notifications:Email:FromAddress`
-
-### SMS
-- `Notifications:Sms:Enabled=true`
-- `Notifications:Sms:BaseUrl`
-- `Notifications:Sms:EndpointPath`
-- `Notifications:Sms:ApiKey`
-- `Notifications:Sms:ApiKeyHeaderName` یا `UseBearerToken=true`
-- `Notifications:Sms:SenderId`
-
-### Slack
-- `Notifications:Slack:Enabled=true`
-- یکی از این دو:
-1. `Notifications:Slack:WebhookUrl`
-2. `Notifications:Slack:BotToken` + `Notifications:Slack:PostMessageApiUrl`
-
-### Teams
-- `Notifications:Teams:Enabled=true`
-- `Notifications:Teams:WebhookUrl`
-
-### Push
-- `Notifications:Push:Enabled=true`
-- `Notifications:Push:BaseUrl`
-- `Notifications:Push:EndpointPath`
-- `Notifications:Push:ApiKey`
-
-### InApp
-- `Notifications:InApp:Enabled=true`
-
-## سرویس‌های زیرساختی (بسته به نیاز)
-- RabbitMQ:
-  - `RabbitMq:Enabled=true`
-  - `RabbitMq:Host`, `Port`, `UserName`, `Password`
-- Redis:
-  - `RedisCache:Enabled=true`
-  - `RedisCache:ConnectionString`
-- Log/Observability (اختیاری برای اجرا، مهم برای عملیات):
-  - `Serilog:*`
-  - `OperationalAlerting:*`
-
-## چک‌لیست سریع قبل از Run
-1. `ConnectionStrings:Database` درست است.
-2. `Jwt` کامل و معتبر است.
-3. `Notifications:SensitiveDataEncryptionKey` مقدار امن دارد.
-4. اگر Email/SMS/Slack می‌خواهی، `Enabled=true` + credential/provider کامل است.
-5. اگر File لازم داری، `FileStorage` و MinIO تنظیم است.
+## 6) چک‌لیست قبل از Run
+1. DB connection درست است.
+2. JWT کامل است.
+3. Notification encryption key تنظیم شده است.
+4. اگر ارسال واقعی می‌خواهی، provider credentialها کامل است.

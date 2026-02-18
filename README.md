@@ -64,6 +64,12 @@ Useful shortcuts:
 Detailed Persian quick guide:
 `docs/operations/Quick-Run-Guide-fa.md`
 
+Persian required configuration guide:
+`docs/operations/Run-Required-Config-fa.md`
+
+Modular monolith structure guide:
+`docs/reports/Modular-Monolith-Structure-fa.md`
+
 ## Operational baseline added
 
 - Secret management via `SecretManagement` section, optional Azure Key Vault provider.
