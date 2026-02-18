@@ -3,6 +3,7 @@ using Domain.Auditing;
 using Domain.Authorization;
 using Domain.Files;
 using Domain.Logging;
+using Domain.Notifications;
 using Domain.Todos;
 using Domain.Users;
 using Infrastructure.Integration;
@@ -33,6 +34,12 @@ public sealed class ApplicationDbContext(
     public DbSet<FileTag> FileTags { get; set; }
     public DbSet<FileAccessAudit> FileAccessAudits { get; set; }
     public DbSet<FilePermissionEntry> FilePermissionEntries { get; set; }
+    public DbSet<NotificationMessage> NotificationMessages { get; set; }
+    public DbSet<NotificationTemplate> NotificationTemplates { get; set; }
+    public DbSet<NotificationTemplateRevision> NotificationTemplateRevisions { get; set; }
+    public DbSet<NotificationSchedule> NotificationSchedules { get; set; }
+    public DbSet<NotificationPermissionEntry> NotificationPermissionEntries { get; set; }
+    public DbSet<NotificationDeliveryAttempt> NotificationDeliveryAttempts { get; set; }
     internal DbSet<OutboxMessage> OutboxMessages => Set<OutboxMessage>();
     internal DbSet<InboxMessage> InboxMessages => Set<InboxMessage>();
 

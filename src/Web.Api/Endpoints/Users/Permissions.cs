@@ -16,4 +16,10 @@ internal static class Permissions
     internal const string FilesDelete = PermissionCodes.FilesDelete;
     internal const string FilesShare = PermissionCodes.FilesShare;
     internal const string FilesPermissionsManage = PermissionCodes.FilesPermissionsManage;
+    internal const string NotificationsRead = PermissionCodes.NotificationsRead;
+    internal const string NotificationsWrite = PermissionCodes.NotificationsWrite;
+    internal const string NotificationTemplatesManage = PermissionCodes.NotificationTemplatesManage;
+    internal const string NotificationSchedulesManage = PermissionCodes.NotificationSchedulesManage;
+    internal const string NotificationPermissionsManage = PermissionCodes.NotificationPermissionsManage;
+    internal const string NotificationReportsRead = PermissionCodes.NotificationReportsRead;
 }

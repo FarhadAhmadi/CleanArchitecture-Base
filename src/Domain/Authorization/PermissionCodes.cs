@@ -20,4 +20,10 @@ public static class PermissionCodes
     public const string FilesDelete = "files.delete";
     public const string FilesShare = "files.share";
     public const string FilesPermissionsManage = "files.permissions.manage";
+    public const string NotificationsRead = "notifications.read";
+    public const string NotificationsWrite = "notifications.write";
+    public const string NotificationTemplatesManage = "notifications.templates.manage";
+    public const string NotificationSchedulesManage = "notifications.schedules.manage";
+    public const string NotificationPermissionsManage = "notifications.permissions.manage";
+    public const string NotificationReportsRead = "notifications.reports.read";
 }

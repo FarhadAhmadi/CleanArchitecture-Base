@@ -2,6 +2,7 @@ using Domain.Auditing;
 using Domain.Authorization;
 using Domain.Files;
 using Domain.Logging;
+using Domain.Notifications;
 using Domain.Todos;
 using Domain.Users;
 
@@ -26,4 +27,10 @@ public interface IApplicationReadDbContext
     IQueryable<FileTag> FileTags { get; }
     IQueryable<FileAccessAudit> FileAccessAudits { get; }
     IQueryable<FilePermissionEntry> FilePermissionEntries { get; }
+    IQueryable<NotificationMessage> NotificationMessages { get; }
+    IQueryable<NotificationTemplate> NotificationTemplates { get; }
+    IQueryable<NotificationTemplateRevision> NotificationTemplateRevisions { get; }
+    IQueryable<NotificationSchedule> NotificationSchedules { get; }
+    IQueryable<NotificationPermissionEntry> NotificationPermissionEntries { get; }
+    IQueryable<NotificationDeliveryAttempt> NotificationDeliveryAttempts { get; }
 }

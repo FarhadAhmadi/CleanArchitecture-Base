@@ -43,7 +43,13 @@ public sealed class AuthorizationSeeder(
             [PermissionCodes.FilesWrite] = "Upload and update files",
             [PermissionCodes.FilesDelete] = "Delete files",
             [PermissionCodes.FilesShare] = "Generate secure temporary links for file sharing",
-            [PermissionCodes.FilesPermissionsManage] = "Manage per-file ACL permissions"
+            [PermissionCodes.FilesPermissionsManage] = "Manage per-file ACL permissions",
+            [PermissionCodes.NotificationsRead] = "Read notifications and delivery states",
+            [PermissionCodes.NotificationsWrite] = "Create and dispatch notifications",
+            [PermissionCodes.NotificationTemplatesManage] = "Create/update/delete notification templates",
+            [PermissionCodes.NotificationSchedulesManage] = "Manage scheduled notifications",
+            [PermissionCodes.NotificationPermissionsManage] = "Manage notification ACL permissions",
+            [PermissionCodes.NotificationReportsRead] = "Read notification reports"
         };
 
         List<string> existingCodes = await dbContext.Permissions
@@ -120,7 +126,13 @@ public sealed class AuthorizationSeeder(
                 PermissionCodes.FilesWrite,
                 PermissionCodes.FilesDelete,
                 PermissionCodes.FilesShare,
-                PermissionCodes.FilesPermissionsManage
+                PermissionCodes.FilesPermissionsManage,
+                PermissionCodes.NotificationsRead,
+                PermissionCodes.NotificationsWrite,
+                PermissionCodes.NotificationTemplatesManage,
+                PermissionCodes.NotificationSchedulesManage,
+                PermissionCodes.NotificationPermissionsManage,
+                PermissionCodes.NotificationReportsRead
             ]
         };
 

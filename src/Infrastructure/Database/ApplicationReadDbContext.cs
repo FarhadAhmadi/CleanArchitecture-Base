@@ -3,6 +3,7 @@ using Domain.Auditing;
 using Domain.Authorization;
 using Domain.Files;
 using Domain.Logging;
+using Domain.Notifications;
 using Domain.Todos;
 using Domain.Users;
 using Infrastructure.Integration;
@@ -30,6 +31,12 @@ public sealed class ApplicationReadDbContext(DbContextOptions<ApplicationReadDbC
     public IQueryable<FileTag> FileTags => Set<FileTag>().AsNoTracking();
     public IQueryable<FileAccessAudit> FileAccessAudits => Set<FileAccessAudit>().AsNoTracking();
     public IQueryable<FilePermissionEntry> FilePermissionEntries => Set<FilePermissionEntry>().AsNoTracking();
+    public IQueryable<NotificationMessage> NotificationMessages => Set<NotificationMessage>().AsNoTracking();
+    public IQueryable<NotificationTemplate> NotificationTemplates => Set<NotificationTemplate>().AsNoTracking();
+    public IQueryable<NotificationTemplateRevision> NotificationTemplateRevisions => Set<NotificationTemplateRevision>().AsNoTracking();
+    public IQueryable<NotificationSchedule> NotificationSchedules => Set<NotificationSchedule>().AsNoTracking();
+    public IQueryable<NotificationPermissionEntry> NotificationPermissionEntries => Set<NotificationPermissionEntry>().AsNoTracking();
+    public IQueryable<NotificationDeliveryAttempt> NotificationDeliveryAttempts => Set<NotificationDeliveryAttempt>().AsNoTracking();
 
     internal IQueryable<OutboxMessage> OutboxMessages => Set<OutboxMessage>().AsNoTracking();
 

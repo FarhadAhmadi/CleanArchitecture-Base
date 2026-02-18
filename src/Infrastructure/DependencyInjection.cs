@@ -21,6 +21,7 @@ public static class DependencyInjection
             .AddAuthorizationModule(configuration)
             .AddAuditModule()
             .AddMonitoringModule()
-            .AddFilesModule(configuration);
+            .AddFilesModule(configuration)
+            .AddNotificationsModule(configuration);
     }
 }

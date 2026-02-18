@@ -2,6 +2,7 @@ using Domain.Auditing;
 using Domain.Authorization;
 using Domain.Files;
 using Domain.Logging;
+using Domain.Notifications;
 using Domain.Todos;
 using Domain.Users;
 using Microsoft.EntityFrameworkCore;
@@ -27,6 +28,12 @@ public interface IApplicationDbContext
     DbSet<FileTag> FileTags { get; }
     DbSet<FileAccessAudit> FileAccessAudits { get; }
     DbSet<FilePermissionEntry> FilePermissionEntries { get; }
+    DbSet<NotificationMessage> NotificationMessages { get; }
+    DbSet<NotificationTemplate> NotificationTemplates { get; }
+    DbSet<NotificationTemplateRevision> NotificationTemplateRevisions { get; }
+    DbSet<NotificationSchedule> NotificationSchedules { get; }
+    DbSet<NotificationPermissionEntry> NotificationPermissionEntries { get; }
+    DbSet<NotificationDeliveryAttempt> NotificationDeliveryAttempts { get; }
 
     Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
 }
