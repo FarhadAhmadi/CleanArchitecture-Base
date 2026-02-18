@@ -22,8 +22,8 @@ $projectRoot = Resolve-Path (Join-Path $PSScriptRoot "..\..")
 $modulePascal = (Get-Culture).TextInfo.ToTitleCase($Module.ToLower()).Replace(" ", "")
 $featurePascal = (Get-Culture).TextInfo.ToTitleCase($Feature.ToLower()).Replace(" ", "")
 
-$applicationDir = Join-Path $projectRoot "src\Application\$modulePascal\$featurePascal"
-$endpointDir = Join-Path $projectRoot "src\Web.Api\Endpoints\$modulePascal"
+$applicationDir = Join-Path $projectRoot "src\Application\Modules\$modulePascal\$featurePascal"
+$endpointDir = Join-Path $projectRoot "src\Web.Api\Endpoints\Modules\$modulePascal"
 $testDir = Join-Path $projectRoot "tests\ArchitectureTests\Features\$modulePascal"
 
 New-DirectoryIfMissing $applicationDir
@@ -108,7 +108,7 @@ internal static class $featurePascal`Mappings
 @"
 using Web.Api.Endpoints;
 
-namespace Web.Api.Endpoints.$modulePascal;
+namespace Web.Api.Endpoints.Modules.$modulePascal;
 
 internal sealed class $featurePascal : IEndpoint
 {

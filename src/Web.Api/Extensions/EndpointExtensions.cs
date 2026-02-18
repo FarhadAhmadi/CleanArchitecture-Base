@@ -24,7 +24,10 @@ public static class EndpointExtensions
         this WebApplication app,
         RouteGroupBuilder? routeGroupBuilder = null)
     {
-        IEnumerable<IEndpoint> endpoints = app.Services.GetRequiredService<IEnumerable<IEndpoint>>();
+        IEnumerable<IEndpoint> endpoints = app.Services
+            .GetRequiredService<IEnumerable<IEndpoint>>()
+            .OrderBy(GetModuleName)
+            .ThenBy(endpoint => endpoint.GetType().Name, StringComparer.Ordinal);
 
         IEndpointRouteBuilder builder = routeGroupBuilder is null ? app : routeGroupBuilder;
 
@@ -39,5 +42,34 @@ public static class EndpointExtensions
     public static RouteHandlerBuilder HasPermission(this RouteHandlerBuilder app, string permission)
     {
         return app.RequireAuthorization(permission);
+    }
+
+    private static string GetModuleName(IEndpoint endpoint)
+    {
+        string? endpointNamespace = endpoint.GetType().Namespace;
+        if (string.IsNullOrWhiteSpace(endpointNamespace))
+        {
+            return "Core";
+        }
+
+        const string modulesMarker = ".Endpoints.Modules.";
+        int modulesIndex = endpointNamespace.IndexOf(modulesMarker, StringComparison.Ordinal);
+        if (modulesIndex >= 0)
+        {
+            string modulePath = endpointNamespace[(modulesIndex + modulesMarker.Length)..];
+            string module = modulePath.Split('.', StringSplitOptions.RemoveEmptyEntries).FirstOrDefault() ?? "Core";
+            return module;
+        }
+
+        const string endpointsMarker = ".Endpoints.";
+        int endpointsIndex = endpointNamespace.IndexOf(endpointsMarker, StringComparison.Ordinal);
+        if (endpointsIndex >= 0)
+        {
+            string modulePath = endpointNamespace[(endpointsIndex + endpointsMarker.Length)..];
+            string module = modulePath.Split('.', StringSplitOptions.RemoveEmptyEntries).FirstOrDefault() ?? "Core";
+            return module;
+        }
+
+        return "Core";
     }
 }

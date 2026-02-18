@@ -39,6 +39,31 @@ If you're ready to learn more, check out [**Pragmatic Clean Architecture**](http
 
 Stay awesome!
 
+## Quick Run (No Hassle)
+
+From project root:
+
+```powershell
+.\scripts\dev\dev-stack.ps1 up
+```
+
+Windows shortcut:
+
+```cmd
+run-dev.cmd
+```
+
+Useful shortcuts:
+
+```powershell
+.\scripts\dev\dev-stack.ps1 status
+.\scripts\dev\dev-stack.ps1 logs
+.\scripts\dev\dev-stack.ps1 down
+```
+
+Detailed Persian quick guide:
+`docs/operations/Quick-Run-Guide-fa.md`
+
 ## Operational baseline added
 
 - Secret management via `SecretManagement` section, optional Azure Key Vault provider.
