@@ -3,14 +3,14 @@ using Application.Abstractions.Data;
 using Application.Abstractions.Messaging;
 using Application.Abstractions.Security;
 using Domain.Users;
-using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Identity;
 using SharedKernel;
 
 namespace Application.Users.Login;
 
 internal sealed class LoginUserCommandHandler(
     IApplicationDbContext context,
-    IPasswordHasher passwordHasher,
+    UserManager<User> userManager,
     ITokenProvider tokenProvider,
     IRefreshTokenProvider refreshTokenProvider,
     ITokenLifetimeProvider tokenLifetimeProvider,
@@ -19,8 +19,7 @@ internal sealed class LoginUserCommandHandler(
 {
     public async Task<Result<TokenResponse>> Handle(LoginUserCommand command, CancellationToken cancellationToken)
     {
-        User? user = await context.Users
-            .SingleOrDefaultAsync(u => u.Email == command.Email, cancellationToken);
+        User? user = await userManager.FindByEmailAsync(command.Email);
 
         if (user is null)
         {
@@ -28,30 +27,31 @@ internal sealed class LoginUserCommandHandler(
             return Result.Failure<TokenResponse>(UserErrors.NotFoundByEmail);
         }
 
-        if (user.LockoutEndUtc.HasValue && user.LockoutEndUtc.Value > DateTime.UtcNow)
+        if (await userManager.IsLockedOutAsync(user))
         {
-            securityEventLogger.AccountLocked(user.Id.ToString("N"), user.LockoutEndUtc.Value, null, null);
+            DateTime lockoutEnd = user.LockoutEnd?.UtcDateTime ?? DateTime.UtcNow.AddMinutes(Math.Max(1, authSecurityOptions.LockoutMinutes));
+            securityEventLogger.AccountLocked(user.Id.ToString("N"), lockoutEnd, null, null);
             return Result.Failure<TokenResponse>(UserErrors.NotFoundByEmail);
         }
 
-        bool verified = passwordHasher.Verify(command.Password, user.PasswordHash);
+        bool verified = await userManager.CheckPasswordAsync(user, command.Password);
 
         if (!verified)
         {
-            user.FailedLoginCount++;
-            if (user.FailedLoginCount >= Math.Max(1, authSecurityOptions.MaxFailedLoginAttempts))
+            await userManager.AccessFailedAsync(user);
+
+            if (await userManager.IsLockedOutAsync(user))
             {
-                user.LockoutEndUtc = DateTime.UtcNow.AddMinutes(Math.Max(1, authSecurityOptions.LockoutMinutes));
-                securityEventLogger.AccountLocked(user.Id.ToString("N"), user.LockoutEndUtc.Value, null, null);
+                DateTime lockoutEnd = user.LockoutEnd?.UtcDateTime ?? DateTime.UtcNow.AddMinutes(Math.Max(1, authSecurityOptions.LockoutMinutes));
+                securityEventLogger.AccountLocked(user.Id.ToString("N"), lockoutEnd, null, null);
             }
 
-            await context.SaveChangesAsync(cancellationToken);
             securityEventLogger.AuthenticationFailed("InvalidPassword", command.Email, null, null);
             return Result.Failure<TokenResponse>(UserErrors.NotFoundByEmail);
         }
 
-        user.FailedLoginCount = 0;
-        user.LockoutEndUtc = null;
+        await userManager.ResetAccessFailedCountAsync(user);
+        await userManager.SetLockoutEndDateAsync(user, null);
 
         string accessToken = tokenProvider.Create(user);
 

@@ -9,7 +9,7 @@ internal sealed class LogEventConfiguration : IEntityTypeConfiguration<LogEvent>
 {
     public void Configure(EntityTypeBuilder<LogEvent> builder)
     {
-        builder.ToTable("LogEvents", Schemas.Default);
+        builder.ToTable("LogEvents", Schemas.Logging);
         builder.HasKey(x => x.Id);
         builder.Property(x => x.Id).ValueGeneratedNever();
 

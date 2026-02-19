@@ -10,7 +10,7 @@ internal sealed class FileAssetConfiguration : IEntityTypeConfiguration<FileAsse
 {
     public void Configure(EntityTypeBuilder<FileAsset> builder)
     {
-        builder.ToTable("FileAssets", Schemas.Default);
+        builder.ToTable("FileAssets", Schemas.Files);
         builder.HasKey(x => x.Id);
 
         builder.Property(x => x.Id).ValueGeneratedNever();

@@ -9,7 +9,7 @@ internal sealed class UserExternalLoginConfiguration : IEntityTypeConfiguration<
 {
     public void Configure(EntityTypeBuilder<UserExternalLogin> builder)
     {
-        builder.ToTable("UserExternalLogins", Schemas.Default);
+        builder.ToTable("UserExternalLogins", Schemas.Users);
         builder.HasKey(x => x.Id);
 
         builder.Property(x => x.Id).ValueGeneratedNever();

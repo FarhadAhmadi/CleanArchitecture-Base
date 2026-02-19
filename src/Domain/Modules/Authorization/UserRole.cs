@@ -1,7 +1,7 @@
+using Microsoft.AspNetCore.Identity;
+
 namespace Domain.Authorization;
 
-public sealed class UserRole
+public sealed class UserRole : IdentityUserRole<Guid>
 {
-    public Guid UserId { get; set; }
-    public Guid RoleId { get; set; }
 }

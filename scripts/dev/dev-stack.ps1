@@ -11,7 +11,11 @@ $ErrorActionPreference = "Stop"
 function Invoke-Step([string]$Title, [scriptblock]$Script) {
     Write-Host ""
     Write-Host "==> $Title" -ForegroundColor Cyan
+    $global:LASTEXITCODE = 0
     & $Script
+    if ($LASTEXITCODE -ne 0) {
+        throw "Step '$Title' failed with exit code $LASTEXITCODE."
+    }
 }
 
 function Wait-Container([string]$Name, [int]$TimeoutSec = 120) {
@@ -48,6 +52,96 @@ function Ensure-Tool([string]$Tool, [string]$Hint) {
     }
 }
 
+function Get-ExcludedTcpPortRanges {
+    if (-not (Get-Command netsh -ErrorAction SilentlyContinue)) {
+        return @()
+    }
+
+    $ranges = @()
+    foreach ($line in (netsh interface ipv4 show excludedportrange protocol=tcp)) {
+        if ($line -match "^\s*(\d+)\s+(\d+)\s*$") {
+            $ranges += [pscustomobject]@{
+                Start = [int]$matches[1]
+                End   = [int]$matches[2]
+            }
+        }
+    }
+    return $ranges
+}
+
+function Test-PortBinding([int]$Port) {
+    $listener = [System.Net.Sockets.TcpListener]::new([System.Net.IPAddress]::Any, $Port)
+    try {
+        $listener.Start()
+        return $true
+    }
+    catch {
+        return $false
+    }
+    finally {
+        try {
+            $listener.Stop()
+        }
+        catch {
+            # ignore cleanup errors
+        }
+    }
+}
+
+function Get-PortConflictReason([int]$Port, [object[]]$ExcludedRanges) {
+    $listener = $null
+    if (Get-Command Get-NetTCPConnection -ErrorAction SilentlyContinue) {
+        $listener = Get-NetTCPConnection -State Listen -LocalPort $Port -ErrorAction SilentlyContinue | Select-Object -First 1
+    }
+    if ($listener) {
+        $ownerPid = $listener.OwningProcess
+        $process = Get-Process -Id $ownerPid -ErrorAction SilentlyContinue
+        if ($process) {
+            return "in use by process '$($process.ProcessName)' (PID $ownerPid)."
+        }
+
+        return "in use by PID $ownerPid."
+    }
+
+    $reserved = $ExcludedRanges | Where-Object { $Port -ge $_.Start -and $Port -le $_.End } | Select-Object -First 1
+    if ($reserved) {
+        return "reserved by Windows excluded port range $($reserved.Start)-$($reserved.End)."
+    }
+
+    return "cannot be bound on host (reserved or blocked by OS policy)."
+}
+
+function Assert-RequiredHostPorts {
+    $requiredHostPorts = @(
+        @{ Service = "web-api http"; Port = 5000 },
+        @{ Service = "web-api https"; Port = 5001 },
+        @{ Service = "sqlserver"; Port = 1433 },
+        @{ Service = "seq"; Port = 8081 },
+        @{ Service = "elasticsearch"; Port = 9200 },
+        @{ Service = "kibana"; Port = 5601 },
+        @{ Service = "logstash"; Port = 5044 },
+        @{ Service = "rabbitmq amqp"; Port = 5672 },
+        @{ Service = "rabbitmq ui"; Port = 15672 },
+        @{ Service = "minio api"; Port = 9000 },
+        @{ Service = "minio ui"; Port = 9001 }
+    )
+
+    $excludedRanges = Get-ExcludedTcpPortRanges
+    $conflicts = @()
+
+    foreach ($portRef in $requiredHostPorts) {
+        if (-not (Test-PortBinding -Port $portRef.Port)) {
+            $reason = Get-PortConflictReason -Port $portRef.Port -ExcludedRanges $excludedRanges
+            $conflicts += "Port $($portRef.Port) for $($portRef.Service) is $reason"
+        }
+    }
+
+    if ($conflicts.Count -gt 0) {
+        $details = $conflicts -join "`n - "
+        throw "Host port pre-check failed. Resolve these conflicts first:`n - $details"
+    }
+}
+
 $projectRoot = Resolve-Path (Join-Path $PSScriptRoot "..\..")
 Set-Location $projectRoot
 
@@ -68,6 +162,8 @@ $services = @(
 
 switch ($Action) {
     "up" {
+        Invoke-Step "Checking required host ports" { Assert-RequiredHostPorts }
+
         if (-not $SkipBuild) {
             Invoke-Step "Building solution" { dotnet build "CleanArchitecture.slnx" -c Debug }
         }
@@ -102,7 +198,11 @@ switch ($Action) {
         break
     }
     "restart" {
-        Invoke-Step "Restarting Docker stack" { docker compose down; docker compose up -d --build @services }
+        Invoke-Step "Restarting Docker stack" {
+            docker compose down
+            Assert-RequiredHostPorts
+            docker compose up -d --build @services
+        }
         Invoke-Step "Stack status" { docker compose ps }
         break
     }

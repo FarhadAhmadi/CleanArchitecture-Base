@@ -1,4 +1,5 @@
 using Application.Abstractions.Data;
+using Application.Abstractions.Authentication;
 using Domain.Auditing;
 using Domain.Authorization;
 using Domain.Files;
@@ -7,6 +8,8 @@ using Domain.Notifications;
 using Domain.Todos;
 using Domain.Users;
 using Infrastructure.Integration;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using SharedKernel;
 
@@ -14,17 +17,23 @@ namespace Infrastructure.Database;
 
 public sealed class ApplicationDbContext(
     DbContextOptions<ApplicationDbContext> options,
-    IntegrationEventSerializer integrationEventSerializer)
-    : DbContext(options), IApplicationDbContext
+    IntegrationEventSerializer integrationEventSerializer,
+    IUserContext? userContext = null)
+    : IdentityDbContext<
+        User,
+        Role,
+        Guid,
+        IdentityUserClaim<Guid>,
+        UserRole,
+        IdentityUserLogin<Guid>,
+        IdentityRoleClaim<Guid>,
+        IdentityUserToken<Guid>>(options), IApplicationDbContext
 {
-    public DbSet<User> Users { get; set; }
     public DbSet<LogEvent> LogEvents { get; set; }
     public DbSet<AlertRule> AlertRules { get; set; }
     public DbSet<AlertIncident> AlertIncidents { get; set; }
     public DbSet<RefreshToken> RefreshTokens { get; set; }
-    public DbSet<Role> Roles { get; set; }
     public DbSet<Permission> Permissions { get; set; }
-    public DbSet<UserRole> UserRoles { get; set; }
     public DbSet<RolePermission> RolePermissions { get; set; }
     public DbSet<UserPermission> UserPermissions { get; set; }
     public DbSet<TodoItem> TodoItems { get; set; }
@@ -42,15 +51,27 @@ public sealed class ApplicationDbContext(
     public DbSet<NotificationDeliveryAttempt> NotificationDeliveryAttempts { get; set; }
     internal DbSet<OutboxMessage> OutboxMessages => Set<OutboxMessage>();
     internal DbSet<InboxMessage> InboxMessages => Set<InboxMessage>();
+    DbSet<User> IApplicationDbContext.Users => base.Users;
+    DbSet<Role> IApplicationDbContext.Roles => base.Roles;
+    DbSet<UserRole> IApplicationDbContext.UserRoles => base.UserRoles;
 
-    protected override void OnModelCreating(ModelBuilder modelBuilder)
+    protected override void OnModelCreating(ModelBuilder builder)
     {
-        modelBuilder.ApplyConfigurationsFromAssembly(typeof(ApplicationDbContext).Assembly);
-        modelBuilder.HasDefaultSchema(Schemas.Default);
+        base.OnModelCreating(builder);
+
+        builder.Entity<IdentityUserClaim<Guid>>().ToTable("UserClaims", Schemas.Auth);
+        builder.Entity<IdentityUserLogin<Guid>>().ToTable("UserLogins", Schemas.Auth);
+        builder.Entity<IdentityUserToken<Guid>>().ToTable("UserTokens", Schemas.Auth);
+        builder.Entity<IdentityRoleClaim<Guid>>().ToTable("RoleClaims", Schemas.Auth);
+
+        builder.ApplyConfigurationsFromAssembly(typeof(ApplicationDbContext).Assembly);
+        builder.HasDefaultSchema(Schemas.Default);
     }
 
     public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
     {
+        ApplyAuditFields();
+
         List<IDomainEvent> domainEvents = CollectDomainEvents();
 
         int result = await base.SaveChangesAsync(cancellationToken);
@@ -64,6 +85,96 @@ public sealed class ApplicationDbContext(
         }
 
         return result;
+    }
+
+    private void ApplyAuditFields()
+    {
+        DateTime now = DateTime.UtcNow;
+        string actor = ResolveActor();
+
+        foreach (Microsoft.EntityFrameworkCore.ChangeTracking.EntityEntry<Entity> entry in ChangeTracker.Entries<Entity>())
+        {
+            if (entry.State == EntityState.Added)
+            {
+                if (entry.Entity.AuditCreatedAtUtc == default)
+                {
+                    entry.Entity.AuditCreatedAtUtc = now;
+                }
+
+                entry.Entity.AuditCreatedBy ??= actor;
+                continue;
+            }
+
+            if (entry.State != EntityState.Modified)
+            {
+                continue;
+            }
+
+            entry.Property(x => x.AuditCreatedAtUtc).IsModified = false;
+            entry.Property(x => x.AuditCreatedBy).IsModified = false;
+            entry.Entity.AuditUpdatedAtUtc = now;
+            entry.Entity.AuditUpdatedBy = actor;
+        }
+
+        foreach (Microsoft.EntityFrameworkCore.ChangeTracking.EntityEntry<User> entry in ChangeTracker.Entries<User>())
+        {
+            if (entry.State == EntityState.Added)
+            {
+                if (entry.Entity.AuditCreatedAtUtc == default)
+                {
+                    entry.Entity.AuditCreatedAtUtc = now;
+                }
+
+                entry.Entity.AuditCreatedBy ??= actor;
+                continue;
+            }
+
+            if (entry.State != EntityState.Modified)
+            {
+                continue;
+            }
+
+            entry.Property(x => x.AuditCreatedAtUtc).IsModified = false;
+            entry.Property(x => x.AuditCreatedBy).IsModified = false;
+            entry.Entity.AuditUpdatedAtUtc = now;
+            entry.Entity.AuditUpdatedBy = actor;
+        }
+
+        foreach (Microsoft.EntityFrameworkCore.ChangeTracking.EntityEntry<Role> entry in ChangeTracker.Entries<Role>())
+        {
+            if (entry.State == EntityState.Added)
+            {
+                if (entry.Entity.AuditCreatedAtUtc == default)
+                {
+                    entry.Entity.AuditCreatedAtUtc = now;
+                }
+
+                entry.Entity.AuditCreatedBy ??= actor;
+                continue;
+            }
+
+            if (entry.State != EntityState.Modified)
+            {
+                continue;
+            }
+
+            entry.Property(x => x.AuditCreatedAtUtc).IsModified = false;
+            entry.Property(x => x.AuditCreatedBy).IsModified = false;
+            entry.Entity.AuditUpdatedAtUtc = now;
+            entry.Entity.AuditUpdatedBy = actor;
+        }
+    }
+
+    private string ResolveActor()
+    {
+        try
+        {
+            return userContext?.UserId.ToString("N") ?? "system";
+        }
+        catch
+        {
+            return "system";
+        }
     }
 
     private List<IDomainEvent> CollectDomainEvents()

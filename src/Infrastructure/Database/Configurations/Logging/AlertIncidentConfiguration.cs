@@ -9,7 +9,7 @@ internal sealed class AlertIncidentConfiguration : IEntityTypeConfiguration<Aler
 {
     public void Configure(EntityTypeBuilder<AlertIncident> builder)
     {
-        builder.ToTable("AlertIncidents", Schemas.Default);
+        builder.ToTable("AlertIncidents", Schemas.Logging);
         builder.HasKey(x => x.Id);
 
         builder.Property(x => x.Id).ValueGeneratedNever();

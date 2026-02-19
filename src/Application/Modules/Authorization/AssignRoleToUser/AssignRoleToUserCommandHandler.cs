@@ -1,52 +1,49 @@
 using Application.Abstractions.Authorization;
-using Application.Abstractions.Data;
 using Application.Abstractions.Messaging;
 using Domain.Authorization;
 using Domain.Users;
-using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Identity;
 using SharedKernel;
 
 namespace Application.Authorization.AssignRoleToUser;
 
 internal sealed class AssignRoleToUserCommandHandler(
-    IApplicationDbContext context,
+    UserManager<User> userManager,
+    RoleManager<Role> roleManager,
     IPermissionCacheVersionService permissionCacheVersionService)
     : ICommandHandler<AssignRoleToUserCommand>
 {
     public async Task<Result> Handle(AssignRoleToUserCommand command, CancellationToken cancellationToken)
     {
-        bool userExists = await context.Users
-            .AnyAsync(x => x.Id == command.UserId, cancellationToken);
+        User? user = await userManager.FindByIdAsync(command.UserId.ToString());
 
-        if (!userExists)
+        if (user is null)
         {
             return Result.Failure(UserErrors.NotFound(command.UserId));
         }
 
-        Role? role = await context.Roles
-            .SingleOrDefaultAsync(x => x.Name == command.RoleName, cancellationToken);
+        Role? role = await roleManager.FindByNameAsync(command.RoleName);
 
         if (role is null)
         {
             return Result.Failure(Error.NotFound("Roles.NotFound", $"Role '{command.RoleName}' was not found."));
         }
 
-        bool alreadyAssigned = await context.UserRoles.AnyAsync(
-            x => x.UserId == command.UserId && x.RoleId == role.Id,
-            cancellationToken);
+        string roleName = role.Name ?? command.RoleName;
 
-        if (alreadyAssigned)
+        if (await userManager.IsInRoleAsync(user, roleName))
         {
             return Result.Success();
         }
 
-        context.UserRoles.Add(new UserRole
-        {
-            UserId = command.UserId,
-            RoleId = role.Id
-        });
+        IdentityResult addRoleResult = await userManager.AddToRoleAsync(user, roleName);
 
-        await context.SaveChangesAsync(cancellationToken);
+        if (!addRoleResult.Succeeded)
+        {
+            string description = string.Join("; ", addRoleResult.Errors.Select(e => e.Description));
+            return Result.Failure(Error.Problem("Roles.AssignFailed", description));
+        }
+
         await permissionCacheVersionService.BumpVersionAsync(cancellationToken);
 
         return Result.Success();

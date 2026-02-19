@@ -9,7 +9,7 @@ internal sealed class NotificationTemplateConfiguration : IEntityTypeConfigurati
 {
     public void Configure(EntityTypeBuilder<NotificationTemplate> builder)
     {
-        builder.ToTable("NotificationTemplates", Schemas.Default);
+        builder.ToTable("NotificationTemplates", Schemas.Notifications);
         builder.HasKey(x => x.Id);
 
         builder.Property(x => x.Id).ValueGeneratedNever();

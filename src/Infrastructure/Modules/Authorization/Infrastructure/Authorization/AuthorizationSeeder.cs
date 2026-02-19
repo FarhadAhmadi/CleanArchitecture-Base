@@ -1,13 +1,19 @@
 using Domain.Authorization;
+using Domain.Users;
 using Infrastructure.Database;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
 namespace Infrastructure.Authorization;
 
 public sealed class AuthorizationSeeder(
     ApplicationDbContext dbContext,
-    AuthorizationBootstrapOptions options)
+    AuthorizationBootstrapOptions options,
+    UserManager<User> userManager)
 {
+    private const string BootstrapAdminEmail = "farhad@gmail.com";
+    private const string BootstrapAdminPassword = "12345678";
+
     public async Task SeedAsync(CancellationToken cancellationToken)
     {
         if (!options.SeedDefaults)
@@ -20,6 +26,7 @@ public sealed class AuthorizationSeeder(
         await SeedRolePermissionsAsync(cancellationToken);
         await SeedUsersAsync(cancellationToken);
         await SeedAdminUserRolesAsync(cancellationToken);
+        await SeedBootstrapAdminAsync(cancellationToken);
     }
 
     private async Task SeedPermissionsAsync(CancellationToken cancellationToken)
@@ -73,19 +80,52 @@ public sealed class AuthorizationSeeder(
     {
         string[] roleNames = [options.UserRoleName, options.AdminRoleName, "LogWriter", "LogReader", "Auditor", "SecurityAnalyst"];
 
-        List<string> existing = await dbContext.Roles
-            .Select(r => r.Name)
-            .ToListAsync(cancellationToken);
+        List<Role> existingRoles = await dbContext.Roles.ToListAsync(cancellationToken);
+        var existing = existingRoles
+            .Where(r => r.Name != null)
+            .Select(r => r.Name!)
+            .ToList();
 
         IEnumerable<Role> roles = roleNames
             .Where(name => !existing.Contains(name, StringComparer.OrdinalIgnoreCase))
             .Select(name => new Role
             {
                 Id = Guid.NewGuid(),
-                Name = name
+                Name = name,
+                NormalizedName = name.ToUpperInvariant(),
+                ConcurrencyStamp = Guid.NewGuid().ToString("N")
             });
 
         await dbContext.Roles.AddRangeAsync(roles, cancellationToken);
+
+        // Repair legacy roles created before Identity migration.
+        foreach (Role role in existingRoles)
+        {
+            if (string.IsNullOrWhiteSpace(role.Name))
+            {
+                continue;
+            }
+
+            bool changed = false;
+
+            if (string.IsNullOrWhiteSpace(role.NormalizedName))
+            {
+                role.NormalizedName = role.Name.ToUpperInvariant();
+                changed = true;
+            }
+
+            if (string.IsNullOrWhiteSpace(role.ConcurrencyStamp))
+            {
+                role.ConcurrencyStamp = Guid.NewGuid().ToString("N");
+                changed = true;
+            }
+
+            if (changed)
+            {
+                dbContext.Roles.Update(role);
+            }
+        }
+
         await dbContext.SaveChangesAsync(cancellationToken);
     }
 
@@ -137,7 +177,8 @@ public sealed class AuthorizationSeeder(
         };
 
         Dictionary<string, Guid> roleIdByName = await dbContext.Roles
-            .ToDictionaryAsync(x => x.Name, x => x.Id, StringComparer.OrdinalIgnoreCase, cancellationToken);
+            .Where(x => x.Name != null)
+            .ToDictionaryAsync(x => x.Name!, x => x.Id, StringComparer.OrdinalIgnoreCase, cancellationToken);
 
         if (roleIdByName.TryGetValue("LogWriter", out Guid logWriterRoleId))
         {
@@ -240,7 +281,7 @@ public sealed class AuthorizationSeeder(
         }
 
         List<Guid> adminUserIds = await dbContext.Users
-            .Where(u => options.AdminEmails.Contains(u.Email))
+            .Where(u => u.Email != null && options.AdminEmails.Contains(u.Email))
             .Select(u => u.Id)
             .ToListAsync(cancellationToken);
 
@@ -259,5 +300,57 @@ public sealed class AuthorizationSeeder(
 
         await dbContext.UserRoles.AddRangeAsync(toInsert, cancellationToken);
         await dbContext.SaveChangesAsync(cancellationToken);
+    }
+
+    private async Task SeedBootstrapAdminAsync(CancellationToken cancellationToken)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+
+        Role? adminRole = await dbContext.Roles.SingleOrDefaultAsync(
+            r => r.Name == options.AdminRoleName,
+            cancellationToken);
+
+        if (adminRole is null || string.IsNullOrWhiteSpace(adminRole.Name))
+        {
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(adminRole.NormalizedName))
+        {
+            adminRole.NormalizedName = adminRole.Name.ToUpperInvariant();
+            adminRole.ConcurrencyStamp ??= Guid.NewGuid().ToString("N");
+            dbContext.Roles.Update(adminRole);
+            await dbContext.SaveChangesAsync(cancellationToken);
+        }
+
+        User? user = await userManager.FindByEmailAsync(BootstrapAdminEmail);
+
+        if (user is null)
+        {
+            user = new User
+            {
+                Id = Guid.NewGuid(),
+                Email = BootstrapAdminEmail,
+                UserName = BootstrapAdminEmail,
+                NormalizedEmail = BootstrapAdminEmail.ToUpperInvariant(),
+                NormalizedUserName = BootstrapAdminEmail.ToUpperInvariant(),
+                EmailConfirmed = true,
+                FirstName = "Farhad",
+                LastName = "Admin",
+                LockoutEnabled = true,
+                SecurityStamp = Guid.NewGuid().ToString("N")
+            };
+
+            IdentityResult createResult = await userManager.CreateAsync(user, BootstrapAdminPassword);
+            if (!createResult.Succeeded)
+            {
+                return;
+            }
+        }
+
+        if (!await userManager.IsInRoleAsync(user, adminRole.Name))
+        {
+            await userManager.AddToRoleAsync(user, adminRole.Name);
+        }
     }
 }

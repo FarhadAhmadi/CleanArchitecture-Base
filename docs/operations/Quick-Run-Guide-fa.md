@@ -28,6 +28,13 @@ run-dev.cmd
 .\scripts\dev\dev-stack.ps1 up -SkipBuild -SkipTests
 ```
 
+## نکته Redis
+در Compose فعلی، Redis فقط داخل شبکه Docker در دسترس است (`redis:6379`) و روی host publish نمی‌شود تا خطاهای bind پورت در ویندوز کمتر شود.
+
+## خطای پورت (ports are not available)
+اگر این خطا را دیدی، یعنی یک پورت host آزاد نیست یا توسط Windows رزرو شده است.  
+اسکریپت `dev-stack.ps1` قبل از `docker compose up` پورت‌های موردنیاز را pre-check می‌کند و دلیل دقیق‌تری نشان می‌دهد.
+
 ## لینک‌های تکمیلی
 1. کانفیگ‌های لازم: `docs/operations/Run-Required-Config-fa.md`
 2. راهنمای کامل setup: `docs/operations/System-Setup-Guide-fa.md`

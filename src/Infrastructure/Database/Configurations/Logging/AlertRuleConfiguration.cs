@@ -9,7 +9,7 @@ internal sealed class AlertRuleConfiguration : IEntityTypeConfiguration<AlertRul
 {
     public void Configure(EntityTypeBuilder<AlertRule> builder)
     {
-        builder.ToTable("AlertRules", Schemas.Default);
+        builder.ToTable("AlertRules", Schemas.Logging);
         builder.HasKey(x => x.Id);
         builder.Property(x => x.Id).ValueGeneratedNever();
 

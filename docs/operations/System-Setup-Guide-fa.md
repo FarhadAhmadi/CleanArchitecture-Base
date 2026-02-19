@@ -28,6 +28,7 @@
 ```powershell
 docker compose up -d sqlserver rabbitmq redis minio seq elasticsearch kibana logstash
 ```
+نکته: Redis در این setup روی host publish نمی‌شود و فقط با آدرس `redis:6379` داخل شبکه Docker مصرف می‌شود.
 
 ### 3.2 build
 ```powershell
@@ -77,3 +78,4 @@ dotnet run --project src/Web.Api/Web.Api.csproj
 2. خطای JWT: `Jwt:*` را بررسی کن.
 3. اعلان ارسال نمی‌شود: تنظیمات provider در `Notifications:*` را کامل کن.
 4. مشکل MinIO: `FileStorage:*` و دسترسی bucket را چک کن.
+5. خطای `ports are not available`: معمولاً یکی از پورت‌های host در حال استفاده یا داخل excluded range ویندوز است؛ خروجی pre-check اسکریپت `scripts/dev/dev-stack.ps1` را بررسی کن.

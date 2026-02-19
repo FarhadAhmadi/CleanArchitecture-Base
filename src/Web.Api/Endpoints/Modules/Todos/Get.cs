@@ -15,17 +15,17 @@ internal sealed class Get : IEndpoint
     {
         app.MapGet("todos", async (
             IUserContext userContext,
-            int page,
-            int pageSize,
-            string? search,
-            bool? isCompleted,
-            string? sortBy,
-            string? sortOrder,
             IQueryHandler<GetTodosQuery, PagedResponse<TodoResponse>> handler,
-            CancellationToken cancellationToken) =>
+            CancellationToken cancellationToken,
+            int page = 1,
+            int pageSize = 15,
+            string? search = null,
+            bool? isCompleted = null,
+            string? sortBy = null,
+            string? sortOrder = null) =>
         {
             page = page <= 0 ? 1 : page;
-            pageSize = pageSize is <= 0 or > 100 ? 20 : pageSize;
+            pageSize = pageSize is <= 0 or > 100 ? 15 : pageSize;
 
             var query = userContext.UserId.ToGetTodosQuery(
                 page,

@@ -9,7 +9,7 @@ internal sealed class NotificationPermissionEntryConfiguration : IEntityTypeConf
 {
     public void Configure(EntityTypeBuilder<NotificationPermissionEntry> builder)
     {
-        builder.ToTable("NotificationPermissionEntries", Schemas.Default);
+        builder.ToTable("NotificationPermissionEntries", Schemas.Notifications);
         builder.HasKey(x => x.Id);
 
         builder.Property(x => x.Id).ValueGeneratedNever();

@@ -8,7 +8,7 @@ internal sealed class InboxMessageConfiguration : IEntityTypeConfiguration<Inbox
 {
     public void Configure(EntityTypeBuilder<InboxMessage> builder)
     {
-        builder.ToTable("InboxMessages", Schemas.Default);
+        builder.ToTable("InboxMessages", Schemas.Integration);
         builder.HasKey(x => x.Id);
 
         builder.Property(x => x.MessageId).HasMaxLength(150).IsRequired();

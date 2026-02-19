@@ -9,7 +9,7 @@ internal sealed class NotificationDeliveryAttemptConfiguration : IEntityTypeConf
 {
     public void Configure(EntityTypeBuilder<NotificationDeliveryAttempt> builder)
     {
-        builder.ToTable("NotificationDeliveryAttempts", Schemas.Default);
+        builder.ToTable("NotificationDeliveryAttempts", Schemas.Notifications);
         builder.HasKey(x => x.Id);
 
         builder.Property(x => x.Id).ValueGeneratedNever();

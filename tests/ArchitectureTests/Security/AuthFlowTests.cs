@@ -94,6 +94,34 @@ public sealed class AuthFlowTests : IClassFixture<ApiWebApplicationFactory>
         usersGetById.StatusCode.ShouldBe(HttpStatusCode.Forbidden);
     }
 
+    [Fact]
+    public async Task RegisterAndLogin_NewUser_ShouldReceiveDefaultUserRolePermissions()
+    {
+        HttpClient client = _factory.CreateClient();
+
+        string email = $"default-role-{Guid.NewGuid():N}@test.local";
+        const string password = "P@ssw0rd-123";
+
+        HttpResponseMessage register = await client.PostAsJsonAsync("/api/v1/users/register", new
+        {
+            email,
+            firstName = "Default",
+            lastName = "Role",
+            password
+        });
+
+        register.StatusCode.ShouldBe(HttpStatusCode.OK);
+
+        HttpResponseMessage login = await client.PostAsJsonAsync("/api/v1/users/login", new { email, password });
+        login.StatusCode.ShouldBe(HttpStatusCode.OK);
+
+        (string accessToken, string _) tokens = await ReadTokensAsync(login);
+        await ApiWebApplicationFactory.SetBearerTokenAsync(client, tokens.accessToken);
+
+        HttpResponseMessage todos = await client.GetAsync("/api/v1/todos?page=1&pageSize=10");
+        todos.StatusCode.ShouldBe(HttpStatusCode.OK);
+    }
+
     private async Task AttachDefaultUserRoleAsync(Guid userId)
     {
         using IServiceScope scope = _factory.Services.CreateScope();

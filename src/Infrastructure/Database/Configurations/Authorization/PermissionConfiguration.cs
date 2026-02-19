@@ -9,7 +9,7 @@ internal sealed class PermissionConfiguration : IEntityTypeConfiguration<Permiss
 {
     public void Configure(EntityTypeBuilder<Permission> builder)
     {
-        builder.ToTable("Permissions", Schemas.Default);
+        builder.ToTable("Permissions", Schemas.Auth);
         builder.HasKey(x => x.Id);
         builder.Property(x => x.Id).ValueGeneratedNever();
         builder.Property(x => x.Code).HasMaxLength(200).IsRequired();

@@ -19,7 +19,8 @@ services:
         condition: service_started
 
   sqlserver:
-    image: mcr.microsoft.com/mssql/server:2025-latest
+    # 2022 image is currently more stable in local Docker Desktop setups.
+    image: mcr.microsoft.com/mssql/server:2022-latest
     container_name: sqlserver
     environment:
       - ACCEPT_EULA=Y
@@ -27,7 +28,7 @@ services:
     ports:
       - "1433:1433"
     volumes:
-      - ./.containers/sql:/var/opt/mssql
+      - sqlserver_data:/var/opt/mssql
     healthcheck:
       test:
         [
@@ -89,8 +90,8 @@ services:
   redis:
     image: redis:7.4-alpine
     container_name: redis
-    ports:
-      - "6379:6379"
+    # Redis is used by containers over the Docker network.
+    # Host port publishing is intentionally disabled to avoid local port collisions.
 
   minio:
     image: minio/minio:latest
@@ -102,3 +103,6 @@ services:
     ports:
       - "9000:9000"
       - "9001:9001"
+
+volumes:
+  sqlserver_data:

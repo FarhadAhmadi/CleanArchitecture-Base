@@ -14,7 +14,7 @@ internal static class ServiceCollectionExtensions
             var securityScheme = new OpenApiSecurityScheme
             {
                 Name = "Authorization",
-                Description = "JWT Authorization header using the Bearer scheme. Example: Bearer {token}",
+                Description = "JWT access token. Enter only the accessToken value (without the 'Bearer ' prefix).",
                 In = ParameterLocation.Header,
                 Type = SecuritySchemeType.Http,
                 Scheme = "bearer",

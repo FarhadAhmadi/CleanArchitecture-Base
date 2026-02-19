@@ -9,7 +9,7 @@ internal sealed class NotificationScheduleConfiguration : IEntityTypeConfigurati
 {
     public void Configure(EntityTypeBuilder<NotificationSchedule> builder)
     {
-        builder.ToTable("NotificationSchedules", Schemas.Default);
+        builder.ToTable("NotificationSchedules", Schemas.Notifications);
         builder.HasKey(x => x.Id);
 
         builder.Property(x => x.Id).ValueGeneratedNever();

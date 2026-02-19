@@ -9,7 +9,7 @@ internal sealed class FileAccessAuditConfiguration : IEntityTypeConfiguration<Fi
 {
     public void Configure(EntityTypeBuilder<FileAccessAudit> builder)
     {
-        builder.ToTable("FileAccessAudits", Schemas.Default);
+        builder.ToTable("FileAccessAudits", Schemas.Files);
         builder.HasKey(x => x.Id);
 
         builder.Property(x => x.Id).ValueGeneratedNever();

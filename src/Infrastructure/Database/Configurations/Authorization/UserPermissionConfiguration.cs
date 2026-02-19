@@ -10,7 +10,7 @@ internal sealed class UserPermissionConfiguration : IEntityTypeConfiguration<Use
 {
     public void Configure(EntityTypeBuilder<UserPermission> builder)
     {
-        builder.ToTable("UserPermissions", Schemas.Default);
+        builder.ToTable("UserPermissions", Schemas.Auth);
         builder.HasKey(x => new { x.UserId, x.PermissionId });
 
         builder.HasOne<User>()

@@ -22,7 +22,7 @@ internal sealed class GetAccessControlQueryHandler(IApplicationReadDbContext con
 
         List<(Guid RoleId, string RoleName)> rolesRaw = await context.Roles
             .OrderBy(x => x.Name)
-            .Select(x => new ValueTuple<Guid, string>(x.Id, x.Name))
+            .Select(x => new ValueTuple<Guid, string>(x.Id, x.Name ?? string.Empty))
             .ToListAsync(cancellationToken);
 
         List<(Guid RoleId, string PermissionCode)> rolePermissionsRaw = await (

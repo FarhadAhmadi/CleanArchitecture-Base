@@ -10,7 +10,7 @@ internal sealed class TodoItemConfiguration : IEntityTypeConfiguration<TodoItem>
 {
     public void Configure(EntityTypeBuilder<TodoItem> builder)
     {
-        builder.ToTable("TodoItems", Schemas.Default);
+        builder.ToTable("TodoItems", Schemas.Todos);
         builder.HasKey(t => t.Id);
 
         builder.Property(t => t.Id).ValueGeneratedNever();

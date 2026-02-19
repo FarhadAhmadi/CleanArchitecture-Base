@@ -9,7 +9,7 @@ internal sealed class FileTagConfiguration : IEntityTypeConfiguration<FileTag>
 {
     public void Configure(EntityTypeBuilder<FileTag> builder)
     {
-        builder.ToTable("FileTags", Schemas.Default);
+        builder.ToTable("FileTags", Schemas.Files);
         builder.HasKey(x => new { x.FileId, x.Tag });
 
         builder.Property(x => x.Tag).HasMaxLength(80).IsRequired();

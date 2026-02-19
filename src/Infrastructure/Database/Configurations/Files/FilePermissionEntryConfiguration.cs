@@ -9,7 +9,7 @@ internal sealed class FilePermissionEntryConfiguration : IEntityTypeConfiguratio
 {
     public void Configure(EntityTypeBuilder<FilePermissionEntry> builder)
     {
-        builder.ToTable("FilePermissionEntries", Schemas.Default);
+        builder.ToTable("FilePermissionEntries", Schemas.Files);
         builder.HasKey(x => x.Id);
 
         builder.Property(x => x.Id).ValueGeneratedNever();

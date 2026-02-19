@@ -8,7 +8,7 @@ internal sealed class OutboxMessageConfiguration : IEntityTypeConfiguration<Outb
 {
     public void Configure(EntityTypeBuilder<OutboxMessage> builder)
     {
-        builder.ToTable("OutboxMessages", Schemas.Default);
+        builder.ToTable("OutboxMessages", Schemas.Integration);
         builder.HasKey(x => x.Id);
 
         builder.Property(x => x.Type).HasMaxLength(500).IsRequired();
