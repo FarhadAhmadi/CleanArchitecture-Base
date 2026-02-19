@@ -12,7 +12,12 @@ internal sealed class GlobalExceptionHandler(ILogger<GlobalExceptionHandler> log
         Exception exception,
         CancellationToken cancellationToken)
     {
-        logger.LogError(exception, "Unhandled exception occurred");
+        logger.LogError(
+            exception,
+            "Unhandled exception occurred. Method={RequestMethod} Path={RequestPath} TraceId={TraceId}",
+            httpContext.Request.Method,
+            httpContext.Request.Path.Value ?? string.Empty,
+            Activity.Current?.TraceId.ToString() ?? httpContext.TraceIdentifier);
 
         var problemDetails = new ProblemDetails
         {

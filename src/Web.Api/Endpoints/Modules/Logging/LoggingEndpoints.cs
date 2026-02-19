@@ -27,6 +27,7 @@ public static class LoggingEndpoints
         RouteGroupBuilder group = app
             .MapGroup("/logging/v1")
             .WithTags("Logging")
+            .AddEndpointFilterFactory(EndpointExecutionLoggingFilter.Create)
             .AddEndpointFilterFactory(RequestSanitizationEndpointFilter.Create);
 
         group.MapPost("/events", IngestSingle).HasPermission(LoggingPermissions.EventsWrite);

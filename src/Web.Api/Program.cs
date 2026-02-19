@@ -1,10 +1,13 @@
 using System.Reflection;
 using System.Security.Claims;
+using System.Globalization;
 using Application;
 using Azure.Identity;
 using Infrastructure;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Serilog;
+using Serilog.Events;
+using Serilog.Sinks.Elasticsearch;
 using Web.Api;
 using Web.Api.Endpoints.Logging;
 using Web.Api.Extensions;
@@ -40,7 +43,38 @@ builder.WebHost.ConfigureKestrel(options =>
     options.Limits.RequestHeadersTimeout = TimeSpan.FromSeconds(Math.Max(1, apiSecurityOptions.RequestHeadersTimeoutSeconds));
 });
 
-builder.Host.UseSerilog((context, loggerConfig) => loggerConfig.ReadFrom.Configuration(context.Configuration));
+builder.Host.UseSerilog((context, loggerConfig) =>
+{
+    loggerConfig.ReadFrom.Configuration(context.Configuration);
+
+    LogSinkOptions sinkOptions = context.Configuration
+        .GetSection(LogSinkOptions.SectionName)
+        .Get<LogSinkOptions>() ?? new LogSinkOptions();
+
+    if (sinkOptions.EnableConsole)
+    {
+        loggerConfig.WriteTo.Console(formatProvider: CultureInfo.InvariantCulture);
+    }
+
+    if (string.Equals(sinkOptions.Provider, "elasticsearch", StringComparison.OrdinalIgnoreCase))
+    {
+        if (!string.IsNullOrWhiteSpace(sinkOptions.ElasticsearchNodeUrl))
+        {
+            loggerConfig.WriteTo.Elasticsearch(new ElasticsearchSinkOptions(new Uri(sinkOptions.ElasticsearchNodeUrl))
+            {
+                IndexFormat = sinkOptions.ElasticsearchIndexFormat,
+                AutoRegisterTemplate = true
+            });
+        }
+    }
+    else
+    {
+        if (!string.IsNullOrWhiteSpace(sinkOptions.SeqServerUrl))
+        {
+            loggerConfig.WriteTo.Seq(sinkOptions.SeqServerUrl, formatProvider: CultureInfo.InvariantCulture);
+        }
+    }
+});
 
 builder.Services.AddSwaggerGenWithAuth();
 
@@ -55,6 +89,7 @@ WebApplication app = builder.Build();
 
 RouteGroupBuilder v1 = app
     .MapGroup("api/v1")
+    .AddEndpointFilterFactory(EndpointExecutionLoggingFilter.Create)
     .AddEndpointFilterFactory(RequestSanitizationEndpointFilter.Create);
 
 app.MapEndpoints(v1);
@@ -82,12 +117,32 @@ app.UseHttpsRedirection();
 app.UseRequestContextLogging();
 app.UseSerilogRequestLogging(options =>
 {
+    options.MessageTemplate = "HTTP {RequestMethod} {RequestPath} responded {StatusCode} in {Elapsed:0.0000} ms";
+    options.GetLevel = (httpContext, _, exception) =>
+    {
+        if (exception is not null || httpContext.Response.StatusCode >= StatusCodes.Status500InternalServerError)
+        {
+            return LogEventLevel.Error;
+        }
+
+        if (httpContext.Response.StatusCode >= StatusCodes.Status400BadRequest)
+        {
+            return LogEventLevel.Warning;
+        }
+
+        return LogEventLevel.Information;
+    };
     options.EnrichDiagnosticContext = (diagnosticContext, httpContext) =>
     {
         diagnosticContext.Set("UserId", httpContext.User.FindFirstValue(ClaimTypes.NameIdentifier) ?? "anonymous");
         diagnosticContext.Set("ClientIp", httpContext.Connection.RemoteIpAddress?.ToString() ?? string.Empty);
         diagnosticContext.Set("RequestPath", httpContext.Request.Path.Value ?? string.Empty);
         diagnosticContext.Set("RequestMethod", httpContext.Request.Method);
+        diagnosticContext.Set(
+            "RequestQueryString",
+            httpContext.Request.QueryString.HasValue ? httpContext.Request.QueryString.Value : string.Empty);
+        diagnosticContext.Set("EndpointName", httpContext.GetEndpoint()?.DisplayName ?? "unknown");
+        diagnosticContext.Set("CorrelationId", httpContext.TraceIdentifier);
         diagnosticContext.Set("StatusCode", httpContext.Response.StatusCode);
     };
 });
