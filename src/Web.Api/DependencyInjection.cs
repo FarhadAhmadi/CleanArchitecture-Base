@@ -101,9 +101,25 @@ public static class DependencyInjection
         {
             options.AddPolicy(DefaultCorsPolicy, policy =>
             {
+                bool isDevelopmentOrTesting =
+                    string.Equals(configuration["ASPNETCORE_ENVIRONMENT"], "Development", StringComparison.OrdinalIgnoreCase) ||
+                    string.Equals(configuration["ASPNETCORE_ENVIRONMENT"], "Testing", StringComparison.OrdinalIgnoreCase);
+
                 if (apiSecurityOptions.AllowedOrigins.Length == 0)
                 {
-                    policy.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod();
+                    if (isDevelopmentOrTesting)
+                    {
+                        policy.WithOrigins("http://localhost:5000", "https://localhost:5001")
+                            .AllowAnyHeader()
+                            .AllowAnyMethod();
+                    }
+                    else
+                    {
+                        // Fail-closed for cross-origin requests when origins are not explicitly configured.
+                        policy.SetIsOriginAllowed(_ => false)
+                            .AllowAnyHeader()
+                            .AllowAnyMethod();
+                    }
                 }
                 else
                 {

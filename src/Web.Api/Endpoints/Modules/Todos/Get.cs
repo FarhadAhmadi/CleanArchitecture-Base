@@ -1,6 +1,7 @@
 using Application.Abstractions.Authentication;
 using Application.Abstractions.Messaging;
 using Application.Todos.Get;
+using Microsoft.AspNetCore.Mvc;
 using SharedKernel;
 using Web.Api.Endpoints.Mappings;
 using Web.Api.Endpoints.Users;
@@ -17,23 +18,14 @@ internal sealed class Get : IEndpoint
             IUserContext userContext,
             IQueryHandler<GetTodosQuery, PagedResponse<TodoResponse>> handler,
             CancellationToken cancellationToken,
-            int page = 1,
-            int pageSize = 15,
-            string? search = null,
-            bool? isCompleted = null,
-            string? sortBy = null,
-            string? sortOrder = null) =>
+            [AsParameters] GetTodosRequest request) =>
         {
-            page = page <= 0 ? 1 : page;
-            pageSize = pageSize is <= 0 or > 100 ? 15 : pageSize;
+            (int page, int pageSize) = request.NormalizePaging();
 
             var query = userContext.UserId.ToGetTodosQuery(
                 page,
                 pageSize,
-                search,
-                isCompleted,
-                sortBy,
-                sortOrder);
+                request);
 
             Result<PagedResponse<TodoResponse>> result = await handler.Handle(query, cancellationToken);
 

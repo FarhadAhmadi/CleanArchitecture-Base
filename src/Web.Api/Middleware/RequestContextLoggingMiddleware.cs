@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using System.Security.Claims;
+using System.Linq;
 using Microsoft.Extensions.Primitives;
 using Serilog.Context;
 
@@ -7,7 +8,9 @@ namespace Web.Api.Middleware;
 
 public sealed class RequestContextLoggingMiddleware(RequestDelegate next)
 {
-    private const string CorrelationIdHeaderName = "Correlation-Id";
+    private const string CorrelationIdHeaderName = "X-Correlation-Id";
+    private const string LegacyCorrelationIdHeaderName = "Correlation-Id";
+    private const int MaxCorrelationIdLength = 64;
 
     public async Task Invoke(HttpContext context)
     {
@@ -30,7 +33,24 @@ public sealed class RequestContextLoggingMiddleware(RequestDelegate next)
 
     private static string GetCorrelationId(HttpContext context)
     {
-        context.Request.Headers.TryGetValue(CorrelationIdHeaderName, out StringValues correlationId);
-        return correlationId.FirstOrDefault() ?? context.TraceIdentifier;
+        string? correlationId = null;
+        if (context.Request.Headers.TryGetValue(CorrelationIdHeaderName, out StringValues primaryHeader))
+        {
+            correlationId = primaryHeader.FirstOrDefault();
+        }
+        else if (context.Request.Headers.TryGetValue(LegacyCorrelationIdHeaderName, out StringValues legacyHeader))
+        {
+            correlationId = legacyHeader.FirstOrDefault();
+        }
+
+        string candidate = string.IsNullOrWhiteSpace(correlationId) ? context.TraceIdentifier : correlationId;
+        string normalized = candidate.Trim();
+        if (normalized.Length > MaxCorrelationIdLength)
+        {
+            normalized = normalized[..MaxCorrelationIdLength];
+        }
+
+        normalized = new string(normalized.Where(ch => char.IsLetterOrDigit(ch) || ch is '-' or '_' or '.').ToArray());
+        return string.IsNullOrWhiteSpace(normalized) ? context.TraceIdentifier : normalized;
     }
 }

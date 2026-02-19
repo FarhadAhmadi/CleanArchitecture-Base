@@ -21,4 +21,14 @@ internal sealed class ApiSecurityOptions
     public bool EnableSecurityHeaders { get; init; } = true;
 
     public bool UseHsts { get; init; } = true;
+
+    public bool HideServerHeader { get; init; } = true;
+
+    public int MaxRequestHeadersTotalSizeKb { get; init; } = 32;
+
+    public int MaxRequestHeaderCount { get; init; } = 100;
+
+    public int RequestHeadersTimeoutSeconds { get; init; } = 15;
+
+    public bool EnforceJsonAcceptHeader { get; init; }
 }

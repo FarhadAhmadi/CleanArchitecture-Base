@@ -1,6 +1,7 @@
 using Application.Abstractions.Data;
 using Domain.Auditing;
 using Infrastructure.Auditing;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Web.Api.Endpoints.Users;
 using Web.Api.Extensions;
@@ -23,39 +24,31 @@ internal sealed class GetAuditTrail : IEndpoint
 
     private static async Task<IResult> GetEntries(
         IApplicationReadDbContext readContext,
-        string? actorId,
-        string? action,
-        DateTime? from,
-        DateTime? to,
-        int page,
-        int pageSize,
+        [AsParameters] GetAuditEntriesRequest request,
         CancellationToken cancellationToken)
     {
-        actorId = InputSanitizer.SanitizeIdentifier(actorId, 100);
-        action = InputSanitizer.SanitizeIdentifier(action, 150);
-
-        (int normalizedPage, int normalizedPageSize) = QueryableExtensions.NormalizePaging(page, pageSize, 50, 200);
+        (int normalizedPage, int normalizedPageSize) = request.NormalizePaging();
 
         IQueryable<AuditEntry> query = readContext.AuditEntries;
 
-        if (!string.IsNullOrWhiteSpace(actorId))
+        if (!string.IsNullOrWhiteSpace(request.ActorId))
         {
-            query = query.Where(x => x.ActorId == actorId);
+            query = query.Where(x => x.ActorId == request.ActorId);
         }
 
-        if (!string.IsNullOrWhiteSpace(action))
+        if (!string.IsNullOrWhiteSpace(request.Action))
         {
-            query = query.Where(x => x.Action == action);
+            query = query.Where(x => x.Action == request.Action);
         }
 
-        if (from.HasValue)
+        if (request.From.HasValue)
         {
-            query = query.Where(x => x.TimestampUtc >= from.Value);
+            query = query.Where(x => x.TimestampUtc >= request.From.Value);
         }
 
-        if (to.HasValue)
+        if (request.To.HasValue)
         {
-            query = query.Where(x => x.TimestampUtc <= to.Value);
+            query = query.Where(x => x.TimestampUtc <= request.To.Value);
         }
 
         query = query.OrderByDescending(x => x.TimestampUtc);

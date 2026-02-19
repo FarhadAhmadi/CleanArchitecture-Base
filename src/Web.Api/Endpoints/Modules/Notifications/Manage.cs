@@ -171,12 +171,7 @@ internal sealed class Manage : IEndpoint
     }
 
     private static async Task<IResult> ListNotificationsAsync(
-        NotificationChannel? channel,
-        NotificationStatus? status,
-        DateTime? from,
-        DateTime? to,
-        int page,
-        int pageSize,
+        [AsParameters] ListNotificationsRequest request,
         IUserContext userContext,
         IApplicationReadDbContext readContext,
         CancellationToken cancellationToken)
@@ -194,27 +189,27 @@ internal sealed class Manage : IEndpoint
             query = query.Where(x => x.CreatedByUserId == uid || aclRead.Contains(x.Id));
         }
 
-        if (channel.HasValue)
+        if (request.Channel.HasValue)
         {
-            query = query.Where(x => x.Channel == channel.Value);
+            query = query.Where(x => x.Channel == request.Channel.Value);
         }
 
-        if (status.HasValue)
+        if (request.Status.HasValue)
         {
-            query = query.Where(x => x.Status == status.Value);
+            query = query.Where(x => x.Status == request.Status.Value);
         }
 
-        if (from.HasValue)
+        if (request.From.HasValue)
         {
-            query = query.Where(x => x.CreatedAtUtc >= from.Value);
+            query = query.Where(x => x.CreatedAtUtc >= request.From.Value);
         }
 
-        if (to.HasValue)
+        if (request.To.HasValue)
         {
-            query = query.Where(x => x.CreatedAtUtc <= to.Value);
+            query = query.Where(x => x.CreatedAtUtc <= request.To.Value);
         }
 
-        (int normalizedPage, int normalizedPageSize) = Application.Abstractions.Data.QueryableExtensions.NormalizePaging(page, pageSize, 50, 200);
+        (int normalizedPage, int normalizedPageSize) = request.NormalizePaging();
         int total = await query.CountAsync(cancellationToken);
         List<object> items = await query
             .OrderByDescending(x => x.CreatedAtUtc)
@@ -512,32 +507,27 @@ internal sealed class Manage : IEndpoint
     }
 
     private static async Task<IResult> ReportDetailsAsync(
-        DateTime? from,
-        DateTime? to,
-        NotificationChannel? channel,
-        NotificationStatus? status,
-        int page,
-        int pageSize,
+        [AsParameters] NotificationReportDetailsRequest request,
         IApplicationReadDbContext readContext,
         CancellationToken cancellationToken)
     {
-        DateTime dateFrom = from ?? DateTime.UtcNow.AddDays(-7);
-        DateTime dateTo = to ?? DateTime.UtcNow;
+        DateTime dateFrom = request.From ?? DateTime.UtcNow.AddDays(-7);
+        DateTime dateTo = request.To ?? DateTime.UtcNow;
 
         IQueryable<NotificationMessage> query = readContext.NotificationMessages
             .Where(x => x.CreatedAtUtc >= dateFrom && x.CreatedAtUtc <= dateTo);
 
-        if (channel.HasValue)
+        if (request.Channel.HasValue)
         {
-            query = query.Where(x => x.Channel == channel.Value);
+            query = query.Where(x => x.Channel == request.Channel.Value);
         }
 
-        if (status.HasValue)
+        if (request.Status.HasValue)
         {
-            query = query.Where(x => x.Status == status.Value);
+            query = query.Where(x => x.Status == request.Status.Value);
         }
 
-        (int normalizedPage, int normalizedPageSize) = Application.Abstractions.Data.QueryableExtensions.NormalizePaging(page, pageSize, 50, 200);
+        (int normalizedPage, int normalizedPageSize) = request.NormalizePaging();
         int total = await query.CountAsync(cancellationToken);
         List<object> items = await query
             .OrderByDescending(x => x.CreatedAtUtc)

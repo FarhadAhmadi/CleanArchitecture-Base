@@ -4,6 +4,7 @@ using Domain.Authorization;
 using Domain.Logging;
 using Infrastructure.Auditing;
 using Infrastructure.Logging;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using SharedKernel;
@@ -25,7 +26,8 @@ public static class LoggingEndpoints
     {
         RouteGroupBuilder group = app
             .MapGroup("/logging/v1")
-            .WithTags("Logging");
+            .WithTags("Logging")
+            .AddEndpointFilterFactory(RequestSanitizationEndpointFilter.Create);
 
         group.MapPost("/events", IngestSingle).HasPermission(LoggingPermissions.EventsWrite);
         group.MapPost("/events/bulk", IngestBulk).HasPermission(LoggingPermissions.EventsWrite);
@@ -97,84 +99,58 @@ public static class LoggingEndpoints
         IApplicationDbContext writeContext,
         ILogIntegrityService integrityService,
         ILoggerFactory loggerFactory,
-        LogLevelType? level,
-        DateTime? from,
-        DateTime? to,
-        string? actorId,
-        string? service,
-        string? module,
-        string? traceId,
-        string? outcome,
-        string? text,
-        int page,
-        int pageSize,
-        string? sortBy,
-        string? sortOrder,
-        bool recalculateIntegrity,
+        [AsParameters] GetLogEventsRequest request,
         CancellationToken cancellationToken)
     {
         ILogger logger = loggerFactory.CreateLogger("LoggingEndpoints.GetEvents");
 
-        actorId = InputSanitizer.SanitizeIdentifier(actorId, 100);
-        service = InputSanitizer.SanitizeIdentifier(service, 150);
-        module = InputSanitizer.SanitizeIdentifier(module, 150);
-        traceId = InputSanitizer.SanitizeIdentifier(traceId, 150);
-        outcome = InputSanitizer.SanitizeIdentifier(outcome, 50);
-        text = InputSanitizer.SanitizeText(text, 500);
-        sortBy = InputSanitizer.SanitizeIdentifier(sortBy, 50);
-        sortOrder = InputSanitizer.SanitizeIdentifier(sortOrder, 10);
-
-        (int normalizedPage, int normalizedPageSize) = QueryableExtensions.NormalizePaging(
-            page,
-            pageSize,
-            defaultPageSize: 50,
-            maxPageSize: 200);
+        (int normalizedPage, int normalizedPageSize) = request.NormalizePaging();
 
         IQueryable<LogEvent> query = readContext.LogEvents.Where(x => !x.IsDeleted);
 
-        if (level.HasValue)
+        if (request.Level.HasValue)
         {
-            query = query.Where(x => x.Level == level.Value);
+            query = query.Where(x => x.Level == request.Level.Value);
         }
 
-        if (from.HasValue)
+        if (request.From.HasValue)
         {
-            query = query.Where(x => x.TimestampUtc >= from.Value);
+            query = query.Where(x => x.TimestampUtc >= request.From.Value);
         }
 
-        if (to.HasValue)
+        if (request.To.HasValue)
         {
-            query = query.Where(x => x.TimestampUtc <= to.Value);
+            query = query.Where(x => x.TimestampUtc <= request.To.Value);
         }
 
-        if (!string.IsNullOrWhiteSpace(actorId))
+        if (!string.IsNullOrWhiteSpace(request.ActorId))
         {
-            query = query.Where(x => x.ActorId == actorId);
+            query = query.Where(x => x.ActorId == request.ActorId);
         }
 
-        if (!string.IsNullOrWhiteSpace(service))
+        if (!string.IsNullOrWhiteSpace(request.Service))
         {
-            query = query.Where(x => x.SourceService == service);
+            query = query.Where(x => x.SourceService == request.Service);
         }
 
-        if (!string.IsNullOrWhiteSpace(module))
+        if (!string.IsNullOrWhiteSpace(request.Module))
         {
-            query = query.Where(x => x.SourceModule == module);
+            query = query.Where(x => x.SourceModule == request.Module);
         }
 
-        if (!string.IsNullOrWhiteSpace(traceId))
+        if (!string.IsNullOrWhiteSpace(request.TraceId))
         {
-            query = query.Where(x => x.TraceId == traceId);
+            query = query.Where(x => x.TraceId == request.TraceId);
         }
 
-        if (!string.IsNullOrWhiteSpace(outcome))
+        if (!string.IsNullOrWhiteSpace(request.Outcome))
         {
-            query = query.Where(x => x.Outcome == outcome);
+            query = query.Where(x => x.Outcome == request.Outcome);
         }
 
-        query = query.ApplyContainsSearch(text, x => x.Message, x => x.PayloadJson, x => x.TagsCsv);
+        query = query.ApplyContainsSearch(request.Text, x => x.Message, x => x.PayloadJson, x => x.TagsCsv);
 
-        query = ApplySorting(query, sortBy, sortOrder);
+        query = ApplySorting(query, request.SortBy, request.SortOrder);
 
         int total = await query.CountAsync(cancellationToken);
         List<LogEvent> items = await query
@@ -195,7 +171,7 @@ public static class LoggingEndpoints
             resultItems.Add(item.ToView(isCorrupted));
         }
 
-        if (recalculateIntegrity && corruptedIds.Count != 0)
+        if (request.RecalculateIntegrity && corruptedIds.Count != 0)
         {
             List<LogEvent> trackedItems = await writeContext.LogEvents
                 .Where(x => corruptedIds.Contains(x.Id) && !x.HasIntegrityIssue)
@@ -217,7 +193,7 @@ public static class LoggingEndpoints
                 resultItems.Count,
                 normalizedPage,
                 normalizedPageSize,
-                level);
+                request.Level);
         }
 
         return Results.Ok(new

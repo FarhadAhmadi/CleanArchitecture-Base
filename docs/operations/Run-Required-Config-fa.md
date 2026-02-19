@@ -54,6 +54,25 @@
 5. Push: `Notifications:Push:*`
 6. InApp: `Notifications:InApp:Enabled`
 
+### راه‌اندازی سریع SMTP برای Email
+به‌جای ذخیره credential در `appsettings` از `user-secrets` استفاده کن:
+
+```powershell
+.\scripts\dev\configure-email.ps1 `
+  -SmtpHost "smtp.gmail.com" `
+  -Port 587 `
+  -UseSsl $true `
+  -UserName "farhadahmadi14132@gmail.com" `
+  -Password "<GMAIL_APP_PASSWORD>" `
+  -FromAddress "farhadahmadi14132@gmail.com" `
+  -FromName "CleanArchitecture Notifications"
+```
+
+نکته:
+1. برای Gmail باید App Password استفاده کنی، نه پسورد اصلی اکانت.
+2. اگر `Notifications:Email:Enabled=true` باشد ولی مقادیر SMTP ناقص باشند، برنامه در startup خطای واضح می‌دهد.
+3. کلید `Notifications:SensitiveDataEncryptionKey` هم توسط اسکریپت ست می‌شود (اگر ندهی خودکار تولید می‌شود).
+
 ## 5) سرویس‌های جانبی
 1. RabbitMQ: `RabbitMq:*`
 2. Redis: `RedisCache:*`

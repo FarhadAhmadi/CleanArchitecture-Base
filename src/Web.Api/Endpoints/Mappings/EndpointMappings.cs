@@ -59,18 +59,15 @@ internal static class EndpointMappings
         this Guid userId,
         int page,
         int pageSize,
-        string? search,
-        bool? isCompleted,
-        string? sortBy,
-        string? sortOrder) =>
+        GetTodosRequest request) =>
         new(
             userId,
             page,
             pageSize,
-            InputSanitizer.SanitizeText(search, 200),
-            isCompleted,
-            InputSanitizer.SanitizeIdentifier(sortBy, 50),
-            InputSanitizer.SanitizeIdentifier(sortOrder, 10));
+            request.Search,
+            request.IsCompleted,
+            request.SortBy,
+            request.SortOrder);
 
     internal static GetTodoByIdQuery ToGetTodoByIdQuery(this Guid todoId) =>
         new(todoId);

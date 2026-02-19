@@ -1,4 +1,4 @@
-﻿using Web.Api.Middleware;
+using Web.Api.Middleware;
 
 namespace Web.Api.Extensions;
 
@@ -14,6 +14,12 @@ public static class MiddlewareExtensions
     public static IApplicationBuilder UseSecurityHeaders(this IApplicationBuilder app)
     {
         app.UseMiddleware<SecurityHeadersMiddleware>();
+        return app;
+    }
+
+    public static IApplicationBuilder UseRequestHardening(this IApplicationBuilder app)
+    {
+        app.UseMiddleware<RequestHardeningMiddleware>();
         return app;
     }
 }

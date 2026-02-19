@@ -38,3 +38,4 @@ run-dev.cmd
 ## لینک‌های تکمیلی
 1. کانفیگ‌های لازم: `docs/operations/Run-Required-Config-fa.md`
 2. راهنمای کامل setup: `docs/operations/System-Setup-Guide-fa.md`
+3. تنظیم سریع SMTP ایمیل: `scripts/dev/configure-email.ps1`

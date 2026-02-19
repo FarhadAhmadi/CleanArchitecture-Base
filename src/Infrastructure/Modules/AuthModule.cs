@@ -6,6 +6,7 @@ using Infrastructure.Database;
 using Application.Abstractions.Security;
 using Infrastructure.Authentication;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -54,6 +55,10 @@ internal static class AuthModule
         services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             .AddJwtBearer(o =>
             {
+                bool isDevelopmentOrTesting =
+                    string.Equals(configuration["ASPNETCORE_ENVIRONMENT"], "Development", StringComparison.OrdinalIgnoreCase) ||
+                    string.Equals(configuration["ASPNETCORE_ENVIRONMENT"], "Testing", StringComparison.OrdinalIgnoreCase);
+
                 List<SecurityKey> signingKeys =
                 [
                     new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtOptions.Secret))
@@ -64,7 +69,9 @@ internal static class AuthModule
                     signingKeys.Add(new SymmetricSecurityKey(Encoding.UTF8.GetBytes(previousSecret)));
                 }
 
-                o.RequireHttpsMetadata = false;
+                o.RequireHttpsMetadata = !isDevelopmentOrTesting;
+                o.IncludeErrorDetails = false;
+                o.SaveToken = false;
                 o.TokenValidationParameters = new TokenValidationParameters
                 {
                     ValidateIssuerSigningKey = true,
@@ -92,6 +99,9 @@ internal static class AuthModule
                     },
                     OnChallenge = context =>
                     {
+                        context.HandleResponse();
+                        context.Response.StatusCode = StatusCodes.Status401Unauthorized;
+
                         ISecurityEventLogger securityLogger = context.HttpContext.RequestServices
                             .GetRequiredService<ISecurityEventLogger>();
                         securityLogger.AuthenticationFailed(

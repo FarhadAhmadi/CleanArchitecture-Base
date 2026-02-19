@@ -1,6 +1,7 @@
 using Infrastructure.Notifications;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using System.Net.Mail;
 
 namespace Infrastructure;
 
@@ -13,6 +14,8 @@ internal static class NotificationsModule
         NotificationOptions options = configuration
             .GetSection(NotificationOptions.SectionName)
             .Get<NotificationOptions>() ?? new NotificationOptions();
+
+        ValidateOptions(options);
 
         services.AddSingleton(options);
         services.AddSingleton<NotificationSensitiveDataProtector>();
@@ -45,5 +48,50 @@ internal static class NotificationsModule
         services.AddSingleton<INotificationChannelSender, TeamsNotificationSender>();
 
         return services;
+    }
+
+    private static void ValidateOptions(NotificationOptions options)
+    {
+        if (string.IsNullOrWhiteSpace(options.SensitiveDataEncryptionKey))
+        {
+            throw new InvalidOperationException(
+                "Notifications:SensitiveDataEncryptionKey is required for notification data protection.");
+        }
+
+        NotificationEmailOptions email = options.Email;
+        if (!email.Enabled)
+        {
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(email.Host))
+        {
+            throw new InvalidOperationException("Notifications:Email:Host is required when email sender is enabled.");
+        }
+
+        if (email.Port is <= 0 or > 65535)
+        {
+            throw new InvalidOperationException("Notifications:Email:Port must be between 1 and 65535.");
+        }
+
+        if (string.IsNullOrWhiteSpace(email.FromAddress))
+        {
+            throw new InvalidOperationException("Notifications:Email:FromAddress is required when email sender is enabled.");
+        }
+
+        try
+        {
+            _ = new MailAddress(email.FromAddress);
+        }
+        catch (FormatException)
+        {
+            throw new InvalidOperationException("Notifications:Email:FromAddress is not a valid email address.");
+        }
+
+        if (!string.IsNullOrWhiteSpace(email.UserName) && string.IsNullOrWhiteSpace(email.Password))
+        {
+            throw new InvalidOperationException(
+                "Notifications:Email:Password is required when Notifications:Email:UserName is provided.");
+        }
     }
 }

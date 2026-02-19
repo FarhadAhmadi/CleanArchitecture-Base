@@ -312,7 +312,7 @@ internal sealed class Manage : IEndpoint
         return Results.Ok(new { file.Id, file.Module, file.Folder });
     }
 
-    private static async Task<IResult> SearchAsync(string? query, string? fileType, Guid? uploaderId, DateTime? from, DateTime? to, int page, int pageSize, IUserContext userContext, IApplicationReadDbContext readContext, CancellationToken cancellationToken)
+    private static async Task<IResult> SearchAsync([AsParameters] SearchFilesRequest request, IUserContext userContext, IApplicationReadDbContext readContext, CancellationToken cancellationToken)
     {
         IQueryable<FileAsset> q = readContext.FileAssets.Where(x => !x.IsDeleted);
         bool isAdmin = await IsAdminAsync(userContext.UserId, readContext, cancellationToken);
@@ -327,34 +327,34 @@ internal sealed class Manage : IEndpoint
             q = q.Where(x => x.OwnerUserId == uid || aclRead.Contains(x.Id));
         }
 
-        if (!string.IsNullOrWhiteSpace(query))
+        if (!string.IsNullOrWhiteSpace(request.Query))
         {
-            string text = query.Trim();
+            string text = request.Query.Trim();
             q = q.Where(x => x.FileName.Contains(text) || x.Description != null && x.Description.Contains(text));
         }
 
-        if (!string.IsNullOrWhiteSpace(fileType))
+        if (!string.IsNullOrWhiteSpace(request.FileType))
         {
-            string ext = fileType.StartsWith('.') ? fileType.ToUpperInvariant() : $".{fileType.ToUpperInvariant()}";
+            string ext = request.FileType.StartsWith('.') ? request.FileType.ToUpperInvariant() : $".{request.FileType.ToUpperInvariant()}";
             q = q.Where(x => x.Extension == ext);
         }
 
-        if (uploaderId.HasValue)
+        if (request.UploaderId.HasValue)
         {
-            q = q.Where(x => x.OwnerUserId == uploaderId.Value);
+            q = q.Where(x => x.OwnerUserId == request.UploaderId.Value);
         }
 
-        if (from.HasValue)
+        if (request.From.HasValue)
         {
-            q = q.Where(x => x.UploadedAtUtc >= from.Value);
+            q = q.Where(x => x.UploadedAtUtc >= request.From.Value);
         }
 
-        if (to.HasValue)
+        if (request.To.HasValue)
         {
-            q = q.Where(x => x.UploadedAtUtc <= to.Value);
+            q = q.Where(x => x.UploadedAtUtc <= request.To.Value);
         }
 
-        (int normalizedPage, int normalizedPageSize) = Application.Abstractions.Data.QueryableExtensions.NormalizePaging(page, pageSize, 50, 200);
+        (int normalizedPage, int normalizedPageSize) = request.NormalizePaging();
         int total = await q.CountAsync(cancellationToken);
         List<object> items = await q.OrderByDescending(x => x.UploadedAtUtc)
             .Skip((normalizedPage - 1) * normalizedPageSize)
@@ -365,10 +365,15 @@ internal sealed class Manage : IEndpoint
         return Results.Ok(new { page = normalizedPage, pageSize = normalizedPageSize, total, items });
     }
 
-    private static async Task<IResult> FilterAsync(string module, int page, int pageSize, IUserContext userContext, IApplicationReadDbContext readContext, CancellationToken cancellationToken)
+    private static async Task<IResult> FilterAsync([AsParameters] FilterFilesRequest request, IUserContext userContext, IApplicationReadDbContext readContext, CancellationToken cancellationToken)
     {
+        if (string.IsNullOrWhiteSpace(request.Module))
+        {
+            return Results.BadRequest(new { message = "module is required." });
+        }
+
         IQueryable<FileAsset> q = readContext.FileAssets
-            .Where(x => !x.IsDeleted && x.Module == module);
+            .Where(x => !x.IsDeleted && x.Module == request.Module);
 
         bool isAdmin = await IsAdminAsync(userContext.UserId, readContext, cancellationToken);
         if (!isAdmin)
@@ -382,7 +387,7 @@ internal sealed class Manage : IEndpoint
             q = q.Where(x => x.OwnerUserId == uid || aclRead.Contains(x.Id));
         }
 
-        (int normalizedPage, int normalizedPageSize) = Application.Abstractions.Data.QueryableExtensions.NormalizePaging(page, pageSize, 50, 200);
+        (int normalizedPage, int normalizedPageSize) = request.NormalizePaging();
         int total = await q.CountAsync(cancellationToken);
         List<object> items = await q.OrderByDescending(x => x.UploadedAtUtc)
             .Skip((normalizedPage - 1) * normalizedPageSize)
