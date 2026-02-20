@@ -22,7 +22,7 @@ internal static class LoggingModule
         services.AddSingleton<IAlertDispatchQueue, AlertDispatchQueue>();
         services.AddScoped<IAlertIncidentDispatchScheduler, AlertIncidentDispatchScheduler>();
         services.AddScoped<ILogIngestionService, LogIngestionService>();
-        services.AddSingleton<LoggingHealthService>();
+        services.AddSingleton<ILoggingHealthService, LoggingHealthService>();
         services.AddHostedService<LogRetryWorker>();
         services.AddHostedService<AlertDispatchWorker>();
 

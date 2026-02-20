@@ -1,4 +1,5 @@
 using Domain.Logging;
+using Domain.Modules.Notifications;
 using Domain.Notifications;
 using Domain.Users;
 using Infrastructure.Authorization;

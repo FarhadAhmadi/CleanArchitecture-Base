@@ -50,7 +50,6 @@ internal sealed class SeedProfileOnUserRegisteredDomainEventHandler(
         profile.Raise(new UserProfileChangedDomainEvent(profile.Id, profile.UserId, "Seeded", profile.ProfileCompletenessScore));
 
         context.UserProfiles.Add(profile);
-        await context.SaveChangesAsync(cancellationToken);
     }
 
     private static string ResolveDisplayName(User user)
@@ -101,3 +100,5 @@ internal sealed class SeedProfileOnUserRegisteredDomainEventHandler(
         return (int)Math.Round(score / (double)total * 100, MidpointRounding.AwayFromZero);
     }
 }
+
+

@@ -1,3 +1,4 @@
+using Application.Abstractions.Notifications;
 using Infrastructure.Notifications;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -19,6 +20,7 @@ internal static class NotificationsModule
 
         services.AddSingleton(options);
         services.AddSingleton<NotificationSensitiveDataProtector>();
+        services.AddSingleton<INotificationRecipientProtector, NotificationRecipientProtector>();
         services.AddScoped<NotificationTemplateRenderer>();
         services.AddScoped<NotificationTemplateSeeder>();
 

@@ -2,7 +2,7 @@ namespace Infrastructure.Logging;
 
 public sealed class LoggingHealthService(
     ILogIngestionQueue ingestionQueue,
-    IAlertDispatchQueue alertQueue)
+    IAlertDispatchQueue alertQueue) : ILoggingHealthService
 {
     public object GetHealth()
     {

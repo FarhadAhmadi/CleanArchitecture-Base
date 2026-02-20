@@ -1,11 +1,14 @@
 using Domain.Notifications;
+using Application.Abstractions.Observability;
 using Infrastructure.Database;
 using Infrastructure.Integration;
 using Microsoft.EntityFrameworkCore;
 
 namespace Infrastructure.Monitoring;
 
-public sealed class OrchestrationHealthService(ApplicationReadDbContext dbContext, OutboxOptions outboxOptions)
+public sealed class OrchestrationHealthService(
+    ApplicationReadDbContext dbContext,
+    OutboxOptions outboxOptions) : IOrchestrationHealthService
 {
     public async Task<OrchestrationHealthSnapshot> GetSnapshotAsync(CancellationToken cancellationToken)
     {
@@ -70,18 +73,3 @@ public sealed class OrchestrationHealthService(ApplicationReadDbContext dbContex
             oldestNotificationPendingUtc);
     }
 }
-
-public sealed record OrchestrationHealthSnapshot(
-    string Status,
-    DateTime TimestampUtc,
-    int OutboxPending,
-    int OutboxFailed,
-    int InboxPending,
-    int InboxFailed,
-    int AlertsQueued,
-    int AlertsFailed,
-    int NotificationsPending,
-    int NotificationsFailed,
-    DateTime? OldestOutboxPendingUtc,
-    DateTime? OldestInboxPendingUtc,
-    DateTime? OldestNotificationPendingUtc);

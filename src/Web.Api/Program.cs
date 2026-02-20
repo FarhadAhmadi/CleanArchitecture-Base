@@ -99,7 +99,7 @@ if (app.Environment.IsDevelopment() || app.Environment.IsEnvironment("Testing"))
 {
     app.UseSwaggerWithUi();
 }
-app.ApplyMigrationsIfEnabled(migrationOptions);
+await app.ApplyMigrationsIfEnabledAsync(migrationOptions);
 
 app.MapHealthChecks("health", new HealthCheckOptions
 {
@@ -173,3 +173,4 @@ namespace Web.Api
 {
     public partial class Program;
 }
+

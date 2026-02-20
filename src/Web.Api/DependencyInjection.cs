@@ -1,6 +1,11 @@
 using System.Security.Claims;
 using System.Threading.RateLimiting;
+using System.Reflection;
 using Asp.Versioning;
+using Application.Abstractions.Files;
+using Application.Abstractions.Messaging;
+using Application.Abstractions.Notifications;
+using Application.Abstractions.Observability;
 using FluentValidation;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
@@ -11,6 +16,8 @@ using Microsoft.Extensions.Http.Resilience;
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
+using Web.Api.Endpoints.Files;
+using Web.Api.Endpoints.Notifications;
 using Web.Api.Infrastructure;
 
 namespace Web.Api;
@@ -19,6 +26,7 @@ public static class DependencyInjection
 {
     private const string DefaultCorsPolicy = "DefaultCors";
     private const string DefaultRateLimiterPolicy = "global";
+    private const string PublicFileLinkRateLimiterPolicy = "files-public-link";
     private const string DefaultRequestTimeoutPolicy = "default-timeout";
 
     public static IServiceCollection AddPresentation(this IServiceCollection services, IConfiguration configuration)
@@ -31,9 +39,9 @@ public static class DependencyInjection
             .GetSection(TelemetryOptions.SectionName)
             .Get<TelemetryOptions>() ?? new TelemetryOptions();
 
-        OperationalSloOptions operationalSloOptions = configuration
-            .GetSection(OperationalSloOptions.SectionName)
-            .Get<OperationalSloOptions>() ?? new OperationalSloOptions();
+        Application.Abstractions.Observability.OperationalSloOptions operationalSloOptions = configuration
+            .GetSection(Application.Abstractions.Observability.OperationalSloOptions.SectionName)
+            .Get<Application.Abstractions.Observability.OperationalSloOptions>() ?? new Application.Abstractions.Observability.OperationalSloOptions();
 
         OperationalAlertingOptions operationalAlertingOptions = configuration
             .GetSection(OperationalAlertingOptions.SectionName)
@@ -60,6 +68,18 @@ public static class DependencyInjection
 
         services.AddControllers();
         services.AddValidatorsFromAssembly(typeof(DependencyInjection).Assembly, includeInternalTypes: true);
+        services.AddScoped<IFileUseCaseService, FileUseCaseService>();
+        services.AddScoped<INotificationUseCaseService, NotificationUseCaseService>();
+        services.Scan(scan => scan.FromAssemblies(Assembly.GetExecutingAssembly())
+            .AddClasses(classes => classes.AssignableTo(typeof(IQueryHandler<,>)), publicOnly: false)
+                .AsImplementedInterfaces()
+                .WithScopedLifetime()
+            .AddClasses(classes => classes.AssignableTo(typeof(ICommandHandler<>)), publicOnly: false)
+                .AsImplementedInterfaces()
+                .WithScopedLifetime()
+            .AddClasses(classes => classes.AssignableTo(typeof(ICommandHandler<,>)), publicOnly: false)
+                .AsImplementedInterfaces()
+                .WithScopedLifetime());
 
         AuthenticationBuilder authenticationBuilder = services.AddAuthentication();
         authenticationBuilder.AddCookie(ExternalAuthSchemes.ExternalCookie, options =>
@@ -161,6 +181,20 @@ public static class DependencyInjection
                 limiterOptions.QueueProcessingOrder = QueueProcessingOrder.OldestFirst;
                 limiterOptions.QueueLimit = 0;
             });
+
+            options.AddPolicy<string>(PublicFileLinkRateLimiterPolicy, httpContext =>
+            {
+                string ip = httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown";
+                return RateLimitPartition.GetFixedWindowLimiter(
+                    $"public-file-link:ip:{ip}",
+                    _ => new FixedWindowRateLimiterOptions
+                    {
+                        PermitLimit = Math.Max(1, apiSecurityOptions.PublicFileLinkRateLimitPermitLimit),
+                        Window = TimeSpan.FromSeconds(Math.Max(1, apiSecurityOptions.PublicFileLinkRateLimitWindowSeconds)),
+                        QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
+                        QueueLimit = 0
+                    });
+            });
         });
 
         services.AddRequestTimeouts(options =>
@@ -223,4 +257,7 @@ public static class DependencyInjection
     public static string GetCorsPolicyName() => DefaultCorsPolicy;
 
     public static string GetRateLimiterPolicyName() => DefaultRateLimiterPolicy;
+
+    public static string GetPublicFileLinkRateLimiterPolicyName() => PublicFileLinkRateLimiterPolicy;
 }
+

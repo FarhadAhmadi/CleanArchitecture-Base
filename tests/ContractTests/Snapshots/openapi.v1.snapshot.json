@@ -10,6 +10,28 @@
     }
   ],
   "paths": {
+    "/api/v1/audit/integrity": {
+      "get": {
+        "tags": [
+          "Audit"
+        ],
+        "parameters": [
+          {
+            "name": "updateFlags",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/v1/audit": {
       "get": {
         "tags": [
@@ -78,28 +100,6 @@
         }
       }
     },
-    "/api/v1/audit/integrity": {
-      "get": {
-        "tags": [
-          "Audit"
-        ],
-        "parameters": [
-          {
-            "name": "updateFlags",
-            "in": "query",
-            "required": true,
-            "schema": {
-              "type": "boolean"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK"
-          }
-        }
-      }
-    },
     "/api/v1/files": {
       "post": {
         "tags": [
@@ -109,60 +109,12 @@
           "content": {
             "multipart/form-data": {
               "schema": {
-                "$ref": "#/components/schemas/Web.Api.Endpoints.Files.Manage-UploadForm"
+                "$ref": "#/components/schemas/Web.Api.Endpoints.Files.UploadFileRequest"
               }
             },
             "application/x-www-form-urlencoded": {
               "schema": {
-                "$ref": "#/components/schemas/Web.Api.Endpoints.Files.Manage-UploadForm"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "OK"
-          }
-        }
-      }
-    },
-    "/api/v1/files/validate": {
-      "post": {
-        "tags": [
-          "Files"
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/Web.Api.Endpoints.Files.Manage-ValidateRequest"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "OK"
-          }
-        }
-      }
-    },
-    "/api/v1/files/scan": {
-      "post": {
-        "tags": [
-          "Files"
-        ],
-        "requestBody": {
-          "content": {
-            "multipart/form-data": {
-              "schema": {
-                "$ref": "#/components/schemas/Web.Api.Endpoints.Files.Manage-UploadForm"
-              }
-            },
-            "application/x-www-form-urlencoded": {
-              "schema": {
-                "$ref": "#/components/schemas/Web.Api.Endpoints.Files.Manage-UploadForm"
+                "$ref": "#/components/schemas/Web.Api.Endpoints.Files.UploadFileRequest"
               }
             }
           }
@@ -236,7 +188,29 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/Web.Api.Endpoints.Files.Manage-MetadataRequest"
+                "$ref": "#/components/schemas/Web.Api.Endpoints.Files.UpdateFileMetadataRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/files/validate": {
+      "post": {
+        "tags": [
+          "Files"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Web.Api.Endpoints.Files.ValidateFileRequest"
               }
             }
           },
@@ -265,6 +239,32 @@
             }
           }
         ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/files/scan": {
+      "post": {
+        "tags": [
+          "Files"
+        ],
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/Web.Api.Endpoints.Files.ScanFileRequest"
+              }
+            },
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "$ref": "#/components/schemas/Web.Api.Endpoints.Files.ScanFileRequest"
+              }
+            }
+          }
+        },
         "responses": {
           "200": {
             "description": "OK"
@@ -315,6 +315,29 @@
             "in": "query",
             "schema": {
               "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/files/audit/{fileId}": {
+      "get": {
+        "tags": [
+          "Files"
+        ],
+        "parameters": [
+          {
+            "name": "fileId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
             }
           }
         ],
@@ -377,29 +400,6 @@
         }
       }
     },
-    "/api/v1/files/audit/{fileId}": {
-      "get": {
-        "tags": [
-          "Files"
-        ],
-        "parameters": [
-          {
-            "name": "fileId",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK"
-          }
-        }
-      }
-    },
     "/api/v1/files/{fileId}/move": {
       "patch": {
         "tags": [
@@ -420,7 +420,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/Web.Api.Endpoints.Files.Manage-MoveRequest"
+                "$ref": "#/components/schemas/Web.Api.Endpoints.Files.MoveFileRequest"
               }
             }
           },
@@ -574,34 +574,12 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/Web.Api.Endpoints.Files.Manage-TagRequest"
+                "$ref": "#/components/schemas/Web.Api.Endpoints.Files.AddFileTagRequest"
               }
             }
           },
           "required": true
         },
-        "responses": {
-          "200": {
-            "description": "OK"
-          }
-        }
-      }
-    },
-    "/api/v1/files/tags/{tag}": {
-      "get": {
-        "tags": [
-          "Files"
-        ],
-        "parameters": [
-          {
-            "name": "tag",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
         "responses": {
           "200": {
             "description": "OK"
@@ -629,7 +607,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/Web.Api.Endpoints.Files.Manage-PermissionRequest"
+                "$ref": "#/components/schemas/Web.Api.Endpoints.Files.UpsertFilePermissionRequest"
               }
             }
           },
@@ -653,6 +631,28 @@
             "schema": {
               "type": "string",
               "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/files/tags/{tag}": {
+      "get": {
+        "tags": [
+          "Files"
+        ],
+        "parameters": [
+          {
+            "name": "tag",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
             }
           }
         ],
@@ -726,7 +726,14 @@
         },
         "responses": {
           "200": {
-            "description": "OK"
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SharedKernel.Result\u00601[[Microsoft.AspNetCore.Http.IResult, Microsoft.AspNetCore.Http.Abstractions, Version=10.0.0.0, Culture=neutral, PublicKeyToken=adb9793829ddae60]]"
+                }
+              }
+            }
           }
         }
       },
@@ -849,7 +856,14 @@
         ],
         "responses": {
           "200": {
-            "description": "OK"
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SharedKernel.Result\u00601[[Microsoft.AspNetCore.Http.IResult, Microsoft.AspNetCore.Http.Abstractions, Version=10.0.0.0, Culture=neutral, PublicKeyToken=adb9793829ddae60]]"
+                }
+              }
+            }
           }
         }
       }
@@ -863,7 +877,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/Web.Api.Endpoints.Logging.LoggingEndpoints-BulkIngestRequest"
+                "$ref": "#/components/schemas/Web.Api.Endpoints.Logging.BulkIngestRequest"
               }
             }
           },
@@ -871,7 +885,14 @@
         },
         "responses": {
           "200": {
-            "description": "OK"
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SharedKernel.Result\u00601[[Microsoft.AspNetCore.Http.IResult, Microsoft.AspNetCore.Http.Abstractions, Version=10.0.0.0, Culture=neutral, PublicKeyToken=adb9793829ddae60]]"
+                }
+              }
+            }
           }
         }
       }
@@ -893,7 +914,14 @@
         ],
         "responses": {
           "200": {
-            "description": "OK"
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SharedKernel.Result\u00601[[Microsoft.AspNetCore.Http.IResult, Microsoft.AspNetCore.Http.Abstractions, Version=10.0.0.0, Culture=neutral, PublicKeyToken=adb9793829ddae60]]"
+                }
+              }
+            }
           }
         }
       }
@@ -924,7 +952,14 @@
         ],
         "responses": {
           "200": {
-            "description": "OK"
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SharedKernel.Result\u00601[[Microsoft.AspNetCore.Http.IResult, Microsoft.AspNetCore.Http.Abstractions, Version=10.0.0.0, Culture=neutral, PublicKeyToken=adb9793829ddae60]]"
+                }
+              }
+            }
           }
         }
       },
@@ -945,7 +980,14 @@
         ],
         "responses": {
           "200": {
-            "description": "OK"
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SharedKernel.Result\u00601[[Microsoft.AspNetCore.Http.IResult, Microsoft.AspNetCore.Http.Abstractions, Version=10.0.0.0, Culture=neutral, PublicKeyToken=adb9793829ddae60]]"
+                }
+              }
+            }
           }
         }
       }
@@ -957,7 +999,14 @@
         ],
         "responses": {
           "200": {
-            "description": "OK"
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SharedKernel.Result\u00601[[Microsoft.AspNetCore.Http.IResult, Microsoft.AspNetCore.Http.Abstractions, Version=10.0.0.0, Culture=neutral, PublicKeyToken=adb9793829ddae60]]"
+                }
+              }
+            }
           }
         }
       }
@@ -979,7 +1028,14 @@
         },
         "responses": {
           "200": {
-            "description": "OK"
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SharedKernel.Result\u00601[[Microsoft.AspNetCore.Http.IResult, Microsoft.AspNetCore.Http.Abstractions, Version=10.0.0.0, Culture=neutral, PublicKeyToken=adb9793829ddae60]]"
+                }
+              }
+            }
           }
         }
       }
@@ -1001,7 +1057,14 @@
         },
         "responses": {
           "200": {
-            "description": "OK"
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SharedKernel.Result\u00601[[Microsoft.AspNetCore.Http.IResult, Microsoft.AspNetCore.Http.Abstractions, Version=10.0.0.0, Culture=neutral, PublicKeyToken=adb9793829ddae60]]"
+                }
+              }
+            }
           }
         }
       }
@@ -1013,7 +1076,14 @@
         ],
         "responses": {
           "200": {
-            "description": "OK"
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SharedKernel.Result\u00601[[Microsoft.AspNetCore.Http.IResult, Microsoft.AspNetCore.Http.Abstractions, Version=10.0.0.0, Culture=neutral, PublicKeyToken=adb9793829ddae60]]"
+                }
+              }
+            }
           }
         }
       }
@@ -1027,7 +1097,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/Web.Api.Endpoints.Logging.LoggingEndpoints-CreateAlertRuleRequest"
+                "$ref": "#/components/schemas/Web.Api.Endpoints.Logging.CreateAlertRuleRequest"
               }
             }
           },
@@ -1035,7 +1105,14 @@
         },
         "responses": {
           "200": {
-            "description": "OK"
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SharedKernel.Result\u00601[[Microsoft.AspNetCore.Http.IResult, Microsoft.AspNetCore.Http.Abstractions, Version=10.0.0.0, Culture=neutral, PublicKeyToken=adb9793829ddae60]]"
+                }
+              }
+            }
           }
         }
       },
@@ -1045,7 +1122,14 @@
         ],
         "responses": {
           "200": {
-            "description": "OK"
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SharedKernel.Result\u00601[[Microsoft.AspNetCore.Http.IResult, Microsoft.AspNetCore.Http.Abstractions, Version=10.0.0.0, Culture=neutral, PublicKeyToken=adb9793829ddae60]]"
+                }
+              }
+            }
           }
         }
       }
@@ -1070,7 +1154,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/Web.Api.Endpoints.Logging.LoggingEndpoints-CreateAlertRuleRequest"
+                "$ref": "#/components/schemas/Web.Api.Endpoints.Logging.UpdateAlertRuleRequest"
               }
             }
           },
@@ -1078,7 +1162,14 @@
         },
         "responses": {
           "200": {
-            "description": "OK"
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SharedKernel.Result\u00601[[Microsoft.AspNetCore.Http.IResult, Microsoft.AspNetCore.Http.Abstractions, Version=10.0.0.0, Culture=neutral, PublicKeyToken=adb9793829ddae60]]"
+                }
+              }
+            }
           }
         }
       },
@@ -1099,7 +1190,14 @@
         ],
         "responses": {
           "200": {
-            "description": "OK"
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SharedKernel.Result\u00601[[Microsoft.AspNetCore.Http.IResult, Microsoft.AspNetCore.Http.Abstractions, Version=10.0.0.0, Culture=neutral, PublicKeyToken=adb9793829ddae60]]"
+                }
+              }
+            }
           }
         }
       }
@@ -1138,7 +1236,14 @@
         ],
         "responses": {
           "200": {
-            "description": "OK"
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SharedKernel.Result\u00601[[Microsoft.AspNetCore.Http.IResult, Microsoft.AspNetCore.Http.Abstractions, Version=10.0.0.0, Culture=neutral, PublicKeyToken=adb9793829ddae60]]"
+                }
+              }
+            }
           }
         }
       }
@@ -1161,7 +1266,14 @@
         ],
         "responses": {
           "200": {
-            "description": "OK"
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SharedKernel.Result\u00601[[Microsoft.AspNetCore.Http.IResult, Microsoft.AspNetCore.Http.Abstractions, Version=10.0.0.0, Culture=neutral, PublicKeyToken=adb9793829ddae60]]"
+                }
+              }
+            }
           }
         }
       }
@@ -1173,7 +1285,14 @@
         ],
         "responses": {
           "200": {
-            "description": "OK"
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SharedKernel.Result\u00601[[Microsoft.AspNetCore.Http.IResult, Microsoft.AspNetCore.Http.Abstractions, Version=10.0.0.0, Culture=neutral, PublicKeyToken=adb9793829ddae60]]"
+                }
+              }
+            }
           }
         }
       }
@@ -1187,7 +1306,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/Web.Api.Endpoints.Logging.LoggingEndpoints-CreateRoleRequest"
+                "$ref": "#/components/schemas/Web.Api.Endpoints.Logging.CreateRoleRequest"
               }
             }
           },
@@ -1195,7 +1314,14 @@
         },
         "responses": {
           "200": {
-            "description": "OK"
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SharedKernel.Result\u00601[[Microsoft.AspNetCore.Http.IResult, Microsoft.AspNetCore.Http.Abstractions, Version=10.0.0.0, Culture=neutral, PublicKeyToken=adb9793829ddae60]]"
+                }
+              }
+            }
           }
         }
       }
@@ -1209,7 +1335,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/Web.Api.Endpoints.Logging.LoggingEndpoints-AssignAccessRequest"
+                "$ref": "#/components/schemas/Web.Api.Endpoints.Logging.AssignAccessRequest"
               }
             }
           },
@@ -1217,7 +1343,14 @@
         },
         "responses": {
           "200": {
-            "description": "OK"
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SharedKernel.Result\u00601[[Microsoft.AspNetCore.Http.IResult, Microsoft.AspNetCore.Http.Abstractions, Version=10.0.0.0, Culture=neutral, PublicKeyToken=adb9793829ddae60]]"
+                }
+              }
+            }
           }
         }
       }
@@ -1231,7 +1364,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/Web.Api.Endpoints.Notifications.Manage-CreateNotificationRequest"
+                "$ref": "#/components/schemas/Web.Api.Endpoints.Notifications.CreateNotificationRequest"
               }
             }
           },
@@ -1353,7 +1486,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/Web.Api.Endpoints.Notifications.Manage-ScheduleRequest"
+                "$ref": "#/components/schemas/Web.Api.Endpoints.Notifications.ScheduleNotificationRequest"
               }
             }
           },
@@ -1370,29 +1503,6 @@
       "get": {
         "tags": [
           "Notifications"
-        ],
-        "responses": {
-          "200": {
-            "description": "OK"
-          }
-        }
-      }
-    },
-    "/api/v1/notifications/schedules/{scheduleId}": {
-      "delete": {
-        "tags": [
-          "Notifications"
-        ],
-        "parameters": [
-          {
-            "name": "scheduleId",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
-          }
         ],
         "responses": {
           "200": {
@@ -1421,7 +1531,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/Web.Api.Endpoints.Notifications.Manage-PermissionRequest"
+                "$ref": "#/components/schemas/Web.Api.Endpoints.Notifications.UpsertNotificationPermissionRequest"
               }
             }
           },
@@ -1463,6 +1573,29 @@
         "parameters": [
           {
             "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/notifications/schedules/{scheduleId}": {
+      "delete": {
+        "tags": [
+          "Notifications"
+        ],
+        "parameters": [
+          {
+            "name": "scheduleId",
             "in": "path",
             "required": true,
             "schema": {
@@ -1585,7 +1718,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/Web.Api.Endpoints.Notifications.Manage-CreateTemplateRequest"
+                "$ref": "#/components/schemas/Web.Api.Endpoints.Notifications.CreateNotificationTemplateRequest"
               }
             }
           },
@@ -1665,7 +1798,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/Web.Api.Endpoints.Notifications.Manage-UpdateTemplateRequest"
+                "$ref": "#/components/schemas/Web.Api.Endpoints.Notifications.UpdateNotificationTemplateRequest"
               }
             }
           },
@@ -1735,7 +1868,7 @@
         }
       }
     },
-    "/api/v1/observability/orchestration/replay/outbox": {
+    "/api/v1/observability/orchestration/replay/inbox": {
       "post": {
         "tags": [
           "Observability"
@@ -1744,7 +1877,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/Web.Api.Endpoints.Observability.ReplayOrchestrationFailures-Request"
+                "$ref": "#/components/schemas/Web.Api.Endpoints.Observability.ReplayInboxFailures-Request"
               }
             }
           },
@@ -1757,7 +1890,7 @@
         }
       }
     },
-    "/api/v1/observability/orchestration/replay/inbox": {
+    "/api/v1/observability/orchestration/replay/outbox": {
       "post": {
         "tags": [
           "Observability"
@@ -1826,6 +1959,38 @@
         "tags": [
           "Profiles"
         ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/profiles/me/avatar": {
+      "delete": {
+        "tags": [
+          "Profiles"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Profiles"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Web.Api.Endpoints.Profiles.UpdateProfileAvatarRequest"
+              }
+            }
+          },
+          "required": true
+        },
         "responses": {
           "200": {
             "description": "OK"
@@ -1993,38 +2158,6 @@
               "type": "string"
             }
           }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK"
-          }
-        }
-      }
-    },
-    "/api/v1/profiles/me/avatar": {
-      "put": {
-        "tags": [
-          "Profiles"
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/Web.Api.Endpoints.Profiles.UpdateProfileAvatarRequest"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "OK"
-          }
-        }
-      },
-      "delete": {
-        "tags": [
-          "Profiles"
         ],
         "responses": {
           "200": {
@@ -2406,29 +2539,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/Web.Api.Endpoints.Users.ForgotPassword-RequestReset"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "OK"
-          }
-        }
-      }
-    },
-    "/api/v1/users/reset-password": {
-      "post": {
-        "tags": [
-          "Users"
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/Web.Api.Endpoints.Users.ForgotPassword-RequestConfirm"
+                "$ref": "#/components/schemas/Web.Api.Endpoints.Users.ForgotPassword-Request"
               }
             }
           },
@@ -2593,6 +2704,28 @@
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/Web.Api.Endpoints.Users.ResendVerificationCode-Request"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/users/reset-password": {
+      "post": {
+        "tags": [
+          "Users"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Web.Api.Endpoints.Modules.Users.ResetPassword-Request"
               }
             }
           },
@@ -2807,6 +2940,57 @@
         },
         "additionalProperties": false
       },
+      "Microsoft.AspNetCore.Http.IResult": {
+        "type": "object",
+        "additionalProperties": false
+      },
+      "SharedKernel.Error": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string",
+            "nullable": true
+          },
+          "description": {
+            "type": "string",
+            "nullable": true
+          },
+          "type": {
+            "$ref": "#/components/schemas/SharedKernel.ErrorType"
+          }
+        },
+        "additionalProperties": false
+      },
+      "SharedKernel.ErrorType": {
+        "enum": [
+          0,
+          1,
+          2,
+          3,
+          4
+        ],
+        "type": "integer",
+        "format": "int32"
+      },
+      "SharedKernel.Result\u00601[[Microsoft.AspNetCore.Http.IResult, Microsoft.AspNetCore.Http.Abstractions, Version=10.0.0.0, Culture=neutral, PublicKeyToken=adb9793829ddae60]]": {
+        "type": "object",
+        "properties": {
+          "isSuccess": {
+            "type": "boolean"
+          },
+          "isFailure": {
+            "type": "boolean",
+            "readOnly": true
+          },
+          "error": {
+            "$ref": "#/components/schemas/SharedKernel.Error"
+          },
+          "value": {
+            "$ref": "#/components/schemas/Microsoft.AspNetCore.Http.IResult"
+          }
+        },
+        "additionalProperties": false
+      },
       "Web.Api.Endpoints.Authorization.AssignPermissionToRole-Request": {
         "type": "object",
         "properties": {
@@ -2835,21 +3019,17 @@
         },
         "additionalProperties": false
       },
-      "Web.Api.Endpoints.Files.Manage-MetadataRequest": {
+      "Web.Api.Endpoints.Files.AddFileTagRequest": {
         "type": "object",
         "properties": {
-          "fileName": {
-            "type": "string",
-            "nullable": true
-          },
-          "description": {
+          "tag": {
             "type": "string",
             "nullable": true
           }
         },
         "additionalProperties": false
       },
-      "Web.Api.Endpoints.Files.Manage-MoveRequest": {
+      "Web.Api.Endpoints.Files.MoveFileRequest": {
         "type": "object",
         "properties": {
           "module": {
@@ -2863,40 +3043,7 @@
         },
         "additionalProperties": false
       },
-      "Web.Api.Endpoints.Files.Manage-PermissionRequest": {
-        "type": "object",
-        "properties": {
-          "subjectType": {
-            "type": "string",
-            "nullable": true
-          },
-          "subjectValue": {
-            "type": "string",
-            "nullable": true
-          },
-          "canRead": {
-            "type": "boolean"
-          },
-          "canWrite": {
-            "type": "boolean"
-          },
-          "canDelete": {
-            "type": "boolean"
-          }
-        },
-        "additionalProperties": false
-      },
-      "Web.Api.Endpoints.Files.Manage-TagRequest": {
-        "type": "object",
-        "properties": {
-          "tag": {
-            "type": "string",
-            "nullable": true
-          }
-        },
-        "additionalProperties": false
-      },
-      "Web.Api.Endpoints.Files.Manage-UploadForm": {
+      "Web.Api.Endpoints.Files.ScanFileRequest": {
         "type": "object",
         "properties": {
           "file": {
@@ -2919,7 +3066,67 @@
         },
         "additionalProperties": false
       },
-      "Web.Api.Endpoints.Files.Manage-ValidateRequest": {
+      "Web.Api.Endpoints.Files.UpdateFileMetadataRequest": {
+        "type": "object",
+        "properties": {
+          "fileName": {
+            "type": "string",
+            "nullable": true
+          },
+          "description": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "Web.Api.Endpoints.Files.UploadFileRequest": {
+        "type": "object",
+        "properties": {
+          "file": {
+            "type": "string",
+            "format": "binary",
+            "nullable": true
+          },
+          "module": {
+            "type": "string",
+            "nullable": true
+          },
+          "folder": {
+            "type": "string",
+            "nullable": true
+          },
+          "description": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "Web.Api.Endpoints.Files.UpsertFilePermissionRequest": {
+        "type": "object",
+        "properties": {
+          "subjectType": {
+            "type": "string",
+            "nullable": true
+          },
+          "subjectValue": {
+            "type": "string",
+            "nullable": true
+          },
+          "canRead": {
+            "type": "boolean"
+          },
+          "canWrite": {
+            "type": "boolean"
+          },
+          "canDelete": {
+            "type": "boolean"
+          }
+        },
+        "additionalProperties": false
+      },
+      "Web.Api.Endpoints.Files.ValidateFileRequest": {
         "type": "object",
         "properties": {
           "fileName": {
@@ -2937,7 +3144,7 @@
         },
         "additionalProperties": false
       },
-      "Web.Api.Endpoints.Logging.LoggingEndpoints-AssignAccessRequest": {
+      "Web.Api.Endpoints.Logging.AssignAccessRequest": {
         "type": "object",
         "properties": {
           "roleName": {
@@ -2951,7 +3158,7 @@
         },
         "additionalProperties": false
       },
-      "Web.Api.Endpoints.Logging.LoggingEndpoints-BulkIngestRequest": {
+      "Web.Api.Endpoints.Logging.BulkIngestRequest": {
         "type": "object",
         "properties": {
           "events": {
@@ -2964,7 +3171,7 @@
         },
         "additionalProperties": false
       },
-      "Web.Api.Endpoints.Logging.LoggingEndpoints-CreateAlertRuleRequest": {
+      "Web.Api.Endpoints.Logging.CreateAlertRuleRequest": {
         "type": "object",
         "properties": {
           "name": {
@@ -2996,7 +3203,7 @@
         },
         "additionalProperties": false
       },
-      "Web.Api.Endpoints.Logging.LoggingEndpoints-CreateRoleRequest": {
+      "Web.Api.Endpoints.Logging.CreateRoleRequest": {
         "type": "object",
         "properties": {
           "roleName": {
@@ -3006,7 +3213,57 @@
         },
         "additionalProperties": false
       },
-      "Web.Api.Endpoints.Notifications.Manage-CreateNotificationRequest": {
+      "Web.Api.Endpoints.Logging.UpdateAlertRuleRequest": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "nullable": true
+          },
+          "isEnabled": {
+            "type": "boolean"
+          },
+          "minimumLevel": {
+            "$ref": "#/components/schemas/Domain.Logging.LogLevelType"
+          },
+          "containsText": {
+            "type": "string",
+            "nullable": true
+          },
+          "windowSeconds": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "thresholdCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "action": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "Web.Api.Endpoints.Modules.Users.ResetPassword-Request": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "nullable": true
+          },
+          "code": {
+            "type": "string",
+            "nullable": true
+          },
+          "newPassword": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "Web.Api.Endpoints.Notifications.CreateNotificationRequest": {
         "type": "object",
         "properties": {
           "channel": {
@@ -3044,7 +3301,7 @@
         },
         "additionalProperties": false
       },
-      "Web.Api.Endpoints.Notifications.Manage-CreateTemplateRequest": {
+      "Web.Api.Endpoints.Notifications.CreateNotificationTemplateRequest": {
         "type": "object",
         "properties": {
           "name": {
@@ -3069,7 +3326,35 @@
         },
         "additionalProperties": false
       },
-      "Web.Api.Endpoints.Notifications.Manage-PermissionRequest": {
+      "Web.Api.Endpoints.Notifications.ScheduleNotificationRequest": {
+        "type": "object",
+        "properties": {
+          "runAtUtc": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "ruleName": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "Web.Api.Endpoints.Notifications.UpdateNotificationTemplateRequest": {
+        "type": "object",
+        "properties": {
+          "subjectTemplate": {
+            "type": "string",
+            "nullable": true
+          },
+          "bodyTemplate": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "Web.Api.Endpoints.Notifications.UpsertNotificationPermissionRequest": {
         "type": "object",
         "properties": {
           "subjectType": {
@@ -3089,30 +3374,12 @@
         },
         "additionalProperties": false
       },
-      "Web.Api.Endpoints.Notifications.Manage-ScheduleRequest": {
+      "Web.Api.Endpoints.Observability.ReplayInboxFailures-Request": {
         "type": "object",
         "properties": {
-          "runAtUtc": {
-            "type": "string",
-            "format": "date-time"
-          },
-          "ruleName": {
-            "type": "string",
-            "nullable": true
-          }
-        },
-        "additionalProperties": false
-      },
-      "Web.Api.Endpoints.Notifications.Manage-UpdateTemplateRequest": {
-        "type": "object",
-        "properties": {
-          "subjectTemplate": {
-            "type": "string",
-            "nullable": true
-          },
-          "bodyTemplate": {
-            "type": "string",
-            "nullable": true
+          "take": {
+            "type": "integer",
+            "format": "int32"
           }
         },
         "additionalProperties": false
@@ -3316,25 +3583,7 @@
         },
         "additionalProperties": false
       },
-      "Web.Api.Endpoints.Users.ForgotPassword-RequestConfirm": {
-        "type": "object",
-        "properties": {
-          "email": {
-            "type": "string",
-            "nullable": true
-          },
-          "code": {
-            "type": "string",
-            "nullable": true
-          },
-          "newPassword": {
-            "type": "string",
-            "nullable": true
-          }
-        },
-        "additionalProperties": false
-      },
-      "Web.Api.Endpoints.Users.ForgotPassword-RequestReset": {
+      "Web.Api.Endpoints.Users.ForgotPassword-Request": {
         "type": "object",
         "properties": {
           "email": {

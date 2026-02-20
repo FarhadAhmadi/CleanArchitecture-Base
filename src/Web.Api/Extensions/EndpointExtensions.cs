@@ -1,4 +1,4 @@
-﻿using System.Reflection;
+using System.Reflection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Web.Api.Endpoints;
 
@@ -27,6 +27,7 @@ public static class EndpointExtensions
         IEnumerable<IEndpoint> endpoints = app.Services
             .GetRequiredService<IEnumerable<IEndpoint>>()
             .OrderBy(GetModuleName)
+            .ThenBy(GetEndpointOrder)
             .ThenBy(endpoint => endpoint.GetType().Name, StringComparer.Ordinal);
 
         IEndpointRouteBuilder builder = routeGroupBuilder is null ? app : routeGroupBuilder;
@@ -72,4 +73,12 @@ public static class EndpointExtensions
 
         return "Core";
     }
+
+    private static int GetEndpointOrder(IEndpoint endpoint)
+    {
+        return endpoint is IOrderedEndpoint orderedEndpoint
+            ? orderedEndpoint.Order
+            : int.MaxValue;
+    }
 }
+

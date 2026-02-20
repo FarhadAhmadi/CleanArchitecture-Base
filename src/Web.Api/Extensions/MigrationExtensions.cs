@@ -8,34 +8,38 @@ namespace Web.Api.Extensions;
 
 public static class MigrationExtensions
 {
-    public static void ApplyMigrations(this IApplicationBuilder app, bool runAuthorizationSeed = true)
+    public static async Task ApplyMigrationsAsync(this IApplicationBuilder app, bool runAuthorizationSeed = true, CancellationToken cancellationToken = default)
     {
         using IServiceScope scope = app.ApplicationServices.CreateScope();
 
         using ApplicationDbContext dbContext =
             scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
 
-        dbContext.Database.Migrate();
+        await dbContext.Database.MigrateAsync(cancellationToken);
 
         if (runAuthorizationSeed)
         {
             AuthorizationSeeder seeder =
                 scope.ServiceProvider.GetRequiredService<AuthorizationSeeder>();
-            seeder.SeedAsync(CancellationToken.None).GetAwaiter().GetResult();
+            await seeder.SeedAsync(cancellationToken);
         }
 
         NotificationTemplateSeeder notificationTemplateSeeder =
             scope.ServiceProvider.GetRequiredService<NotificationTemplateSeeder>();
-        notificationTemplateSeeder.SeedAsync(CancellationToken.None).GetAwaiter().GetResult();
+        await notificationTemplateSeeder.SeedAsync(cancellationToken);
     }
 
-    public static void ApplyMigrationsIfEnabled(this IApplicationBuilder app, DatabaseMigrationOptions options)
+    public static async Task ApplyMigrationsIfEnabledAsync(
+        this IApplicationBuilder app,
+        DatabaseMigrationOptions options,
+        CancellationToken cancellationToken = default)
     {
         if (!options.ApplyOnStartup)
         {
             return;
         }
 
-        app.ApplyMigrations(options.RunAuthorizationSeed);
+        await app.ApplyMigrationsAsync(options.RunAuthorizationSeed, cancellationToken);
     }
 }
+

@@ -1,7 +1,6 @@
-using Application.Abstractions.Data;
-using Domain.Profiles;
-using Microsoft.EntityFrameworkCore;
+using Application.Abstractions.Messaging;
 using Web.Api.Extensions;
+using Web.Api.Infrastructure;
 
 namespace Web.Api.Endpoints.Profiles;
 
@@ -9,24 +8,13 @@ internal sealed class GetPublicProfile : IEndpoint
 {
     public void MapEndpoint(IEndpointRouteBuilder app)
     {
-        app.MapGet("profiles/{userId:guid}/public", GetAsync)
+        app.MapGet("profiles/{userId:guid}/public", async (
+                Guid userId,
+                IQueryHandler<GetPublicProfileQuery, IResult> handler,
+                CancellationToken cancellationToken) =>
+            (await handler.Handle(new GetPublicProfileQuery(userId), cancellationToken)).Match(static x => x, CustomResults.Problem))
             .HasPermission(Permissions.ProfilesPublicRead)
             .WithTags(Tags.Profiles);
     }
-
-    private static async Task<IResult> GetAsync(
-        Guid userId,
-        IApplicationReadDbContext readContext,
-        CancellationToken cancellationToken)
-    {
-        UserProfile? profile = await readContext.UserProfiles
-            .SingleOrDefaultAsync(x => x.UserId == userId, cancellationToken);
-
-        if (profile is null || !profile.IsProfilePublic)
-        {
-            return Results.NotFound();
-        }
-
-        return Results.Ok(ProfileEndpointCommon.ToPublicResponse(profile));
-    }
 }
+

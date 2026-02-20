@@ -3,6 +3,7 @@ using Domain.Auditing;
 using Domain.Authorization;
 using Domain.Files;
 using Domain.Logging;
+using Domain.Modules.Notifications;
 using Domain.Notifications;
 using Domain.Profiles;
 using Domain.Todos;

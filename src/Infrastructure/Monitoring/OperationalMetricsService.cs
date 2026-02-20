@@ -1,3 +1,4 @@
+using Application.Abstractions.Observability;
 using Infrastructure.Database;
 using Infrastructure.Integration;
 using Infrastructure.Logging;
@@ -9,7 +10,7 @@ public sealed class OperationalMetricsService(
     ApplicationReadDbContext dbContext,
     ILogIngestionQueue ingestionQueue,
     IAlertDispatchQueue alertQueue,
-    OutboxOptions outboxOptions)
+    OutboxOptions outboxOptions) : IOperationalMetricsService
 {
     public async Task<OperationalMetricsSnapshot> GetSnapshotAsync(CancellationToken cancellationToken)
     {

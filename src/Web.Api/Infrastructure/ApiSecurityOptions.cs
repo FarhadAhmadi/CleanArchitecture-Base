@@ -18,6 +18,10 @@ internal sealed class ApiSecurityOptions
 
     public int PerIpRateLimitPermitLimit { get; init; } = 120;
 
+    public int PublicFileLinkRateLimitPermitLimit { get; init; } = 20;
+
+    public int PublicFileLinkRateLimitWindowSeconds { get; init; } = 60;
+
     public bool EnableSecurityHeaders { get; init; } = true;
 
     public bool UseHsts { get; init; } = true;
@@ -32,3 +36,4 @@ internal sealed class ApiSecurityOptions
 
     public bool EnforceJsonAcceptHeader { get; init; }
 }
+

@@ -1,12 +1,12 @@
 using System.Text;
 using System.Text.Json;
-using Infrastructure.Monitoring;
+using Application.Abstractions.Observability;
 
 namespace Web.Api.Infrastructure;
 
 internal sealed class OperationalAlertWorker(
     OperationalAlertingOptions alertingOptions,
-    OperationalSloOptions sloOptions,
+    Application.Abstractions.Observability.OperationalSloOptions sloOptions,
     IServiceScopeFactory scopeFactory,
     IHttpClientFactory httpClientFactory,
     ILogger<OperationalAlertWorker> logger) : BackgroundService
@@ -25,7 +25,7 @@ internal sealed class OperationalAlertWorker(
             try
             {
                 using IServiceScope scope = scopeFactory.CreateScope();
-                OperationalMetricsService metricsService = scope.ServiceProvider.GetRequiredService<OperationalMetricsService>();
+                IOperationalMetricsService metricsService = scope.ServiceProvider.GetRequiredService<IOperationalMetricsService>();
                 OperationalMetricsSnapshot snapshot = await metricsService.GetSnapshotAsync(stoppingToken);
                 List<string> incidents = Evaluate(snapshot);
 
@@ -141,3 +141,4 @@ internal sealed class OperationalAlertWorker(
         logger.LogWarning("Operational alert sent. Message={Message}", incident);
     }
 }
+

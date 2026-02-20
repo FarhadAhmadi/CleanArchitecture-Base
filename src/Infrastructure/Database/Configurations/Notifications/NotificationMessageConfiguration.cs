@@ -3,6 +3,7 @@ using Infrastructure.Database;
 using Domain.Users;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
+using Domain.Modules.Notifications;
 
 namespace Infrastructure.Notifications;
 

@@ -1,7 +1,9 @@
 using System.Security.Cryptography;
 using System.Text;
 using Application.Abstractions.Data;
+using Application.Abstractions.Notifications;
 using Domain.Logging;
+using Domain.Modules.Notifications;
 using Domain.Notifications;
 using Domain.Profiles;
 using SharedKernel;
@@ -10,11 +12,13 @@ namespace Application.Profiles;
 
 internal sealed class UserProfileChangedDomainEventHandler(
     IApplicationDbContext context,
+    INotificationRecipientProtector recipientProtector,
     IDateTimeProvider dateTimeProvider)
     : IDomainEventHandler<UserProfileChangedDomainEvent>
 {
-    public async Task Handle(UserProfileChangedDomainEvent domainEvent, CancellationToken cancellationToken)
+    public Task Handle(UserProfileChangedDomainEvent domainEvent, CancellationToken cancellationToken)
     {
+        _ = cancellationToken;
         DateTime now = dateTimeProvider.UtcNow;
 
         context.LogEvents.Add(new LogEvent
@@ -41,16 +45,15 @@ internal sealed class UserProfileChangedDomainEventHandler(
             Channel = NotificationChannel.InApp,
             Priority = NotificationPriority.Low,
             Status = NotificationStatus.Pending,
-            RecipientEncrypted = Convert.ToBase64String(Encoding.UTF8.GetBytes(recipientRaw)),
-            RecipientHash = ComputeHash(recipientRaw),
+            RecipientEncrypted = recipientProtector.Protect(recipientRaw),
+            RecipientHash = recipientProtector.ComputeDeterministicHash(recipientRaw),
             Subject = "Profile updated",
             Body = $"Your profile was updated ({domainEvent.ChangeType}). Completion score: {domainEvent.CompletenessScore}%.",
             Language = "fa-IR",
             CreatedAtUtc = now,
             MaxRetryCount = 1
         });
-
-        await context.SaveChangesAsync(cancellationToken);
+        return Task.CompletedTask;
     }
 
     private static string ComputeChecksum(UserProfileChangedDomainEvent domainEvent, DateTime now)
@@ -59,10 +62,6 @@ internal sealed class UserProfileChangedDomainEventHandler(
         byte[] hash = SHA256.HashData(Encoding.UTF8.GetBytes(payload));
         return Convert.ToHexString(hash);
     }
-
-    private static string ComputeHash(string value)
-    {
-        byte[] hash = SHA256.HashData(Encoding.UTF8.GetBytes(value));
-        return Convert.ToHexString(hash);
-    }
 }
+
+

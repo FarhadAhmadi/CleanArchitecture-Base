@@ -1,10 +1,11 @@
 using System.Reflection;
 using System.Text.RegularExpressions;
+using Application.Abstractions.Observability;
 using SharedKernel;
 
 namespace Infrastructure.Monitoring;
 
-public sealed class EventContractCatalogService
+public sealed class EventContractCatalogService : IEventContractCatalogService
 {
     public IReadOnlyList<EventContractDescriptor> GetContracts()
     {
@@ -60,9 +61,3 @@ public sealed class EventContractCatalogService
         return Regex.Replace(raw, "(?<!^)([A-Z])", ".$1", RegexOptions.CultureInvariant);
     }
 }
-
-public sealed record EventContractDescriptor(
-    string ContractName,
-    int ContractVersion,
-    string ClrType,
-    string AssemblyName);

@@ -1,5 +1,6 @@
 using System.Net;
 using System.Net.Mail;
+using Domain.Modules.Notifications;
 using Domain.Notifications;
 using Microsoft.Extensions.Logging;
 

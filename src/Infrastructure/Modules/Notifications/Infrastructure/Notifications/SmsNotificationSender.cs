@@ -1,4 +1,5 @@
 using System.Net.Http.Json;
+using Domain.Modules.Notifications;
 using Domain.Notifications;
 using Microsoft.Extensions.Logging;
 

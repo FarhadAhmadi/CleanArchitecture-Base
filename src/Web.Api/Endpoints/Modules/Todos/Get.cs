@@ -3,12 +3,26 @@ using Application.Abstractions.Messaging;
 using Application.Todos.Get;
 using Microsoft.AspNetCore.Mvc;
 using SharedKernel;
+using Web.Api.Endpoints.Common.Requests;
 using Web.Api.Endpoints.Mappings;
 using Web.Api.Endpoints.Users;
 using Web.Api.Extensions;
 using Web.Api.Infrastructure;
 
 namespace Web.Api.Endpoints.Todos;
+
+public sealed class GetTodosRequest : PagedSortedQueryRequest
+{
+    [FromQuery(Name = "search")]
+    [SanitizeText(200)]
+    public string? Search { get; set; }
+
+    [FromQuery(Name = "isCompleted")]
+    public bool? IsCompleted { get; set; }
+
+    protected override int DefaultPageSize => 15;
+    protected override int MaxPageSize => 100;
+}
 
 internal sealed class Get : IEndpoint
 {
@@ -35,3 +49,4 @@ internal sealed class Get : IEndpoint
         .HasPermission(Permissions.TodosRead);
     }
 }
+

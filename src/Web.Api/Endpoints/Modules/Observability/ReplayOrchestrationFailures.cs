@@ -1,4 +1,5 @@
-using Infrastructure.Monitoring;
+using Application.Abstractions.Messaging;
+using Application.Observability;
 using Web.Api.Endpoints.Users;
 using Web.Api.Extensions;
 
@@ -12,24 +13,12 @@ internal sealed class ReplayOrchestrationFailures : IEndpoint
     {
         app.MapPost("observability/orchestration/replay/outbox", async (
             Request request,
-            OrchestrationReplayService replayService,
+            ICommandHandler<ReplayFailedOutboxCommand, IResult> handler,
             CancellationToken cancellationToken) =>
-        {
-            int replayed = await replayService.ReplayFailedOutboxAsync(request.Take, cancellationToken);
-            return Results.Ok(new { target = "outbox", replayed });
-        })
-        .WithTags("Observability")
-        .HasPermission(Permissions.ObservabilityManage);
-
-        app.MapPost("observability/orchestration/replay/inbox", async (
-            Request request,
-            OrchestrationReplayService replayService,
-            CancellationToken cancellationToken) =>
-        {
-            int replayed = await replayService.ReplayFailedInboxAsync(request.Take, cancellationToken);
-            return Results.Ok(new { target = "inbox", replayed });
-        })
+            (await handler.Handle(new ReplayFailedOutboxCommand(request.Take), cancellationToken)).Match(static x => x, Web.Api.Infrastructure.CustomResults.Problem))
         .WithTags("Observability")
         .HasPermission(Permissions.ObservabilityManage);
     }
 }
+
+

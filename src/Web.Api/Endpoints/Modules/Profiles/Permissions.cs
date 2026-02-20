@@ -9,3 +9,4 @@ internal static class Permissions
     internal const string ProfilesPublicRead = PermissionCodes.ProfilesPublicRead;
     internal const string ProfilesAdminRead = PermissionCodes.ProfilesAdminRead;
 }
+

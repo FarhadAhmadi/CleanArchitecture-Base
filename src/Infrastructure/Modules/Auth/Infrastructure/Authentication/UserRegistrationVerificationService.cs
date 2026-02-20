@@ -4,6 +4,7 @@ using System.Text;
 using Application.Abstractions.Security;
 using Application.Abstractions.Users;
 using Application.Users.Register;
+using Domain.Modules.Notifications;
 using Domain.Notifications;
 using Domain.Users;
 using Infrastructure.Database;

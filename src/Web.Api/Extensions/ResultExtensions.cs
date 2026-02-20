@@ -1,4 +1,4 @@
-﻿using SharedKernel;
+using SharedKernel;
 
 namespace Web.Api.Extensions;
 
@@ -12,11 +12,12 @@ public static class ResultExtensions
         return result.IsSuccess ? onSuccess() : onFailure(result);
     }
 
-    public static TOut Match<TIn, TOut>(
-        this Result<TIn> result,
-        Func<TIn, TOut> onSuccess,
-        Func<Result<TIn>, TOut> onFailure)
+    public static TOut Match<TValue, TOut>(
+        this Result<TValue> result,
+        Func<TValue, TOut> onSuccess,
+        Func<Result<TValue>, TOut> onFailure)
     {
         return result.IsSuccess ? onSuccess(result.Value) : onFailure(result);
     }
 }
+

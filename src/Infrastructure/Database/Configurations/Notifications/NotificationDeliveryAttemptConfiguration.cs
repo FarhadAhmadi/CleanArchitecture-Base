@@ -1,4 +1,4 @@
-using Domain.Notifications;
+using Domain.Modules.Notifications;
 using Infrastructure.Database;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;

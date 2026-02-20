@@ -682,7 +682,7 @@ namespace Infrastructure.Database.Migrations
                     b.ToTable("LogEvents", "logging");
                 });
 
-            modelBuilder.Entity("Domain.Notifications.NotificationDeliveryAttempt", b =>
+            modelBuilder.Entity("Domain.Modules.Notifications.NotificationDeliveryAttempt", b =>
                 {
                     b.Property<Guid>("Id")
                         .HasColumnType("uniqueidentifier");
@@ -733,7 +733,7 @@ namespace Infrastructure.Database.Migrations
                     b.ToTable("NotificationDeliveryAttempts", "notifications");
                 });
 
-            modelBuilder.Entity("Domain.Notifications.NotificationMessage", b =>
+            modelBuilder.Entity("Domain.Modules.Notifications.NotificationMessage", b =>
                 {
                     b.Property<Guid>("Id")
                         .HasColumnType("uniqueidentifier");
@@ -1039,6 +1039,133 @@ namespace Infrastructure.Database.Migrations
                         .IsUnique();
 
                     b.ToTable("NotificationTemplateRevisions", "notifications");
+                });
+
+            modelBuilder.Entity("Domain.Profiles.UserProfile", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("AuditCreatedAtUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("AuditCreatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("AuditUpdatedAtUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("AuditUpdatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<Guid?>("AvatarFileId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("AvatarUrl")
+                        .HasMaxLength(800)
+                        .HasColumnType("nvarchar(800)");
+
+                    b.Property<string>("Bio")
+                        .HasMaxLength(1200)
+                        .HasColumnType("nvarchar(1200)");
+
+                    b.Property<string>("ContactEmail")
+                        .HasMaxLength(320)
+                        .HasColumnType("nvarchar(320)");
+
+                    b.Property<string>("ContactPhone")
+                        .HasMaxLength(32)
+                        .HasColumnType("nvarchar(32)");
+
+                    b.Property<DateTime?>("DateOfBirth")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("DisplayName")
+                        .IsRequired()
+                        .HasMaxLength(160)
+                        .HasColumnType("nvarchar(160)");
+
+                    b.Property<string>("FavoriteMusicArtist")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<Guid?>("FavoriteMusicFileId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("FavoriteMusicTitle")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<string>("Gender")
+                        .HasMaxLength(32)
+                        .HasColumnType("nvarchar(32)");
+
+                    b.Property<string>("InterestsCsv")
+                        .IsRequired()
+                        .HasMaxLength(3000)
+                        .HasColumnType("nvarchar(3000)");
+
+                    b.Property<bool>("IsProfilePublic")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime?>("LastProfileUpdateAtUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("LastSeenAtUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Location")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<string>("PreferredLanguage")
+                        .IsRequired()
+                        .HasMaxLength(16)
+                        .HasColumnType("nvarchar(16)");
+
+                    b.Property<int>("ProfileCompletenessScore")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("ReceiveProductUpdates")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("ReceiveSecurityAlerts")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("ShowEmail")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("ShowPhone")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("SocialLinksJson")
+                        .IsRequired()
+                        .HasMaxLength(4000)
+                        .HasColumnType("nvarchar(4000)");
+
+                    b.Property<string>("TimeZone")
+                        .HasMaxLength(80)
+                        .HasColumnType("nvarchar(80)");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("WebsiteUrl")
+                        .HasMaxLength(400)
+                        .HasColumnType("nvarchar(400)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("DisplayName");
+
+                    b.HasIndex("IsProfilePublic");
+
+                    b.HasIndex("LastProfileUpdateAtUtc");
+
+                    b.HasIndex("UserId")
+                        .IsUnique();
+
+                    b.ToTable("UserProfiles", "profiles");
                 });
 
             modelBuilder.Entity("Domain.Todos.TodoItem", b =>
@@ -1551,16 +1678,16 @@ namespace Infrastructure.Database.Migrations
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("Domain.Notifications.NotificationDeliveryAttempt", b =>
+            modelBuilder.Entity("Domain.Modules.Notifications.NotificationDeliveryAttempt", b =>
                 {
-                    b.HasOne("Domain.Notifications.NotificationMessage", null)
+                    b.HasOne("Domain.Modules.Notifications.NotificationMessage", null)
                         .WithMany()
                         .HasForeignKey("NotificationId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("Domain.Notifications.NotificationMessage", b =>
+            modelBuilder.Entity("Domain.Modules.Notifications.NotificationMessage", b =>
                 {
                     b.HasOne("Domain.Users.User", null)
                         .WithMany()
@@ -1576,7 +1703,7 @@ namespace Infrastructure.Database.Migrations
 
             modelBuilder.Entity("Domain.Notifications.NotificationPermissionEntry", b =>
                 {
-                    b.HasOne("Domain.Notifications.NotificationMessage", null)
+                    b.HasOne("Domain.Modules.Notifications.NotificationMessage", null)
                         .WithMany()
                         .HasForeignKey("NotificationId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -1585,7 +1712,7 @@ namespace Infrastructure.Database.Migrations
 
             modelBuilder.Entity("Domain.Notifications.NotificationSchedule", b =>
                 {
-                    b.HasOne("Domain.Notifications.NotificationMessage", null)
+                    b.HasOne("Domain.Modules.Notifications.NotificationMessage", null)
                         .WithMany()
                         .HasForeignKey("NotificationId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -1602,6 +1729,15 @@ namespace Infrastructure.Database.Migrations
                     b.HasOne("Domain.Notifications.NotificationTemplate", null)
                         .WithMany()
                         .HasForeignKey("TemplateId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Domain.Profiles.UserProfile", b =>
+                {
+                    b.HasOne("Domain.Users.User", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });

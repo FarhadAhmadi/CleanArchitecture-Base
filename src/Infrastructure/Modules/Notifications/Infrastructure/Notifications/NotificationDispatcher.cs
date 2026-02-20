@@ -1,3 +1,4 @@
+using Domain.Modules.Notifications;
 using Domain.Notifications;
 using Infrastructure.Database;
 using Microsoft.EntityFrameworkCore;

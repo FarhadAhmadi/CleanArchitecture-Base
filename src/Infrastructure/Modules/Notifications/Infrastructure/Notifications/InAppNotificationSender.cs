@@ -1,3 +1,4 @@
+using Domain.Modules.Notifications;
 using Domain.Notifications;
 using Microsoft.Extensions.Logging;
 

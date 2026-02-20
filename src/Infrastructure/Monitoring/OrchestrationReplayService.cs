@@ -1,6 +1,7 @@
 using Infrastructure.Database;
 using Infrastructure.Integration;
 using Infrastructure.DomainEvents;
+using Application.Abstractions.Observability;
 using Microsoft.EntityFrameworkCore;
 using SharedKernel;
 
@@ -10,7 +11,7 @@ public sealed class OrchestrationReplayService(
     ApplicationDbContext dbContext,
     OutboxOptions outboxOptions,
     IntegrationEventSerializer serializer,
-    IDomainEventsDispatcher dispatcher)
+    IDomainEventsDispatcher dispatcher) : IOrchestrationReplayService
 {
     public async Task<int> ReplayFailedOutboxAsync(int take, CancellationToken cancellationToken)
     {

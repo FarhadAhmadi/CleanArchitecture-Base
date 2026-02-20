@@ -1,6 +1,7 @@
 using System.Net.Http.Headers;
 using Domain.Authorization;
 using Domain.Users;
+using Infrastructure.Files;
 using Infrastructure.Database;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
@@ -30,6 +31,7 @@ public sealed class ApiWebApplicationFactory : WebApplicationFactory<Web.Api.Pro
             services.RemoveAll<ApplicationReadDbContext>();
             services.RemoveAll<Application.Abstractions.Data.IApplicationDbContext>();
             services.RemoveAll<Application.Abstractions.Data.IApplicationReadDbContext>();
+            services.RemoveAll<IFileObjectStorage>();
 
             _connection.Open();
 
@@ -37,6 +39,7 @@ public sealed class ApiWebApplicationFactory : WebApplicationFactory<Web.Api.Pro
             services.AddDbContext<ApplicationReadDbContext>(options => options.UseSqlite(_connection));
             services.AddScoped<Application.Abstractions.Data.IApplicationDbContext>(sp => sp.GetRequiredService<ApplicationDbContext>());
             services.AddScoped<Application.Abstractions.Data.IApplicationReadDbContext>(sp => sp.GetRequiredService<ApplicationReadDbContext>());
+            services.AddSingleton<IFileObjectStorage, FakeFileObjectStorage>();
 
             using IServiceScope scope = services.BuildServiceProvider().CreateScope();
             ApplicationDbContext dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
@@ -88,5 +91,41 @@ public sealed class ApiWebApplicationFactory : WebApplicationFactory<Web.Api.Pro
             new RolePermission { RoleId = adminRole.Id, PermissionId = authManage.Id });
 
         dbContext.SaveChanges();
+    }
+
+    private sealed class FakeFileObjectStorage : IFileObjectStorage
+    {
+        public Task UploadAsync(string objectKey, Stream content, long contentLength, string contentType, CancellationToken cancellationToken)
+        {
+            _ = objectKey;
+            _ = content;
+            _ = contentLength;
+            _ = contentType;
+            _ = cancellationToken;
+            return Task.CompletedTask;
+        }
+
+        public Task DeleteAsync(string objectKey, CancellationToken cancellationToken)
+        {
+            _ = objectKey;
+            _ = cancellationToken;
+            return Task.CompletedTask;
+        }
+
+        public Task<string> CreatePresignedDownloadUrlAsync(string objectKey, int expirySeconds, CancellationToken cancellationToken)
+        {
+            _ = objectKey;
+            _ = expirySeconds;
+            _ = cancellationToken;
+            return Task.FromResult("https://example.local/files/presigned");
+        }
+
+        public Task<(Stream Content, string ContentType)> OpenReadAsync(string objectKey, CancellationToken cancellationToken)
+        {
+            _ = objectKey;
+            _ = cancellationToken;
+            Stream stream = new MemoryStream();
+            return Task.FromResult((stream, "application/octet-stream"));
+        }
     }
 }

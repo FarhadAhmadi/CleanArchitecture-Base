@@ -1,8 +1,4 @@
-using Application.Abstractions.Authentication;
-using Application.Abstractions.Data;
-using Domain.Profiles;
-using FluentValidation;
-using FluentValidation.Results;
+using Application.Abstractions.Messaging;
 using Web.Api.Extensions;
 using Web.Api.Infrastructure;
 
@@ -12,46 +8,13 @@ internal sealed class AddMyProfileInterests : IEndpoint
 {
     public void MapEndpoint(IEndpointRouteBuilder app)
     {
-        app.MapPost("profiles/me/interests", AddAsync)
+        app.MapPost("profiles/me/interests", async (
+                AddProfileInterestsRequest request,
+                ICommandHandler<AddMyProfileInterestsCommand, IResult> handler,
+                CancellationToken cancellationToken) =>
+            (await handler.Handle(new AddMyProfileInterestsCommand(request), cancellationToken)).Match(static x => x, CustomResults.Problem))
             .HasPermission(Permissions.ProfilesWrite)
             .WithTags(Tags.Profiles);
     }
-
-    private static async Task<IResult> AddAsync(
-        AddProfileInterestsRequest request,
-        IUserContext userContext,
-        IApplicationDbContext writeContext,
-        IValidator<AddProfileInterestsRequest> validator,
-        CancellationToken cancellationToken)
-    {
-        ValidationResult validationResult = await validator.ValidateAsync(request, cancellationToken);
-        if (!validationResult.IsValid)
-        {
-            return validationResult.ToValidationProblem();
-        }
-
-        UserProfile? profile = await ProfileEndpointCommon.GetCurrentProfileForUpdateAsync(
-            userContext.UserId,
-            writeContext,
-            cancellationToken);
-
-        if (profile is null)
-        {
-            return Results.NotFound();
-        }
-
-        HashSet<string> currentInterests = [.. ProfileEndpointCommon.ParseInterests(profile.InterestsCsv)];
-        foreach (string interest in InputSanitizer.SanitizeList(request.Interests ?? [], 60))
-        {
-            currentInterests.Add(interest);
-        }
-
-        profile.InterestsCsv = string.Join(',', currentInterests.OrderBy(x => x, StringComparer.OrdinalIgnoreCase));
-        profile.LastProfileUpdateAtUtc = DateTime.UtcNow;
-        profile.ProfileCompletenessScore = ProfileEndpointCommon.ComputeCompleteness(profile);
-        profile.Raise(new UserProfileChangedDomainEvent(profile.Id, profile.UserId, "Interests", profile.ProfileCompletenessScore));
-
-        await writeContext.SaveChangesAsync(cancellationToken);
-        return Results.Ok(ProfileEndpointCommon.ToPrivateResponse(profile));
-    }
 }
+

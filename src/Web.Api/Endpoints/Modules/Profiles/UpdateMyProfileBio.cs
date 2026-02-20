@@ -1,8 +1,4 @@
-using Application.Abstractions.Authentication;
-using Application.Abstractions.Data;
-using Domain.Profiles;
-using FluentValidation;
-using FluentValidation.Results;
+using Application.Abstractions.Messaging;
 using Web.Api.Extensions;
 using Web.Api.Infrastructure;
 
@@ -12,40 +8,13 @@ internal sealed class UpdateMyProfileBio : IEndpoint
 {
     public void MapEndpoint(IEndpointRouteBuilder app)
     {
-        app.MapPut("profiles/me/bio", UpdateAsync)
+        app.MapPatch("profiles/me/bio", async (
+                UpdateProfileBioRequest request,
+                ICommandHandler<UpdateMyProfileBioCommand, IResult> handler,
+                CancellationToken cancellationToken) =>
+            (await handler.Handle(new UpdateMyProfileBioCommand(request), cancellationToken)).Match(static x => x, CustomResults.Problem))
             .HasPermission(Permissions.ProfilesWrite)
             .WithTags(Tags.Profiles);
     }
-
-    private static async Task<IResult> UpdateAsync(
-        UpdateProfileBioRequest request,
-        IUserContext userContext,
-        IApplicationDbContext writeContext,
-        IValidator<UpdateProfileBioRequest> validator,
-        CancellationToken cancellationToken)
-    {
-        ValidationResult validationResult = await validator.ValidateAsync(request, cancellationToken);
-        if (!validationResult.IsValid)
-        {
-            return validationResult.ToValidationProblem();
-        }
-
-        UserProfile? profile = await ProfileEndpointCommon.GetCurrentProfileForUpdateAsync(
-            userContext.UserId,
-            writeContext,
-            cancellationToken);
-
-        if (profile is null)
-        {
-            return Results.NotFound();
-        }
-
-        profile.Bio = InputSanitizer.SanitizeText(request.Bio, 1200);
-        profile.LastProfileUpdateAtUtc = DateTime.UtcNow;
-        profile.ProfileCompletenessScore = ProfileEndpointCommon.ComputeCompleteness(profile);
-        profile.Raise(new UserProfileChangedDomainEvent(profile.Id, profile.UserId, "Bio", profile.ProfileCompletenessScore));
-
-        await writeContext.SaveChangesAsync(cancellationToken);
-        return Results.Ok(ProfileEndpointCommon.ToPrivateResponse(profile));
-    }
 }
+

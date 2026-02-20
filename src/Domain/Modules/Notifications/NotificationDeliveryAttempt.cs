@@ -1,6 +1,7 @@
+using Domain.Notifications;
 using SharedKernel;
 
-namespace Domain.Notifications;
+namespace Domain.Modules.Notifications;
 
 public sealed class NotificationDeliveryAttempt : Entity
 {
