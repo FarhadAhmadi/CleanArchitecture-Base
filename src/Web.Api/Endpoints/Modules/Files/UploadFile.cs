@@ -22,7 +22,7 @@ public sealed class UploadFileRequest
     public string? Description { get; set; }
 }
 
-internal sealed class UploadFileEndpoints : IEndpoint, IOrderedEndpoint
+internal sealed class UploadFile : IEndpoint, IOrderedEndpoint
 {
     public int Order => 1;
 
@@ -45,6 +45,7 @@ internal sealed class UploadFileEndpoints : IEndpoint, IOrderedEndpoint
                     httpContext),
                 cancellationToken)).Match(static x => x, Web.Api.Infrastructure.CustomResults.Problem))
             .HasPermission(Permissions.FilesWrite)
+            .DisableAntiforgery()
             .RequireRateLimiting(Web.Api.DependencyInjection.GetRateLimiterPolicyName())
             .WithTags(Tags.Files);
     }

@@ -39,6 +39,11 @@ public sealed class NotificationSensitiveDataProtector(NotificationOptions optio
         }
 
         byte[] payload = Convert.FromBase64String(cipherText);
+        if (payload.Length <= 16)
+        {
+            throw new CryptographicException("Encrypted payload is invalid.");
+        }
+
         byte[] iv = payload[..16];
         byte[] cipher = payload[16..];
 

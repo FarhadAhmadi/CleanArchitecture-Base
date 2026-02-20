@@ -43,6 +43,7 @@ internal sealed class ScanFile : IEndpoint, IOrderedEndpoint
                     }),
                 cancellationToken)).Match(static x => x, Web.Api.Infrastructure.CustomResults.Problem))
             .HasPermission(Permissions.FilesWrite)
+            .DisableAntiforgery()
             .WithTags(Tags.Files);
     }
 }

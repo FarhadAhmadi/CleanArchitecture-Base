@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 
@@ -20,6 +21,13 @@ public sealed class ApiWebApplicationFactory : WebApplicationFactory<Web.Api.Pro
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
         builder.UseEnvironment("Testing");
+        builder.ConfigureAppConfiguration((_, configurationBuilder) =>
+        {
+            configurationBuilder.AddInMemoryCollection(new Dictionary<string, string?>
+            {
+                ["Notifications:Enabled"] = "false"
+            });
+        });
 
         builder.ConfigureServices(services =>
         {
@@ -74,21 +82,39 @@ public sealed class ApiWebApplicationFactory : WebApplicationFactory<Web.Api.Pro
         var userRole = new Role { Id = Guid.NewGuid(), Name = "user" };
         var adminRole = new Role { Id = Guid.NewGuid(), Name = "admin" };
 
-        var todosRead = new Permission { Id = Guid.NewGuid(), Code = PermissionCodes.TodosRead, Description = "todos read" };
-        var todosWrite = new Permission { Id = Guid.NewGuid(), Code = PermissionCodes.TodosWrite, Description = "todos write" };
-        var usersAccess = new Permission { Id = Guid.NewGuid(), Code = PermissionCodes.UsersAccess, Description = "users access" };
-        var authManage = new Permission { Id = Guid.NewGuid(), Code = PermissionCodes.AuthorizationManage, Description = "authorization manage" };
-
         dbContext.Roles.AddRange(userRole, adminRole);
-        dbContext.Permissions.AddRange(todosRead, todosWrite, usersAccess, authManage);
+        var permissions = typeof(PermissionCodes)
+            .GetFields(System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Static)
+            .Where(x => x.FieldType == typeof(string))
+            .Select(x => (string?)x.GetValue(null))
+            .Where(x => !string.IsNullOrWhiteSpace(x))
+            .Distinct(StringComparer.Ordinal)
+            .Select(code => new Permission
+            {
+                Id = Guid.NewGuid(),
+                Code = code!,
+                Description = code!
+            })
+            .ToList();
 
-        dbContext.RolePermissions.AddRange(
-            new RolePermission { RoleId = userRole.Id, PermissionId = todosRead.Id },
-            new RolePermission { RoleId = userRole.Id, PermissionId = todosWrite.Id },
-            new RolePermission { RoleId = adminRole.Id, PermissionId = todosRead.Id },
-            new RolePermission { RoleId = adminRole.Id, PermissionId = todosWrite.Id },
-            new RolePermission { RoleId = adminRole.Id, PermissionId = usersAccess.Id },
-            new RolePermission { RoleId = adminRole.Id, PermissionId = authManage.Id });
+        dbContext.Permissions.AddRange(permissions);
+
+        Guid? todosReadPermissionId = permissions.SingleOrDefault(x => x.Code == PermissionCodes.TodosRead)?.Id;
+        Guid? todosWritePermissionId = permissions.SingleOrDefault(x => x.Code == PermissionCodes.TodosWrite)?.Id;
+        if (todosReadPermissionId.HasValue)
+        {
+            dbContext.RolePermissions.Add(new RolePermission { RoleId = userRole.Id, PermissionId = todosReadPermissionId.Value });
+        }
+
+        if (todosWritePermissionId.HasValue)
+        {
+            dbContext.RolePermissions.Add(new RolePermission { RoleId = userRole.Id, PermissionId = todosWritePermissionId.Value });
+        }
+
+        foreach (Permission permission in permissions)
+        {
+            dbContext.RolePermissions.Add(new RolePermission { RoleId = adminRole.Id, PermissionId = permission.Id });
+        }
 
         dbContext.SaveChanges();
     }

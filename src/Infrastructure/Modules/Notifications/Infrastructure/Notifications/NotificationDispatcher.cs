@@ -3,6 +3,7 @@ using Domain.Notifications;
 using Infrastructure.Database;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using System.Security.Cryptography;
 
 namespace Infrastructure.Notifications;
 
@@ -68,7 +69,26 @@ public sealed class NotificationDispatcher
             return;
         }
 
-        string recipient = _protector.Unprotect(message.RecipientEncrypted);
+        string recipient;
+        try
+        {
+            recipient = _protector.Unprotect(message.RecipientEncrypted);
+        }
+        catch (Exception ex) when (ex is FormatException or CryptographicException)
+        {
+            message.RetryCount = Math.Max(message.RetryCount, Math.Max(1, message.MaxRetryCount));
+            message.Status = NotificationStatus.Failed;
+            message.NextRetryAtUtc = null;
+            message.LastError = "Failed to decrypt notification recipient. Data may have been encrypted with a different key.";
+
+            _logger.LogError(
+                ex,
+                "Notification recipient decryption failed permanently. NotificationId={NotificationId} Channel={Channel}",
+                message.Id,
+                message.Channel);
+            return;
+        }
+
         NotificationDispatchResult result;
 
         try
