@@ -5,6 +5,8 @@ using Web.Api.Extensions;
 
 namespace Web.Api.Endpoints.Notifications;
 
+public sealed record UpsertNotificationPermissionRequest(string SubjectType, string SubjectValue, bool CanRead, bool CanManage);
+
 internal sealed class NotificationPermissionsEndpoint : IEndpoint, IOrderedEndpoint
 {
     public int Order => 7;
@@ -16,7 +18,14 @@ internal sealed class NotificationPermissionsEndpoint : IEndpoint, IOrderedEndpo
                 UpsertNotificationPermissionRequest request,
                 ICommandHandler<UpsertNotificationPermissionCommand, IResult> handler,
                 CancellationToken cancellationToken) =>
-            (await handler.Handle(new UpsertNotificationPermissionCommand(notificationId, request), cancellationToken)).Match(static x => x, Web.Api.Infrastructure.CustomResults.Problem))
+            (await handler.Handle(
+                new UpsertNotificationPermissionCommand(
+                    notificationId,
+                    request.SubjectType,
+                    request.SubjectValue,
+                    request.CanRead,
+                    request.CanManage),
+                cancellationToken)).Match(static x => x, Web.Api.Infrastructure.CustomResults.Problem))
             .HasPermission(Permissions.NotificationPermissionsManage)
             .WithTags(Tags.Notifications);
     }

@@ -8,20 +8,38 @@ using Application.Shared;
 
 namespace Application.Profiles;
 
-public sealed record UpdateMyProfileBasicCommand(UpdateProfileBasicRequest Request) : ICommand<IResult>;
+public sealed record UpdateMyProfileBasicCommand(
+    string? DisplayName,
+    string? Bio,
+    DateTime? DateOfBirth,
+    string? Gender,
+    string? Location) : ICommand<IResult>;
+
+internal sealed class UpdateMyProfileBasicCommandValidator : AbstractValidator<UpdateMyProfileBasicCommand>
+{
+    public UpdateMyProfileBasicCommandValidator()
+    {
+        RuleFor(x => x.DisplayName).MaximumLength(160).When(x => !string.IsNullOrWhiteSpace(x.DisplayName));
+        RuleFor(x => x.Bio).MaximumLength(1200).When(x => !string.IsNullOrWhiteSpace(x.Bio));
+        RuleFor(x => x.Gender).MaximumLength(32).When(x => !string.IsNullOrWhiteSpace(x.Gender));
+        RuleFor(x => x.Location).MaximumLength(200).When(x => !string.IsNullOrWhiteSpace(x.Location));
+        RuleFor(x => x.DateOfBirth).LessThanOrEqualTo(DateTime.UtcNow.Date).When(x => x.DateOfBirth.HasValue);
+    }
+}
+
 internal sealed class UpdateMyProfileBasicCommandHandler(
     IUserContext userContext,
     IApplicationDbContext writeContext,
-    IValidator<UpdateProfileBasicRequest> validator) : ResultWrappingCommandHandler<UpdateMyProfileBasicCommand>
+    IValidator<UpdateMyProfileBasicCommand> validator) : ResultWrappingCommandHandler<UpdateMyProfileBasicCommand>
 {
     protected override async Task<IResult> HandleCore(UpdateMyProfileBasicCommand command, CancellationToken cancellationToken) =>
-        await UpdateAsync(command.Request, userContext, writeContext, validator, cancellationToken);
+        await UpdateAsync(command, userContext, writeContext, validator, cancellationToken);
 
     private static async Task<IResult> UpdateAsync(
-        UpdateProfileBasicRequest request,
+        UpdateMyProfileBasicCommand request,
         IUserContext userContext,
         IApplicationDbContext writeContext,
-        IValidator<UpdateProfileBasicRequest> validator,
+        IValidator<UpdateMyProfileBasicCommand> validator,
         CancellationToken cancellationToken)
     {
         ValidationResult validationResult = await validator.ValidateAsync(request, cancellationToken);

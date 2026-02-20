@@ -7,20 +7,34 @@ using FluentValidation.Results;
 
 namespace Application.Profiles;
 
-public sealed record UpdateMyProfileSocialLinksCommand(UpdateProfileSocialLinksRequest Request) : ICommand<IResult>;
+public sealed record UpdateMyProfileSocialLinksCommand(Dictionary<string, string>? Links) : ICommand<IResult>;
+
+internal sealed class UpdateMyProfileSocialLinksCommandValidator : AbstractValidator<UpdateMyProfileSocialLinksCommand>
+{
+    public UpdateMyProfileSocialLinksCommandValidator()
+    {
+        RuleFor(x => x.Links).Must(x => x is null || x.Count <= 20);
+        RuleForEach(x => x.Links!).ChildRules(link =>
+        {
+            link.RuleFor(x => x.Key).NotEmpty().MaximumLength(50);
+            link.RuleFor(x => x.Value).NotEmpty().MaximumLength(800);
+        });
+    }
+}
+
 internal sealed class UpdateMyProfileSocialLinksCommandHandler(
     IUserContext userContext,
     IApplicationDbContext writeContext,
-    IValidator<UpdateProfileSocialLinksRequest> validator) : ResultWrappingCommandHandler<UpdateMyProfileSocialLinksCommand>
+    IValidator<UpdateMyProfileSocialLinksCommand> validator) : ResultWrappingCommandHandler<UpdateMyProfileSocialLinksCommand>
 {
     protected override async Task<IResult> HandleCore(UpdateMyProfileSocialLinksCommand command, CancellationToken cancellationToken) =>
-        await UpdateAsync(command.Request, userContext, writeContext, validator, cancellationToken);
+        await UpdateAsync(command, userContext, writeContext, validator, cancellationToken);
 
     private static async Task<IResult> UpdateAsync(
-        UpdateProfileSocialLinksRequest request,
+        UpdateMyProfileSocialLinksCommand request,
         IUserContext userContext,
         IApplicationDbContext writeContext,
-        IValidator<UpdateProfileSocialLinksRequest> validator,
+        IValidator<UpdateMyProfileSocialLinksCommand> validator,
         CancellationToken cancellationToken)
     {
         ValidationResult validationResult = await validator.ValidateAsync(request, cancellationToken);

@@ -4,6 +4,8 @@ using Web.Api.Infrastructure;
 
 namespace Web.Api.Endpoints.Profiles;
 
+public sealed record AddProfileInterestsRequest(List<string>? Interests);
+
 internal sealed class AddMyProfileInterests : IEndpoint
 {
     public void MapEndpoint(IEndpointRouteBuilder app)
@@ -12,7 +14,7 @@ internal sealed class AddMyProfileInterests : IEndpoint
                 AddProfileInterestsRequest request,
                 ICommandHandler<AddMyProfileInterestsCommand, IResult> handler,
                 CancellationToken cancellationToken) =>
-            (await handler.Handle(new AddMyProfileInterestsCommand(request), cancellationToken)).Match(static x => x, CustomResults.Problem))
+            (await handler.Handle(new AddMyProfileInterestsCommand(request.Interests), cancellationToken)).Match(static x => x, CustomResults.Problem))
             .HasPermission(Permissions.ProfilesWrite)
             .WithTags(Tags.Profiles);
     }

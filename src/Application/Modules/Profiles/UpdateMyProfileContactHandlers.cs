@@ -8,20 +8,36 @@ using Application.Shared;
 
 namespace Application.Profiles;
 
-public sealed record UpdateMyProfileContactCommand(UpdateProfileContactRequest Request) : ICommand<IResult>;
+public sealed record UpdateMyProfileContactCommand(
+    string? ContactEmail,
+    string? ContactPhone,
+    string? Website,
+    string? TimeZone) : ICommand<IResult>;
+
+internal sealed class UpdateMyProfileContactCommandValidator : AbstractValidator<UpdateMyProfileContactCommand>
+{
+    public UpdateMyProfileContactCommandValidator()
+    {
+        RuleFor(x => x.ContactEmail).MaximumLength(320).When(x => !string.IsNullOrWhiteSpace(x.ContactEmail));
+        RuleFor(x => x.ContactPhone).MaximumLength(32).When(x => !string.IsNullOrWhiteSpace(x.ContactPhone));
+        RuleFor(x => x.Website).MaximumLength(400).When(x => !string.IsNullOrWhiteSpace(x.Website));
+        RuleFor(x => x.TimeZone).MaximumLength(80).When(x => !string.IsNullOrWhiteSpace(x.TimeZone));
+    }
+}
+
 internal sealed class UpdateMyProfileContactCommandHandler(
     IUserContext userContext,
     IApplicationDbContext writeContext,
-    IValidator<UpdateProfileContactRequest> validator) : ResultWrappingCommandHandler<UpdateMyProfileContactCommand>
+    IValidator<UpdateMyProfileContactCommand> validator) : ResultWrappingCommandHandler<UpdateMyProfileContactCommand>
 {
     protected override async Task<IResult> HandleCore(UpdateMyProfileContactCommand command, CancellationToken cancellationToken) =>
-        await UpdateAsync(command.Request, userContext, writeContext, validator, cancellationToken);
+        await UpdateAsync(command, userContext, writeContext, validator, cancellationToken);
 
     private static async Task<IResult> UpdateAsync(
-        UpdateProfileContactRequest request,
+        UpdateMyProfileContactCommand request,
         IUserContext userContext,
         IApplicationDbContext writeContext,
-        IValidator<UpdateProfileContactRequest> validator,
+        IValidator<UpdateMyProfileContactCommand> validator,
         CancellationToken cancellationToken)
     {
         ValidationResult validationResult = await validator.ValidateAsync(request, cancellationToken);

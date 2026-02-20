@@ -9,20 +9,30 @@ using Application.Shared;
 
 namespace Application.Profiles;
 
-public sealed record UpdateMyProfileMusicCommand(UpdateProfileMusicRequest Request) : ICommand<IResult>;
+public sealed record UpdateMyProfileMusicCommand(string? MusicTitle, string? MusicArtist, Guid? MusicFileId) : ICommand<IResult>;
+
+internal sealed class UpdateMyProfileMusicCommandValidator : AbstractValidator<UpdateMyProfileMusicCommand>
+{
+    public UpdateMyProfileMusicCommandValidator()
+    {
+        RuleFor(x => x.MusicTitle).MaximumLength(200).When(x => !string.IsNullOrWhiteSpace(x.MusicTitle));
+        RuleFor(x => x.MusicArtist).MaximumLength(200).When(x => !string.IsNullOrWhiteSpace(x.MusicArtist));
+    }
+}
+
 internal sealed class UpdateMyProfileMusicCommandHandler(
     IUserContext userContext,
     IApplicationDbContext writeContext,
-    IValidator<UpdateProfileMusicRequest> validator) : ResultWrappingCommandHandler<UpdateMyProfileMusicCommand>
+    IValidator<UpdateMyProfileMusicCommand> validator) : ResultWrappingCommandHandler<UpdateMyProfileMusicCommand>
 {
     protected override async Task<IResult> HandleCore(UpdateMyProfileMusicCommand command, CancellationToken cancellationToken) =>
-        await UpdateAsync(command.Request, userContext, writeContext, validator, cancellationToken);
+        await UpdateAsync(command, userContext, writeContext, validator, cancellationToken);
 
     private static async Task<IResult> UpdateAsync(
-        UpdateProfileMusicRequest request,
+        UpdateMyProfileMusicCommand request,
         IUserContext userContext,
         IApplicationDbContext writeContext,
-        IValidator<UpdateProfileMusicRequest> validator,
+        IValidator<UpdateMyProfileMusicCommand> validator,
         CancellationToken cancellationToken)
     {
         ValidationResult validationResult = await validator.ValidateAsync(request, cancellationToken);

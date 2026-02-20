@@ -9,10 +9,16 @@ using Application.Shared;
 namespace Application.Profiles;
 
 public sealed record RemoveMyProfileInterestCommand(string Interest) : ICommand<IResult>;
+
+internal sealed class RemoveMyProfileInterestCommandValidator : AbstractValidator<RemoveMyProfileInterestCommand>
+{
+    public RemoveMyProfileInterestCommandValidator() => RuleFor(x => x.Interest).NotEmpty().MaximumLength(60);
+}
+
 internal sealed class RemoveMyProfileInterestCommandHandler(
     IUserContext userContext,
     IApplicationDbContext writeContext,
-    IValidator<RemoveProfileInterestRequest> validator) : ResultWrappingCommandHandler<RemoveMyProfileInterestCommand>
+    IValidator<RemoveMyProfileInterestCommand> validator) : ResultWrappingCommandHandler<RemoveMyProfileInterestCommand>
 {
     protected override async Task<IResult> HandleCore(RemoveMyProfileInterestCommand command, CancellationToken cancellationToken) =>
         await RemoveAsync(command.Interest, userContext, writeContext, validator, cancellationToken);
@@ -21,10 +27,10 @@ internal sealed class RemoveMyProfileInterestCommandHandler(
         string interest,
         IUserContext userContext,
         IApplicationDbContext writeContext,
-        IValidator<RemoveProfileInterestRequest> validator,
+        IValidator<RemoveMyProfileInterestCommand> validator,
         CancellationToken cancellationToken)
     {
-        RemoveProfileInterestRequest request = new(interest);
+        RemoveMyProfileInterestCommand request = new(interest);
         ValidationResult validationResult = await validator.ValidateAsync(request, cancellationToken);
         if (!validationResult.IsValid)
         {

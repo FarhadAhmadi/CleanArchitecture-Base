@@ -7,18 +7,44 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Application.Profiles;
 
-public sealed record GetProfilesAdminReportQuery(ProfileAdminReportRequest Request) : IQuery<IResult>;
+public sealed record GetProfilesAdminReportQuery(
+    int? Page,
+    int? PageIndex,
+    int? PageSize,
+    string? Search,
+    bool? IsProfilePublic,
+    string? PreferredLanguage,
+    int? MinCompleteness,
+    int? MaxCompleteness,
+    DateTime? UpdatedFrom,
+    DateTime? UpdatedTo) : IQuery<IResult>;
+
+internal sealed class GetProfilesAdminReportQueryValidator : AbstractValidator<GetProfilesAdminReportQuery>
+{
+    public GetProfilesAdminReportQueryValidator()
+    {
+        RuleFor(x => x.Search).MaximumLength(100).When(x => !string.IsNullOrWhiteSpace(x.Search));
+        RuleFor(x => x.PreferredLanguage).MaximumLength(16).When(x => !string.IsNullOrWhiteSpace(x.PreferredLanguage));
+        RuleFor(x => x.MinCompleteness).InclusiveBetween(0, 100).When(x => x.MinCompleteness.HasValue);
+        RuleFor(x => x.MaxCompleteness).InclusiveBetween(0, 100).When(x => x.MaxCompleteness.HasValue);
+        RuleFor(x => x).Must(x => !x.MinCompleteness.HasValue || !x.MaxCompleteness.HasValue || x.MinCompleteness <= x.MaxCompleteness)
+            .WithMessage("minCompletion cannot be greater than maxCompletion.");
+        RuleFor(x => x).Must(x => !x.UpdatedFrom.HasValue || !x.UpdatedTo.HasValue || x.UpdatedFrom <= x.UpdatedTo)
+            .WithMessage("updatedFrom cannot be greater than updatedTo.");
+    }
+}
+
 internal sealed class GetProfilesAdminReportQueryHandler(
     IApplicationReadDbContext readContext,
-    IValidator<ProfileAdminReportRequest> validator) : ResultWrappingQueryHandler<GetProfilesAdminReportQuery>
+    IValidator<GetProfilesAdminReportQuery> validator) : ResultWrappingQueryHandler<GetProfilesAdminReportQuery>
 {
     protected override async Task<IResult> HandleCore(GetProfilesAdminReportQuery query, CancellationToken cancellationToken) =>
-        await GetAsync(query.Request, readContext, validator, cancellationToken);
+        await GetAsync(query, readContext, validator, cancellationToken);
 
     private static async Task<IResult> GetAsync(
-        ProfileAdminReportRequest request,
+        GetProfilesAdminReportQuery request,
         IApplicationReadDbContext readContext,
-        IValidator<ProfileAdminReportRequest> validator,
+        IValidator<GetProfilesAdminReportQuery> validator,
         CancellationToken cancellationToken)
     {
         ValidationResult validationResult = await validator.ValidateAsync(request, cancellationToken);
@@ -75,7 +101,9 @@ internal sealed class GetProfilesAdminReportQueryHandler(
             query = query.Where(x => x.LastProfileUpdateAtUtc.HasValue && x.LastProfileUpdateAtUtc <= to);
         }
 
-        (int page, int pageSize) = request.NormalizePaging();
+        int page = request.PageIndex ?? request.Page ?? 1;
+        int pageSize = request.PageSize ?? 50;
+        (page, pageSize) = Application.Abstractions.Data.QueryableExtensions.NormalizePaging(page, pageSize, 50, 200);
         int total = await query.CountAsync(cancellationToken);
 
         List<object> items = await (

@@ -4,11 +4,11 @@ using Domain.Notifications;
 
 namespace Application.Notifications;
 
-public sealed record ScheduleNotificationCommand(Guid NotificationId, ScheduleNotificationRequest Request) : ICommand<IResult>;
+public sealed record ScheduleNotificationCommand(Guid NotificationId, DateTime RunAtUtc, string? RuleName) : ICommand<IResult>;
 internal sealed class ScheduleNotificationCommandHandler(INotificationUseCaseService service) : ResultWrappingCommandHandler<ScheduleNotificationCommand>
 {
     protected override async Task<IResult> HandleCore(ScheduleNotificationCommand command, CancellationToken cancellationToken) =>
-        await service.ScheduleNotificationAsync(command.NotificationId, command.Request, cancellationToken);
+        await service.ScheduleNotificationAsync(command.NotificationId, command.RunAtUtc, command.RuleName, cancellationToken);
 }
 
 

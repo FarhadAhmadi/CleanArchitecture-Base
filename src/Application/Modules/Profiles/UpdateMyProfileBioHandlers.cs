@@ -8,20 +8,26 @@ using Application.Shared;
 
 namespace Application.Profiles;
 
-public sealed record UpdateMyProfileBioCommand(UpdateProfileBioRequest Request) : ICommand<IResult>;
+public sealed record UpdateMyProfileBioCommand(string? Bio) : ICommand<IResult>;
+
+internal sealed class UpdateMyProfileBioCommandValidator : AbstractValidator<UpdateMyProfileBioCommand>
+{
+    public UpdateMyProfileBioCommandValidator() => RuleFor(x => x.Bio).MaximumLength(1200).When(x => !string.IsNullOrWhiteSpace(x.Bio));
+}
+
 internal sealed class UpdateMyProfileBioCommandHandler(
     IUserContext userContext,
     IApplicationDbContext writeContext,
-    IValidator<UpdateProfileBioRequest> validator) : ResultWrappingCommandHandler<UpdateMyProfileBioCommand>
+    IValidator<UpdateMyProfileBioCommand> validator) : ResultWrappingCommandHandler<UpdateMyProfileBioCommand>
 {
     protected override async Task<IResult> HandleCore(UpdateMyProfileBioCommand command, CancellationToken cancellationToken) =>
-        await UpdateAsync(command.Request, userContext, writeContext, validator, cancellationToken);
+        await UpdateAsync(command, userContext, writeContext, validator, cancellationToken);
 
     private static async Task<IResult> UpdateAsync(
-        UpdateProfileBioRequest request,
+        UpdateMyProfileBioCommand request,
         IUserContext userContext,
         IApplicationDbContext writeContext,
-        IValidator<UpdateProfileBioRequest> validator,
+        IValidator<UpdateMyProfileBioCommand> validator,
         CancellationToken cancellationToken)
     {
         ValidationResult validationResult = await validator.ValidateAsync(request, cancellationToken);

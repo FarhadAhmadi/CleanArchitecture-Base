@@ -4,6 +4,8 @@ using Web.Api.Infrastructure;
 
 namespace Web.Api.Endpoints.Profiles;
 
+public sealed record CreateProfileRequest(string? DisplayName, string? PreferredLanguage, bool IsProfilePublic);
+
 internal sealed class CreateMyProfile : IEndpoint
 {
     public void MapEndpoint(IEndpointRouteBuilder app)
@@ -12,7 +14,9 @@ internal sealed class CreateMyProfile : IEndpoint
                 CreateProfileRequest request,
                 ICommandHandler<CreateMyProfileCommand, IResult> handler,
                 CancellationToken cancellationToken) =>
-            (await handler.Handle(new CreateMyProfileCommand(request), cancellationToken)).Match(static x => x, CustomResults.Problem))
+            (await handler.Handle(
+                new CreateMyProfileCommand(request.DisplayName, request.PreferredLanguage, request.IsProfilePublic),
+                cancellationToken)).Match(static x => x, CustomResults.Problem))
             .HasPermission(Permissions.ProfilesWrite)
             .WithTags(Tags.Profiles);
     }

@@ -8,20 +8,26 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Application.Profiles;
 
-public sealed record UpdateMyProfileAvatarCommand(UpdateProfileAvatarRequest Request) : ICommand<IResult>;
+public sealed record UpdateMyProfileAvatarCommand(Guid? AvatarFileId) : ICommand<IResult>;
+
+internal sealed class UpdateMyProfileAvatarCommandValidator : AbstractValidator<UpdateMyProfileAvatarCommand>
+{
+    public UpdateMyProfileAvatarCommandValidator() { }
+}
+
 internal sealed class UpdateMyProfileAvatarCommandHandler(
     IUserContext userContext,
     IApplicationDbContext writeContext,
-    IValidator<UpdateProfileAvatarRequest> validator) : ResultWrappingCommandHandler<UpdateMyProfileAvatarCommand>
+    IValidator<UpdateMyProfileAvatarCommand> validator) : ResultWrappingCommandHandler<UpdateMyProfileAvatarCommand>
 {
     protected override async Task<IResult> HandleCore(UpdateMyProfileAvatarCommand command, CancellationToken cancellationToken) =>
-        await UpdateAsync(command.Request, userContext, writeContext, validator, cancellationToken);
+        await UpdateAsync(command, userContext, writeContext, validator, cancellationToken);
 
     private static async Task<IResult> UpdateAsync(
-        UpdateProfileAvatarRequest request,
+        UpdateMyProfileAvatarCommand request,
         IUserContext userContext,
         IApplicationDbContext writeContext,
-        IValidator<UpdateProfileAvatarRequest> validator,
+        IValidator<UpdateMyProfileAvatarCommand> validator,
         CancellationToken cancellationToken)
     {
         ValidationResult validationResult = await validator.ValidateAsync(request, cancellationToken);

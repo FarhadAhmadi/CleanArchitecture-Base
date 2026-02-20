@@ -9,20 +9,30 @@ using Application.Shared;
 
 namespace Application.Profiles;
 
-public sealed record CreateMyProfileCommand(CreateProfileRequest Request) : ICommand<IResult>;
+public sealed record CreateMyProfileCommand(string? DisplayName, string? PreferredLanguage, bool IsProfilePublic) : ICommand<IResult>;
+
+internal sealed class CreateMyProfileCommandValidator : AbstractValidator<CreateMyProfileCommand>
+{
+    public CreateMyProfileCommandValidator()
+    {
+        RuleFor(x => x.DisplayName).NotEmpty().MaximumLength(160);
+        RuleFor(x => x.PreferredLanguage).MaximumLength(16).When(x => !string.IsNullOrWhiteSpace(x.PreferredLanguage));
+    }
+}
+
 internal sealed class CreateMyProfileCommandHandler(
     IUserContext userContext,
     IApplicationDbContext writeContext,
-    IValidator<CreateProfileRequest> validator) : ResultWrappingCommandHandler<CreateMyProfileCommand>
+    IValidator<CreateMyProfileCommand> validator) : ResultWrappingCommandHandler<CreateMyProfileCommand>
 {
     protected override async Task<IResult> HandleCore(CreateMyProfileCommand command, CancellationToken cancellationToken) =>
-        await CreateAsync(command.Request, userContext, writeContext, validator, cancellationToken);
+        await CreateAsync(command, userContext, writeContext, validator, cancellationToken);
 
     private static async Task<IResult> CreateAsync(
-        CreateProfileRequest request,
+        CreateMyProfileCommand request,
         IUserContext userContext,
         IApplicationDbContext writeContext,
-        IValidator<CreateProfileRequest> validator,
+        IValidator<CreateMyProfileCommand> validator,
         CancellationToken cancellationToken)
     {
         ValidationResult validationResult = await validator.ValidateAsync(request, cancellationToken);

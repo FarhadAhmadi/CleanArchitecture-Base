@@ -8,20 +8,32 @@ using Application.Shared;
 
 namespace Application.Profiles;
 
-public sealed record UpdateMyProfilePreferencesCommand(UpdateProfilePreferencesRequest Request) : ICommand<IResult>;
+public sealed record UpdateMyProfilePreferencesCommand(
+    string? PreferredLanguage,
+    bool ReceiveSecurityAlerts,
+    bool ReceiveProductUpdates) : ICommand<IResult>;
+
+internal sealed class UpdateMyProfilePreferencesCommandValidator : AbstractValidator<UpdateMyProfilePreferencesCommand>
+{
+    public UpdateMyProfilePreferencesCommandValidator()
+    {
+        RuleFor(x => x.PreferredLanguage).MaximumLength(16).When(x => !string.IsNullOrWhiteSpace(x.PreferredLanguage));
+    }
+}
+
 internal sealed class UpdateMyProfilePreferencesCommandHandler(
     IUserContext userContext,
     IApplicationDbContext writeContext,
-    IValidator<UpdateProfilePreferencesRequest> validator) : ResultWrappingCommandHandler<UpdateMyProfilePreferencesCommand>
+    IValidator<UpdateMyProfilePreferencesCommand> validator) : ResultWrappingCommandHandler<UpdateMyProfilePreferencesCommand>
 {
     protected override async Task<IResult> HandleCore(UpdateMyProfilePreferencesCommand command, CancellationToken cancellationToken) =>
-        await UpdateAsync(command.Request, userContext, writeContext, validator, cancellationToken);
+        await UpdateAsync(command, userContext, writeContext, validator, cancellationToken);
 
     private static async Task<IResult> UpdateAsync(
-        UpdateProfilePreferencesRequest request,
+        UpdateMyProfilePreferencesCommand request,
         IUserContext userContext,
         IApplicationDbContext writeContext,
-        IValidator<UpdateProfilePreferencesRequest> validator,
+        IValidator<UpdateMyProfilePreferencesCommand> validator,
         CancellationToken cancellationToken)
     {
         ValidationResult validationResult = await validator.ValidateAsync(request, cancellationToken);

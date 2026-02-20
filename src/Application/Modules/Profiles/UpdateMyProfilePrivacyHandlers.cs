@@ -7,20 +7,26 @@ using FluentValidation.Results;
 
 namespace Application.Profiles;
 
-public sealed record UpdateMyProfilePrivacyCommand(UpdateProfilePrivacyRequest Request) : ICommand<IResult>;
+public sealed record UpdateMyProfilePrivacyCommand(bool IsProfilePublic, bool ShowEmail, bool ShowPhone) : ICommand<IResult>;
+
+internal sealed class UpdateMyProfilePrivacyCommandValidator : AbstractValidator<UpdateMyProfilePrivacyCommand>
+{
+    public UpdateMyProfilePrivacyCommandValidator() { }
+}
+
 internal sealed class UpdateMyProfilePrivacyCommandHandler(
     IUserContext userContext,
     IApplicationDbContext writeContext,
-    IValidator<UpdateProfilePrivacyRequest> validator) : ResultWrappingCommandHandler<UpdateMyProfilePrivacyCommand>
+    IValidator<UpdateMyProfilePrivacyCommand> validator) : ResultWrappingCommandHandler<UpdateMyProfilePrivacyCommand>
 {
     protected override async Task<IResult> HandleCore(UpdateMyProfilePrivacyCommand command, CancellationToken cancellationToken) =>
-        await UpdateAsync(command.Request, userContext, writeContext, validator, cancellationToken);
+        await UpdateAsync(command, userContext, writeContext, validator, cancellationToken);
 
     private static async Task<IResult> UpdateAsync(
-        UpdateProfilePrivacyRequest request,
+        UpdateMyProfilePrivacyCommand request,
         IUserContext userContext,
         IApplicationDbContext writeContext,
-        IValidator<UpdateProfilePrivacyRequest> validator,
+        IValidator<UpdateMyProfilePrivacyCommand> validator,
         CancellationToken cancellationToken)
     {
         ValidationResult validationResult = await validator.ValidateAsync(request, cancellationToken);

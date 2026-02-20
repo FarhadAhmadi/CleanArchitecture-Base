@@ -1,7 +1,6 @@
 using Application.Abstractions.Authentication;
 using Application.Abstractions.Data;
 using Application.Abstractions.Notifications;
-using Application.Notifications;
 using Domain.Modules.Notifications;
 using Domain.Notifications;
 using Infrastructure.Notifications;
@@ -19,7 +18,16 @@ internal sealed class NotificationUseCaseService(
     private const string SubjectTypeUser = "User";
     private const string SubjectTypeRole = "Role";
 
-    public async Task<IResult> CreateNotificationAsync(CreateNotificationRequest request, CancellationToken cancellationToken)
+    public async Task<IResult> CreateNotificationAsync(
+        NotificationChannel channel,
+        NotificationPriority priority,
+        string recipient,
+        string? subject,
+        string? body,
+        string language,
+        Guid? templateId,
+        DateTime? scheduledAtUtc,
+        CancellationToken cancellationToken)
     {
         if (!options.Enabled)
         {
@@ -36,31 +44,31 @@ internal sealed class NotificationUseCaseService(
             return Results.StatusCode(StatusCodes.Status429TooManyRequests);
         }
 
-        string recipient = (request.Recipient ?? string.Empty).Trim();
-        if (string.IsNullOrWhiteSpace(recipient))
+        string normalizedRecipient = (recipient ?? string.Empty).Trim();
+        if (string.IsNullOrWhiteSpace(normalizedRecipient))
         {
             return Results.BadRequest(new { message = "Recipient is required." });
         }
 
-        (string subject, string body) = await ResolveContentAsync(request, cancellationToken);
+        (string resolvedSubject, string resolvedBody) = await ResolveContentAsync(templateId, channel, language, subject, body, cancellationToken);
 
         NotificationMessage message = new()
         {
             Id = Guid.NewGuid(),
             CreatedByUserId = userContext.UserId,
-            Channel = request.Channel,
-            Priority = request.Priority,
-            Status = request.ScheduledAtUtc.HasValue && request.ScheduledAtUtc.Value > now
+            Channel = channel,
+            Priority = priority,
+            Status = scheduledAtUtc.HasValue && scheduledAtUtc.Value > now
                 ? NotificationStatus.Scheduled
                 : NotificationStatus.Pending,
-            RecipientEncrypted = protector.Protect(recipient),
-            RecipientHash = NotificationSensitiveDataProtector.ComputeDeterministicHash(recipient),
-            Subject = subject,
-            Body = body,
-            Language = string.IsNullOrWhiteSpace(request.Language) ? "fa-IR" : request.Language.Trim(),
-            TemplateId = request.TemplateId,
+            RecipientEncrypted = protector.Protect(normalizedRecipient),
+            RecipientHash = NotificationSensitiveDataProtector.ComputeDeterministicHash(normalizedRecipient),
+            Subject = resolvedSubject,
+            Body = resolvedBody,
+            Language = string.IsNullOrWhiteSpace(language) ? "fa-IR" : language.Trim(),
+            TemplateId = templateId,
             CreatedAtUtc = now,
-            ScheduledAtUtc = request.ScheduledAtUtc,
+            ScheduledAtUtc = scheduledAtUtc,
             MaxRetryCount = Math.Max(1, options.MaxRetries)
         };
 
@@ -114,7 +122,15 @@ internal sealed class NotificationUseCaseService(
         });
     }
 
-    public async Task<IResult> ListNotificationsAsync(ListNotificationsRequest request, CancellationToken cancellationToken)
+    public async Task<IResult> ListNotificationsAsync(
+        int? page,
+        int? pageIndex,
+        int? pageSize,
+        NotificationChannel? channel,
+        NotificationStatus? status,
+        DateTime? from,
+        DateTime? to,
+        CancellationToken cancellationToken)
     {
         IQueryable<NotificationMessage> query = readContext.NotificationMessages;
         bool isAdmin = await IsAdminAsync(userContext.UserId, cancellationToken);
@@ -129,27 +145,29 @@ internal sealed class NotificationUseCaseService(
             query = query.Where(x => x.CreatedByUserId == uid || aclRead.Contains(x.Id));
         }
 
-        if (request.Channel.HasValue)
+        if (channel.HasValue)
         {
-            query = query.Where(x => x.Channel == request.Channel.Value);
+            query = query.Where(x => x.Channel == channel.Value);
         }
 
-        if (request.Status.HasValue)
+        if (status.HasValue)
         {
-            query = query.Where(x => x.Status == request.Status.Value);
+            query = query.Where(x => x.Status == status.Value);
         }
 
-        if (request.From.HasValue)
+        if (from.HasValue)
         {
-            query = query.Where(x => x.CreatedAtUtc >= request.From.Value);
+            query = query.Where(x => x.CreatedAtUtc >= from.Value);
         }
 
-        if (request.To.HasValue)
+        if (to.HasValue)
         {
-            query = query.Where(x => x.CreatedAtUtc <= request.To.Value);
+            query = query.Where(x => x.CreatedAtUtc <= to.Value);
         }
 
-        (int normalizedPage, int normalizedPageSize) = request.NormalizePaging();
+        int normalizedPage = pageIndex ?? page ?? 1;
+        int normalizedPageSize = pageSize ?? 50;
+        (normalizedPage, normalizedPageSize) = Application.Abstractions.Data.QueryableExtensions.NormalizePaging(normalizedPage, normalizedPageSize, 50, 200);
         int total = await query.CountAsync(cancellationToken);
         List<object> items = await query
             .OrderByDescending(x => x.CreatedAtUtc)
@@ -171,16 +189,22 @@ internal sealed class NotificationUseCaseService(
         return Results.Ok(new { page = normalizedPage, pageSize = normalizedPageSize, total, items });
     }
 
-    public async Task<IResult> CreateTemplateAsync(CreateNotificationTemplateRequest request, CancellationToken cancellationToken)
+    public async Task<IResult> CreateTemplateAsync(
+        string name,
+        NotificationChannel channel,
+        string language,
+        string subjectTemplate,
+        string bodyTemplate,
+        CancellationToken cancellationToken)
     {
         NotificationTemplate template = new()
         {
             Id = Guid.NewGuid(),
-            Name = request.Name.Trim(),
-            Channel = request.Channel,
-            Language = string.IsNullOrWhiteSpace(request.Language) ? "fa-IR" : request.Language.Trim(),
-            SubjectTemplate = request.SubjectTemplate,
-            BodyTemplate = request.BodyTemplate,
+            Name = name.Trim(),
+            Channel = channel,
+            Language = string.IsNullOrWhiteSpace(language) ? "fa-IR" : language.Trim(),
+            SubjectTemplate = subjectTemplate,
+            BodyTemplate = bodyTemplate,
             CreatedAtUtc = DateTime.UtcNow
         };
 
@@ -207,7 +231,7 @@ internal sealed class NotificationUseCaseService(
         return template is null ? Results.NotFound() : Results.Ok(template);
     }
 
-    public async Task<IResult> UpdateTemplateAsync(Guid templateId, UpdateNotificationTemplateRequest request, CancellationToken cancellationToken)
+    public async Task<IResult> UpdateTemplateAsync(Guid templateId, string subjectTemplate, string bodyTemplate, CancellationToken cancellationToken)
     {
         NotificationTemplate? template = await writeContext.NotificationTemplates
             .SingleOrDefaultAsync(x => x.Id == templateId && !x.IsDeleted, cancellationToken);
@@ -216,8 +240,8 @@ internal sealed class NotificationUseCaseService(
             return Results.NotFound();
         }
 
-        template.SubjectTemplate = request.SubjectTemplate;
-        template.BodyTemplate = request.BodyTemplate;
+        template.SubjectTemplate = subjectTemplate;
+        template.BodyTemplate = bodyTemplate;
         template.Version++;
         template.UpdatedAtUtc = DateTime.UtcNow;
 
@@ -268,7 +292,7 @@ internal sealed class NotificationUseCaseService(
         return Results.Ok(items);
     }
 
-    public async Task<IResult> ScheduleNotificationAsync(Guid notificationId, ScheduleNotificationRequest request, CancellationToken cancellationToken)
+    public async Task<IResult> ScheduleNotificationAsync(Guid notificationId, DateTime runAtUtc, string? ruleName, CancellationToken cancellationToken)
     {
         NotificationMessage? notification = await writeContext.NotificationMessages.SingleOrDefaultAsync(x => x.Id == notificationId, cancellationToken);
         if (notification is null)
@@ -277,8 +301,8 @@ internal sealed class NotificationUseCaseService(
         }
 
         notification.Status = NotificationStatus.Scheduled;
-        notification.ScheduledAtUtc = request.RunAtUtc;
-        notification.NextRetryAtUtc = request.RunAtUtc;
+        notification.ScheduledAtUtc = runAtUtc;
+        notification.NextRetryAtUtc = runAtUtc;
 
         NotificationSchedule? existing = await writeContext.NotificationSchedules
             .SingleOrDefaultAsync(x => x.NotificationId == notificationId && !x.IsCancelled, cancellationToken);
@@ -289,20 +313,20 @@ internal sealed class NotificationUseCaseService(
             {
                 Id = Guid.NewGuid(),
                 NotificationId = notificationId,
-                RunAtUtc = request.RunAtUtc,
-                RuleName = request.RuleName,
+                RunAtUtc = runAtUtc,
+                RuleName = ruleName,
                 CreatedAtUtc = DateTime.UtcNow
             });
         }
         else
         {
-            existing.RunAtUtc = request.RunAtUtc;
-            existing.RuleName = request.RuleName;
+            existing.RunAtUtc = runAtUtc;
+            existing.RuleName = ruleName;
             existing.IsCancelled = false;
         }
 
         await writeContext.SaveChangesAsync(cancellationToken);
-        return Results.Ok(new { notificationId, status = notification.Status, request.RunAtUtc });
+        return Results.Ok(new { notificationId, status = notification.Status, runAtUtc });
     }
 
     public async Task<IResult> ListSchedulesAsync(CancellationToken cancellationToken)
@@ -347,25 +371,31 @@ internal sealed class NotificationUseCaseService(
         return Results.NoContent();
     }
 
-    public async Task<IResult> UpsertPermissionAsync(Guid notificationId, UpsertNotificationPermissionRequest request, CancellationToken cancellationToken)
+    public async Task<IResult> UpsertPermissionAsync(
+        Guid notificationId,
+        string subjectType,
+        string subjectValue,
+        bool canRead,
+        bool canManage,
+        CancellationToken cancellationToken)
     {
-        string subjectType = NormalizeSubjectType(request.SubjectType);
-        if (subjectType.Length == 0 || string.IsNullOrWhiteSpace(request.SubjectValue))
+        string normalizedSubjectType = NormalizeSubjectType(subjectType);
+        if (normalizedSubjectType.Length == 0 || string.IsNullOrWhiteSpace(subjectValue))
         {
             return Results.BadRequest(new { message = "Invalid permission payload." });
         }
 
-        string subjectValue = request.SubjectValue.Trim();
-        if (subjectType == SubjectTypeUser && Guid.TryParse(subjectValue, out Guid userId))
+        string normalizedSubjectValue = subjectValue.Trim();
+        if (normalizedSubjectType == SubjectTypeUser && Guid.TryParse(normalizedSubjectValue, out Guid userId))
         {
-            subjectValue = userId.ToString("N");
+            normalizedSubjectValue = userId.ToString("N");
         }
 
         NotificationPermissionEntry? existing = await writeContext.NotificationPermissionEntries
             .SingleOrDefaultAsync(
                 x => x.NotificationId == notificationId &&
-                     x.SubjectType == subjectType &&
-                     x.SubjectValue == subjectValue,
+                     x.SubjectType == normalizedSubjectType &&
+                     x.SubjectValue == normalizedSubjectValue,
                 cancellationToken);
 
         if (existing is null)
@@ -374,15 +404,15 @@ internal sealed class NotificationUseCaseService(
             {
                 Id = Guid.NewGuid(),
                 NotificationId = notificationId,
-                SubjectType = subjectType,
-                SubjectValue = subjectValue,
+                SubjectType = normalizedSubjectType,
+                SubjectValue = normalizedSubjectValue,
                 CreatedAtUtc = DateTime.UtcNow
             };
             writeContext.NotificationPermissionEntries.Add(existing);
         }
 
-        existing.CanRead = request.CanRead;
-        existing.CanManage = request.CanManage;
+        existing.CanRead = canRead;
+        existing.CanManage = canManage;
         await writeContext.SaveChangesAsync(cancellationToken);
 
         return Results.Ok(new { existing.Id, existing.NotificationId, existing.SubjectType, existing.SubjectValue, existing.CanRead, existing.CanManage });
@@ -446,25 +476,35 @@ internal sealed class NotificationUseCaseService(
         });
     }
 
-    public async Task<IResult> ReportDetailsAsync(NotificationReportDetailsRequest request, CancellationToken cancellationToken)
+    public async Task<IResult> ReportDetailsAsync(
+        int? page,
+        int? pageIndex,
+        int? pageSize,
+        DateTime? from,
+        DateTime? to,
+        NotificationChannel? channel,
+        NotificationStatus? status,
+        CancellationToken cancellationToken)
     {
-        DateTime dateFrom = request.From ?? DateTime.UtcNow.AddDays(-7);
-        DateTime dateTo = request.To ?? DateTime.UtcNow;
+        DateTime dateFrom = from ?? DateTime.UtcNow.AddDays(-7);
+        DateTime dateTo = to ?? DateTime.UtcNow;
 
         IQueryable<NotificationMessage> query = readContext.NotificationMessages
             .Where(x => x.CreatedAtUtc >= dateFrom && x.CreatedAtUtc <= dateTo);
 
-        if (request.Channel.HasValue)
+        if (channel.HasValue)
         {
-            query = query.Where(x => x.Channel == request.Channel.Value);
+            query = query.Where(x => x.Channel == channel.Value);
         }
 
-        if (request.Status.HasValue)
+        if (status.HasValue)
         {
-            query = query.Where(x => x.Status == request.Status.Value);
+            query = query.Where(x => x.Status == status.Value);
         }
 
-        (int normalizedPage, int normalizedPageSize) = request.NormalizePaging();
+        int normalizedPage = pageIndex ?? page ?? 1;
+        int normalizedPageSize = pageSize ?? 50;
+        (normalizedPage, normalizedPageSize) = Application.Abstractions.Data.QueryableExtensions.NormalizePaging(normalizedPage, normalizedPageSize, 50, 200);
         int total = await query.CountAsync(cancellationToken);
         List<object> items = await query
             .OrderByDescending(x => x.CreatedAtUtc)
@@ -489,28 +529,34 @@ internal sealed class NotificationUseCaseService(
         return Results.Ok(new { page = normalizedPage, pageSize = normalizedPageSize, total, items });
     }
 
-    private async Task<(string Subject, string Body)> ResolveContentAsync(CreateNotificationRequest request, CancellationToken cancellationToken)
+    private async Task<(string Subject, string Body)> ResolveContentAsync(
+        Guid? templateId,
+        NotificationChannel channel,
+        string language,
+        string? subject,
+        string? body,
+        CancellationToken cancellationToken)
     {
-        if (!request.TemplateId.HasValue)
+        if (!templateId.HasValue)
         {
             return (
-                string.IsNullOrWhiteSpace(request.Subject) ? "(no-subject)" : request.Subject.Trim(),
-                string.IsNullOrWhiteSpace(request.Body) ? string.Empty : request.Body);
+                string.IsNullOrWhiteSpace(subject) ? "(no-subject)" : subject.Trim(),
+                string.IsNullOrWhiteSpace(body) ? string.Empty : body);
         }
 
         NotificationTemplate? template = await writeContext.NotificationTemplates
             .SingleOrDefaultAsync(
-                x => x.Id == request.TemplateId.Value &&
+                x => x.Id == templateId.Value &&
                      !x.IsDeleted &&
-                     x.Channel == request.Channel &&
-                     x.Language == request.Language,
+                     x.Channel == channel &&
+                     x.Language == language,
                 cancellationToken);
 
         if (template is null)
         {
             return (
-                string.IsNullOrWhiteSpace(request.Subject) ? "(template-not-found)" : request.Subject.Trim(),
-                string.IsNullOrWhiteSpace(request.Body) ? string.Empty : request.Body);
+                string.IsNullOrWhiteSpace(subject) ? "(template-not-found)" : subject.Trim(),
+                string.IsNullOrWhiteSpace(body) ? string.Empty : body);
         }
 
         return (template.SubjectTemplate, template.BodyTemplate);

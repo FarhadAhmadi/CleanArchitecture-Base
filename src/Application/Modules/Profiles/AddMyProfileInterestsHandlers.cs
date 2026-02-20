@@ -8,20 +8,30 @@ using Application.Shared;
 
 namespace Application.Profiles;
 
-public sealed record AddMyProfileInterestsCommand(AddProfileInterestsRequest Request) : ICommand<IResult>;
+public sealed record AddMyProfileInterestsCommand(List<string>? Interests) : ICommand<IResult>;
+
+internal sealed class AddMyProfileInterestsCommandValidator : AbstractValidator<AddMyProfileInterestsCommand>
+{
+    public AddMyProfileInterestsCommandValidator()
+    {
+        RuleFor(x => x.Interests).NotNull().Must(x => x!.Count is > 0 and <= 20);
+        RuleForEach(x => x.Interests!).NotEmpty().MaximumLength(60);
+    }
+}
+
 internal sealed class AddMyProfileInterestsCommandHandler(
     IUserContext userContext,
     IApplicationDbContext writeContext,
-    IValidator<AddProfileInterestsRequest> validator) : ResultWrappingCommandHandler<AddMyProfileInterestsCommand>
+    IValidator<AddMyProfileInterestsCommand> validator) : ResultWrappingCommandHandler<AddMyProfileInterestsCommand>
 {
     protected override async Task<IResult> HandleCore(AddMyProfileInterestsCommand command, CancellationToken cancellationToken) =>
-        await AddAsync(command.Request, userContext, writeContext, validator, cancellationToken);
+        await AddAsync(command, userContext, writeContext, validator, cancellationToken);
 
     private static async Task<IResult> AddAsync(
-        AddProfileInterestsRequest request,
+        AddMyProfileInterestsCommand request,
         IUserContext userContext,
         IApplicationDbContext writeContext,
-        IValidator<AddProfileInterestsRequest> validator,
+        IValidator<AddMyProfileInterestsCommand> validator,
         CancellationToken cancellationToken)
     {
         ValidationResult validationResult = await validator.ValidateAsync(request, cancellationToken);

@@ -4,11 +4,11 @@ using Domain.Notifications;
 
 namespace Application.Notifications;
 
-public sealed record UpdateNotificationTemplateCommand(Guid TemplateId, UpdateNotificationTemplateRequest Request) : ICommand<IResult>;
+public sealed record UpdateNotificationTemplateCommand(Guid TemplateId, string SubjectTemplate, string BodyTemplate) : ICommand<IResult>;
 internal sealed class UpdateNotificationTemplateCommandHandler(INotificationUseCaseService service) : ResultWrappingCommandHandler<UpdateNotificationTemplateCommand>
 {
     protected override async Task<IResult> HandleCore(UpdateNotificationTemplateCommand command, CancellationToken cancellationToken) =>
-        await service.UpdateTemplateAsync(command.TemplateId, command.Request, cancellationToken);
+        await service.UpdateTemplateAsync(command.TemplateId, command.SubjectTemplate, command.BodyTemplate, cancellationToken);
 }
 
 

@@ -4,6 +4,8 @@ using Web.Api.Infrastructure;
 
 namespace Web.Api.Endpoints.Profiles;
 
+public sealed record UpdateProfileBioRequest(string? Bio);
+
 internal sealed class UpdateMyProfileBio : IEndpoint
 {
     public void MapEndpoint(IEndpointRouteBuilder app)
@@ -12,7 +14,7 @@ internal sealed class UpdateMyProfileBio : IEndpoint
                 UpdateProfileBioRequest request,
                 ICommandHandler<UpdateMyProfileBioCommand, IResult> handler,
                 CancellationToken cancellationToken) =>
-            (await handler.Handle(new UpdateMyProfileBioCommand(request), cancellationToken)).Match(static x => x, CustomResults.Problem))
+            (await handler.Handle(new UpdateMyProfileBioCommand(request.Bio), cancellationToken)).Match(static x => x, CustomResults.Problem))
             .HasPermission(Permissions.ProfilesWrite)
             .WithTags(Tags.Profiles);
     }
