@@ -10,4 +10,5 @@ internal sealed class OperationalAlertingOptions
     public string[] WebhookUrls { get; init; } = [];
     public string? PagerDutyRoutingKey { get; init; }
     public string PagerDutyEventsApiUrl { get; init; } = "https://events.pagerduty.com/v2/enqueue";
+    public string? RunbookBaseUrl { get; init; }
 }

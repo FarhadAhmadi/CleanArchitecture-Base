@@ -53,6 +53,7 @@ internal static class FilesModule
         });
 
         services.AddSingleton<IFileObjectStorage, MinioFileObjectStorage>();
+        services.AddSingleton<FileAppLinkService>();
 
         if (clamAvOptions.Enabled)
         {

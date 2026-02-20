@@ -5,6 +5,7 @@ using Domain.Authorization;
 using Domain.Files;
 using Domain.Logging;
 using Domain.Notifications;
+using Domain.Profiles;
 using Domain.Todos;
 using Domain.Users;
 using Infrastructure.Integration;
@@ -49,6 +50,7 @@ public sealed class ApplicationDbContext(
     public DbSet<NotificationSchedule> NotificationSchedules { get; set; }
     public DbSet<NotificationPermissionEntry> NotificationPermissionEntries { get; set; }
     public DbSet<NotificationDeliveryAttempt> NotificationDeliveryAttempts { get; set; }
+    public DbSet<UserProfile> UserProfiles { get; set; }
     internal DbSet<OutboxMessage> OutboxMessages => Set<OutboxMessage>();
     internal DbSet<InboxMessage> InboxMessages => Set<InboxMessage>();
     DbSet<User> IApplicationDbContext.Users => base.Users;
@@ -179,10 +181,18 @@ public sealed class ApplicationDbContext(
 
     private List<IDomainEvent> CollectDomainEvents()
     {
-        return [.. ChangeTracker
+        List<IDomainEvent> entityEvents = [.. ChangeTracker
             .Entries<Entity>()
             .Select(entry => entry.Entity)
             .SelectMany(entity => entity.DomainEvents)];
+
+        List<IDomainEvent> userEvents = [.. ChangeTracker
+            .Entries<User>()
+            .Select(entry => entry.Entity)
+            .SelectMany(user => user.DomainEvents)];
+
+        entityEvents.AddRange(userEvents);
+        return entityEvents;
     }
 
     private void ClearDomainEvents()
@@ -190,6 +200,11 @@ public sealed class ApplicationDbContext(
         foreach (Entity entity in ChangeTracker.Entries<Entity>().Select(entry => entry.Entity))
         {
             entity.ClearDomainEvents();
+        }
+
+        foreach (User user in ChangeTracker.Entries<User>().Select(entry => entry.Entity))
+        {
+            user.ClearDomainEvents();
         }
     }
 }

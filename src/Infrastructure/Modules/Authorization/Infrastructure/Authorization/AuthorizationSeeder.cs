@@ -44,6 +44,7 @@ public sealed class AuthorizationSeeder(
             [PermissionCodes.LoggingAccessManage] = "Manage logging access control",
             [PermissionCodes.LoggingExportRead] = "Export or read sensitive log reports",
             [PermissionCodes.ObservabilityRead] = "Read operational metrics and SLO dashboards",
+            [PermissionCodes.ObservabilityManage] = "Manage observability operational controls and replays",
             [PermissionCodes.AuditRead] = "Read audit trail data",
             [PermissionCodes.AuditManage] = "Manage audit controls",
             [PermissionCodes.FilesRead] = "Read file metadata and file content",
@@ -56,7 +57,11 @@ public sealed class AuthorizationSeeder(
             [PermissionCodes.NotificationTemplatesManage] = "Create/update/delete notification templates",
             [PermissionCodes.NotificationSchedulesManage] = "Manage scheduled notifications",
             [PermissionCodes.NotificationPermissionsManage] = "Manage notification ACL permissions",
-            [PermissionCodes.NotificationReportsRead] = "Read notification reports"
+            [PermissionCodes.NotificationReportsRead] = "Read notification reports",
+            [PermissionCodes.ProfilesRead] = "Read own profile data",
+            [PermissionCodes.ProfilesWrite] = "Create/update own profile data",
+            [PermissionCodes.ProfilesPublicRead] = "Read public profile information",
+            [PermissionCodes.ProfilesAdminRead] = "Read profile analytics and admin reports"
         };
 
         List<string> existingCodes = await dbContext.Permissions
@@ -146,7 +151,14 @@ public sealed class AuthorizationSeeder(
 
         Dictionary<Guid, HashSet<string>> rolePermissions = new()
         {
-            [userRole.Id] = [PermissionCodes.TodosRead, PermissionCodes.TodosWrite],
+            [userRole.Id] =
+            [
+                PermissionCodes.TodosRead,
+                PermissionCodes.TodosWrite,
+                PermissionCodes.ProfilesRead,
+                PermissionCodes.ProfilesWrite,
+                PermissionCodes.ProfilesPublicRead
+            ],
             [adminRole.Id] =
             [
                 PermissionCodes.TodosRead,
@@ -160,6 +172,7 @@ public sealed class AuthorizationSeeder(
                 PermissionCodes.LoggingAccessManage,
                 PermissionCodes.LoggingExportRead,
                 PermissionCodes.ObservabilityRead,
+                PermissionCodes.ObservabilityManage,
                 PermissionCodes.AuditRead,
                 PermissionCodes.AuditManage,
                 PermissionCodes.FilesRead,
@@ -172,7 +185,11 @@ public sealed class AuthorizationSeeder(
                 PermissionCodes.NotificationTemplatesManage,
                 PermissionCodes.NotificationSchedulesManage,
                 PermissionCodes.NotificationPermissionsManage,
-                PermissionCodes.NotificationReportsRead
+                PermissionCodes.NotificationReportsRead,
+                PermissionCodes.ProfilesRead,
+                PermissionCodes.ProfilesWrite,
+                PermissionCodes.ProfilesPublicRead,
+                PermissionCodes.ProfilesAdminRead
             ]
         };
 

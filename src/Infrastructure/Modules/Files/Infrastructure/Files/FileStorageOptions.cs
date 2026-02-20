@@ -12,5 +12,7 @@ public sealed class FileStorageOptions
     public bool UseSsl { get; init; }
     public bool CreateBucketIfMissing { get; init; } = true;
     public int PresignedUrlExpiryMinutes { get; init; } = 15;
+    public string AppLinkSigningKey { get; init; } = "change-me-file-link-key";
+    public int AppLinkExpiryMinutes { get; init; } = 15;
     public string ObjectPrefix { get; init; } = "files";
 }

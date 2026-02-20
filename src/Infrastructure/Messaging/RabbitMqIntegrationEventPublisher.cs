@@ -1,4 +1,5 @@
 using System.Text;
+using System.Diagnostics;
 using Microsoft.Extensions.Logging;
 using RabbitMQ.Client;
 
@@ -30,6 +31,7 @@ internal sealed class RabbitMqIntegrationEventPublisher(
             properties.ContentType = "application/json";
             properties.DeliveryMode = 2;
             properties.Timestamp = new AmqpTimestamp(DateTimeOffset.UtcNow.ToUnixTimeSeconds());
+            properties.CorrelationId = Activity.Current?.TraceId.ToString() ?? Guid.NewGuid().ToString("N");
 
             byte[] body = Encoding.UTF8.GetBytes(payload);
             _channel.BasicPublish(

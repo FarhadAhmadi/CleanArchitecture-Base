@@ -1,4 +1,5 @@
 using Application.Abstractions.Messaging;
+using Application.Abstractions.Users;
 using Application.Users.Register;
 using Infrastructure.Auditing;
 using SharedKernel;
@@ -14,14 +15,15 @@ internal sealed class Register : IEndpoint
 
     public void MapEndpoint(IEndpointRouteBuilder app)
     {
-        app.MapPost("users/register", async (
+        app.MapPost("users/register", async Task<IResult> (
             Request request,
+            HttpContext httpContext,
+            IUserRegistrationVerificationService verificationService,
             IAuditTrailService auditTrailService,
             ICommandHandler<RegisterUserCommand, Guid> handler,
             CancellationToken cancellationToken) =>
         {
             RegisterUserCommand command = request.ToCommand();
-
             Result<Guid> result = await handler.Handle(command, cancellationToken);
 
             await auditTrailService.RecordAsync(
@@ -33,7 +35,16 @@ internal sealed class Register : IEndpoint
                     "{\"scope\":\"user-register\"}"),
                 cancellationToken);
 
-            return result.Match(Results.Ok, CustomResults.Problem);
+            if (!result.IsSuccess)
+            {
+                return CustomResults.Problem(result);
+            }
+
+            DateTime verificationExpiresAtUtc = verificationService.GetVerificationExpiryUtc(DateTime.UtcNow);
+            httpContext.Response.Headers["X-Verification-Required"] = "true";
+            httpContext.Response.Headers["X-Verification-Expires-At-Utc"] = verificationExpiresAtUtc.ToString("O");
+
+            return Results.Ok(result.Value);
         })
         .WithTags(Tags.Users);
     }

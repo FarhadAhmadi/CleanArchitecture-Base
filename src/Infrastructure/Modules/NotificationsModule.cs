@@ -19,6 +19,8 @@ internal static class NotificationsModule
 
         services.AddSingleton(options);
         services.AddSingleton<NotificationSensitiveDataProtector>();
+        services.AddScoped<NotificationTemplateRenderer>();
+        services.AddScoped<NotificationTemplateSeeder>();
 
         services.AddHttpClient(NotificationHttpClientNames.Sms, client =>
         {

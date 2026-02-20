@@ -10,5 +10,6 @@ internal static class Schemas
     public const string Audit = "audit";
     public const string Files = "files";
     public const string Notifications = "notifications";
+    public const string Profiles = "profiles";
     public const string Integration = "integration";
 }

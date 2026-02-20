@@ -309,6 +309,13 @@
               "type": "string",
               "format": "uuid"
             }
+          },
+          {
+            "name": "mode",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
           }
         ],
         "responses": {
@@ -331,6 +338,35 @@
             "schema": {
               "type": "string",
               "format": "uuid"
+            }
+          },
+          {
+            "name": "mode",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/files/public/{token}": {
+      "get": {
+        "tags": [
+          "Files"
+        ],
+        "parameters": [
+          {
+            "name": "token",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
             }
           }
         ],
@@ -1068,6 +1104,68 @@
         }
       }
     },
+    "/logging/v1/alerts/incidents": {
+      "get": {
+        "tags": [
+          "Logging"
+        ],
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/logging/v1/alerts/incidents/{id}": {
+      "get": {
+        "tags": [
+          "Logging"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/logging/v1/access-control": {
       "get": {
         "tags": [
@@ -1601,11 +1699,465 @@
         }
       }
     },
+    "/api/v1/observability/events/catalog": {
+      "get": {
+        "tags": [
+          "Observability"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/v1/observability/metrics": {
       "get": {
         "tags": [
           "Observability"
         ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/dashboard/orchestration-health": {
+      "get": {
+        "tags": [
+          "Observability"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/observability/orchestration/replay/outbox": {
+      "post": {
+        "tags": [
+          "Observability"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Web.Api.Endpoints.Observability.ReplayOrchestrationFailures-Request"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/observability/orchestration/replay/inbox": {
+      "post": {
+        "tags": [
+          "Observability"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Web.Api.Endpoints.Observability.ReplayOrchestrationFailures-Request"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/profiles/me/interests": {
+      "post": {
+        "tags": [
+          "Profiles"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Web.Api.Endpoints.Profiles.AddProfileInterestsRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/profiles/me": {
+      "post": {
+        "tags": [
+          "Profiles"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Web.Api.Endpoints.Profiles.CreateProfileRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "Profiles"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/profiles/reports/admin": {
+      "get": {
+        "tags": [
+          "Profiles"
+        ],
+        "parameters": [
+          {
+            "name": "search",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "isPublic",
+            "in": "query",
+            "schema": {
+              "type": "boolean"
+            }
+          },
+          {
+            "name": "language",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "minCompletion",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "maxCompletion",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "updatedFrom",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "updatedTo",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "pageIndex",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/profiles/{userId}/public": {
+      "get": {
+        "tags": [
+          "Profiles"
+        ],
+        "parameters": [
+          {
+            "name": "userId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/profiles/me/music": {
+      "get": {
+        "tags": [
+          "Profiles"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Profiles"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Web.Api.Endpoints.Profiles.UpdateProfileMusicRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/profiles/me/interests/{interest}": {
+      "delete": {
+        "tags": [
+          "Profiles"
+        ],
+        "parameters": [
+          {
+            "name": "interest",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/profiles/me/avatar": {
+      "put": {
+        "tags": [
+          "Profiles"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Web.Api.Endpoints.Profiles.UpdateProfileAvatarRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Profiles"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/profiles/me/basic": {
+      "put": {
+        "tags": [
+          "Profiles"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Web.Api.Endpoints.Profiles.UpdateProfileBasicRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/profiles/me/bio": {
+      "put": {
+        "tags": [
+          "Profiles"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Web.Api.Endpoints.Profiles.UpdateProfileBioRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/profiles/me/contact": {
+      "put": {
+        "tags": [
+          "Profiles"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Web.Api.Endpoints.Profiles.UpdateProfileContactRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/profiles/me/preferences": {
+      "put": {
+        "tags": [
+          "Profiles"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Web.Api.Endpoints.Profiles.UpdateProfilePreferencesRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/profiles/me/privacy": {
+      "put": {
+        "tags": [
+          "Profiles"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Web.Api.Endpoints.Profiles.UpdateProfilePrivacyRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/profiles/me/social-links": {
+      "put": {
+        "tags": [
+          "Profiles"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Web.Api.Endpoints.Profiles.UpdateProfileSocialLinksRequest"
+              }
+            }
+          },
+          "required": true
+        },
         "responses": {
           "200": {
             "description": "OK"
@@ -1845,6 +2397,50 @@
         }
       }
     },
+    "/api/v1/users/forgot-password": {
+      "post": {
+        "tags": [
+          "Users"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Web.Api.Endpoints.Users.ForgotPassword-RequestReset"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/users/reset-password": {
+      "post": {
+        "tags": [
+          "Users"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Web.Api.Endpoints.Users.ForgotPassword-RequestConfirm"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/v1/users/{userId}": {
       "get": {
         "tags": [
@@ -1860,6 +2456,18 @@
               "format": "uuid"
             }
           }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/users/me": {
+      "get": {
+        "tags": [
+          "Users"
         ],
         "responses": {
           "200": {
@@ -1975,6 +2583,28 @@
         }
       }
     },
+    "/api/v1/users/resend-verification-code": {
+      "post": {
+        "tags": [
+          "Users"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Web.Api.Endpoints.Users.ResendVerificationCode-Request"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/v1/users/revoke": {
       "post": {
         "tags": [
@@ -1985,6 +2615,40 @@
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/Web.Api.Endpoints.Users.Revoke-Request"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/users/sessions/revoke-all": {
+      "post": {
+        "tags": [
+          "Users"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/users/verify-email": {
+      "post": {
+        "tags": [
+          "Users"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Web.Api.Endpoints.Users.VerifyEmail-Request"
               }
             }
           },
@@ -2453,6 +3117,179 @@
         },
         "additionalProperties": false
       },
+      "Web.Api.Endpoints.Observability.ReplayOrchestrationFailures-Request": {
+        "type": "object",
+        "properties": {
+          "take": {
+            "type": "integer",
+            "format": "int32"
+          }
+        },
+        "additionalProperties": false
+      },
+      "Web.Api.Endpoints.Profiles.AddProfileInterestsRequest": {
+        "type": "object",
+        "properties": {
+          "interests": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "Web.Api.Endpoints.Profiles.CreateProfileRequest": {
+        "type": "object",
+        "properties": {
+          "displayName": {
+            "type": "string",
+            "nullable": true
+          },
+          "preferredLanguage": {
+            "type": "string",
+            "nullable": true
+          },
+          "isProfilePublic": {
+            "type": "boolean"
+          }
+        },
+        "additionalProperties": false
+      },
+      "Web.Api.Endpoints.Profiles.UpdateProfileAvatarRequest": {
+        "type": "object",
+        "properties": {
+          "avatarFileId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "Web.Api.Endpoints.Profiles.UpdateProfileBasicRequest": {
+        "type": "object",
+        "properties": {
+          "displayName": {
+            "type": "string",
+            "nullable": true
+          },
+          "bio": {
+            "type": "string",
+            "nullable": true
+          },
+          "dateOfBirth": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "gender": {
+            "type": "string",
+            "nullable": true
+          },
+          "location": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "Web.Api.Endpoints.Profiles.UpdateProfileBioRequest": {
+        "type": "object",
+        "properties": {
+          "bio": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "Web.Api.Endpoints.Profiles.UpdateProfileContactRequest": {
+        "type": "object",
+        "properties": {
+          "contactEmail": {
+            "type": "string",
+            "nullable": true
+          },
+          "contactPhone": {
+            "type": "string",
+            "nullable": true
+          },
+          "website": {
+            "type": "string",
+            "nullable": true
+          },
+          "timeZone": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "Web.Api.Endpoints.Profiles.UpdateProfileMusicRequest": {
+        "type": "object",
+        "properties": {
+          "musicTitle": {
+            "type": "string",
+            "nullable": true
+          },
+          "musicArtist": {
+            "type": "string",
+            "nullable": true
+          },
+          "musicFileId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "Web.Api.Endpoints.Profiles.UpdateProfilePreferencesRequest": {
+        "type": "object",
+        "properties": {
+          "preferredLanguage": {
+            "type": "string",
+            "nullable": true
+          },
+          "receiveSecurityAlerts": {
+            "type": "boolean"
+          },
+          "receiveProductUpdates": {
+            "type": "boolean"
+          }
+        },
+        "additionalProperties": false
+      },
+      "Web.Api.Endpoints.Profiles.UpdateProfilePrivacyRequest": {
+        "type": "object",
+        "properties": {
+          "isProfilePublic": {
+            "type": "boolean"
+          },
+          "showEmail": {
+            "type": "boolean"
+          },
+          "showPhone": {
+            "type": "boolean"
+          }
+        },
+        "additionalProperties": false
+      },
+      "Web.Api.Endpoints.Profiles.UpdateProfileSocialLinksRequest": {
+        "type": "object",
+        "properties": {
+          "links": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            },
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
       "Web.Api.Endpoints.Todos.Create-Request": {
         "type": "object",
         "properties": {
@@ -2475,6 +3312,34 @@
           "priority": {
             "type": "integer",
             "format": "int32"
+          }
+        },
+        "additionalProperties": false
+      },
+      "Web.Api.Endpoints.Users.ForgotPassword-RequestConfirm": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "nullable": true
+          },
+          "code": {
+            "type": "string",
+            "nullable": true
+          },
+          "newPassword": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "Web.Api.Endpoints.Users.ForgotPassword-RequestReset": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "nullable": true
           }
         },
         "additionalProperties": false
@@ -2525,10 +3390,34 @@
         },
         "additionalProperties": false
       },
+      "Web.Api.Endpoints.Users.ResendVerificationCode-Request": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
       "Web.Api.Endpoints.Users.Revoke-Request": {
         "type": "object",
         "properties": {
           "refreshToken": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "Web.Api.Endpoints.Users.VerifyEmail-Request": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "nullable": true
+          },
+          "code": {
             "type": "string",
             "nullable": true
           }
@@ -2565,6 +3454,9 @@
     },
     {
       "name": "Observability"
+    },
+    {
+      "name": "Profiles"
     },
     {
       "name": "todos"

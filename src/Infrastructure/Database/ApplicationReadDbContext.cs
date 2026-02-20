@@ -4,6 +4,7 @@ using Domain.Authorization;
 using Domain.Files;
 using Domain.Logging;
 using Domain.Notifications;
+using Domain.Profiles;
 using Domain.Todos;
 using Domain.Users;
 using Infrastructure.Integration;
@@ -37,6 +38,7 @@ public sealed class ApplicationReadDbContext(DbContextOptions<ApplicationReadDbC
     public IQueryable<NotificationSchedule> NotificationSchedules => Set<NotificationSchedule>().AsNoTracking();
     public IQueryable<NotificationPermissionEntry> NotificationPermissionEntries => Set<NotificationPermissionEntry>().AsNoTracking();
     public IQueryable<NotificationDeliveryAttempt> NotificationDeliveryAttempts => Set<NotificationDeliveryAttempt>().AsNoTracking();
+    public IQueryable<UserProfile> UserProfiles => Set<UserProfile>().AsNoTracking();
 
     internal IQueryable<OutboxMessage> OutboxMessages => Set<OutboxMessage>().AsNoTracking();
 

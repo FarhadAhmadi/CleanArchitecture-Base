@@ -1,3 +1,4 @@
+using Application.Abstractions.Logging;
 using Infrastructure.Logging;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -19,6 +20,7 @@ internal static class LoggingModule
         services.AddSingleton<ILogIntegrityService, LogIntegrityService>();
         services.AddSingleton<ILogIngestionQueue, LogIngestionQueue>();
         services.AddSingleton<IAlertDispatchQueue, AlertDispatchQueue>();
+        services.AddScoped<IAlertIncidentDispatchScheduler, AlertIncidentDispatchScheduler>();
         services.AddScoped<ILogIngestionService, LogIngestionService>();
         services.AddSingleton<LoggingHealthService>();
         services.AddHostedService<LogRetryWorker>();

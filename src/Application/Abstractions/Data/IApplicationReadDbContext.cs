@@ -3,6 +3,7 @@ using Domain.Authorization;
 using Domain.Files;
 using Domain.Logging;
 using Domain.Notifications;
+using Domain.Profiles;
 using Domain.Todos;
 using Domain.Users;
 
@@ -33,4 +34,5 @@ public interface IApplicationReadDbContext
     IQueryable<NotificationSchedule> NotificationSchedules { get; }
     IQueryable<NotificationPermissionEntry> NotificationPermissionEntries { get; }
     IQueryable<NotificationDeliveryAttempt> NotificationDeliveryAttempts { get; }
+    IQueryable<UserProfile> UserProfiles { get; }
 }

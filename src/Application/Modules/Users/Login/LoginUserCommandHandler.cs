@@ -34,6 +34,12 @@ internal sealed class LoginUserCommandHandler(
             return Result.Failure<TokenResponse>(UserErrors.NotFoundByEmail);
         }
 
+        if (!user.EmailConfirmed)
+        {
+            securityEventLogger.AuthenticationFailed("EmailNotConfirmed", command.Email, null, null);
+            return Result.Failure<TokenResponse>(UserErrors.EmailNotConfirmed);
+        }
+
         bool verified = await userManager.CheckPasswordAsync(user, command.Password);
 
         if (!verified)

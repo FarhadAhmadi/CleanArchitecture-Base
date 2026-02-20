@@ -30,6 +30,13 @@ internal sealed class RefreshTokenCommandHandler(
 
         if (existing.RevokedAtUtc.HasValue)
         {
+            if (!string.IsNullOrWhiteSpace(existing.ReplacedByTokenHash))
+            {
+                await RevokeActiveUserRefreshTokensAsync(existing.UserId, "Refresh token reuse detected", cancellationToken);
+                securityEventLogger.AuthenticationFailed("RefreshTokenReuseDetected", existing.UserId.ToString("N"), null, null);
+                return Result.Failure<TokenResponse>(UserErrors.RefreshTokenReuseDetected);
+            }
+
             securityEventLogger.AuthenticationFailed("RefreshTokenRevoked", existing.UserId.ToString("N"), null, null);
             return Result.Failure<TokenResponse>(UserErrors.RevokedRefreshToken);
         }
@@ -77,5 +84,24 @@ internal sealed class RefreshTokenCommandHandler(
             newRefreshToken,
             now.AddMinutes(tokenLifetimeProvider.AccessTokenExpirationInMinutes),
             refreshExpiresAt);
+    }
+
+    private async Task RevokeActiveUserRefreshTokensAsync(Guid userId, string reason, CancellationToken cancellationToken)
+    {
+        DateTime nowUtc = DateTime.UtcNow;
+        List<RefreshToken> activeTokens = await context.RefreshTokens
+            .Where(x => x.UserId == userId && x.RevokedAtUtc == null && x.ExpiresAtUtc > nowUtc)
+            .ToListAsync(cancellationToken);
+
+        foreach (RefreshToken token in activeTokens)
+        {
+            token.RevokedAtUtc = nowUtc;
+            token.RevokedReason = reason;
+        }
+
+        if (activeTokens.Count > 0)
+        {
+            await context.SaveChangesAsync(cancellationToken);
+        }
     }
 }

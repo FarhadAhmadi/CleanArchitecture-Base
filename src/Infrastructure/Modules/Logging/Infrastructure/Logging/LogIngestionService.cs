@@ -10,7 +10,6 @@ internal sealed class LogIngestionService(
     ApplicationDbContext dbContext,
     ILogSanitizer sanitizer,
     ILogIngestionQueue queue,
-    IAlertDispatchQueue alertQueue,
     ILogIntegrityService integrityService,
     ILogger<LogIngestionService> logger) : ILogIngestionService
 {
@@ -127,10 +126,10 @@ internal sealed class LogIngestionService(
                 TriggeredAtUtc = DateTime.UtcNow,
                 Status = "Queued"
             };
+            incident.Raise(new AlertIncidentCreatedDomainEvent(incident.Id));
 
             dbContext.AlertIncidents.Add(incident);
             await dbContext.SaveChangesAsync(cancellationToken);
-            alertQueue.TryEnqueue(incident.Id);
 
             logger.LogWarning(
                 "Alert rule triggered. RuleId={RuleId} RuleName={RuleName} EventId={EventId} MatchedCount={MatchedCount}",

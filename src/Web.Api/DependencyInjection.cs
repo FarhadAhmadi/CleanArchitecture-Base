@@ -1,6 +1,7 @@
 using System.Security.Claims;
 using System.Threading.RateLimiting;
 using Asp.Versioning;
+using FluentValidation;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.Facebook;
@@ -58,6 +59,7 @@ public static class DependencyInjection
         });
 
         services.AddControllers();
+        services.AddValidatorsFromAssembly(typeof(DependencyInjection).Assembly, includeInternalTypes: true);
 
         AuthenticationBuilder authenticationBuilder = services.AddAuthentication();
         authenticationBuilder.AddCookie(ExternalAuthSchemes.ExternalCookie, options =>

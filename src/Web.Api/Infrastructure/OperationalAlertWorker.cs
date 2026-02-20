@@ -93,8 +93,11 @@ internal sealed class OperationalAlertWorker(
     private async Task NotifyAsync(string incident, OperationalMetricsSnapshot snapshot, CancellationToken cancellationToken)
     {
         HttpClient client = httpClientFactory.CreateClient("default");
+        string runbookLink = string.IsNullOrWhiteSpace(alertingOptions.RunbookBaseUrl)
+            ? string.Empty
+            : $" | runbook={alertingOptions.RunbookBaseUrl!.TrimEnd('/')}/operations/orchestration-alerts";
         string message =
-            $"[Operational Alert] {incident} | timestamp={snapshot.TimestampUtc:O} | outboxPending={snapshot.OutboxPending} | outboxFailed={snapshot.OutboxFailed} | ingestionQueueDepth={snapshot.IngestionQueueDepth}";
+            $"[Operational Alert] {incident} | timestamp={snapshot.TimestampUtc:O} | outboxPending={snapshot.OutboxPending} | outboxFailed={snapshot.OutboxFailed} | ingestionQueueDepth={snapshot.IngestionQueueDepth}{runbookLink}";
 
         foreach (string webhookUrl in alertingOptions.WebhookUrls.Where(x => !string.IsNullOrWhiteSpace(x)))
         {

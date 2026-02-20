@@ -1,5 +1,6 @@
 using Infrastructure.Authorization;
 using Infrastructure.Database;
+using Infrastructure.Notifications;
 using Microsoft.EntityFrameworkCore;
 using Web.Api.Infrastructure;
 
@@ -16,14 +17,16 @@ public static class MigrationExtensions
 
         dbContext.Database.Migrate();
 
-        if (!runAuthorizationSeed)
+        if (runAuthorizationSeed)
         {
-            return;
+            AuthorizationSeeder seeder =
+                scope.ServiceProvider.GetRequiredService<AuthorizationSeeder>();
+            seeder.SeedAsync(CancellationToken.None).GetAwaiter().GetResult();
         }
 
-        AuthorizationSeeder seeder =
-            scope.ServiceProvider.GetRequiredService<AuthorizationSeeder>();
-        seeder.SeedAsync(CancellationToken.None).GetAwaiter().GetResult();
+        NotificationTemplateSeeder notificationTemplateSeeder =
+            scope.ServiceProvider.GetRequiredService<NotificationTemplateSeeder>();
+        notificationTemplateSeeder.SeedAsync(CancellationToken.None).GetAwaiter().GetResult();
     }
 
     public static void ApplyMigrationsIfEnabled(this IApplicationBuilder app, DatabaseMigrationOptions options)

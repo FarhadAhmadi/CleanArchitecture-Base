@@ -9,6 +9,7 @@ internal static class Permissions
     internal const string TodosWrite = PermissionCodes.TodosWrite;
     internal const string AuthorizationManage = PermissionCodes.AuthorizationManage;
     internal const string ObservabilityRead = PermissionCodes.ObservabilityRead;
+    internal const string ObservabilityManage = PermissionCodes.ObservabilityManage;
     internal const string AuditRead = PermissionCodes.AuditRead;
     internal const string AuditManage = PermissionCodes.AuditManage;
     internal const string FilesRead = PermissionCodes.FilesRead;
@@ -22,4 +23,8 @@ internal static class Permissions
     internal const string NotificationSchedulesManage = PermissionCodes.NotificationSchedulesManage;
     internal const string NotificationPermissionsManage = PermissionCodes.NotificationPermissionsManage;
     internal const string NotificationReportsRead = PermissionCodes.NotificationReportsRead;
+    internal const string ProfilesRead = PermissionCodes.ProfilesRead;
+    internal const string ProfilesWrite = PermissionCodes.ProfilesWrite;
+    internal const string ProfilesPublicRead = PermissionCodes.ProfilesPublicRead;
+    internal const string ProfilesAdminRead = PermissionCodes.ProfilesAdminRead;
 }

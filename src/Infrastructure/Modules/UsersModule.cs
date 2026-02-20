@@ -1,4 +1,5 @@
 using Application.Abstractions.Authentication;
+using Application.Abstractions.Users;
 using Application.Abstractions.Security;
 using Infrastructure.Authentication;
 using Infrastructure.Security;
@@ -33,6 +34,8 @@ internal static class UsersModule
         services.AddSingleton<IRefreshTokenProvider, RefreshTokenProvider>();
         services.AddSingleton<ITokenLifetimeProvider, TokenLifetimeProvider>();
         services.AddSingleton<ISecurityEventLogger, SecurityEventLogger>();
+        services.AddScoped<IUserRegistrationVerificationService, UserRegistrationVerificationService>();
+        services.AddScoped<IUserPasswordResetService, UserPasswordResetService>();
 
         return services;
     }

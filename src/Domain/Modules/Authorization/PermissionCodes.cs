@@ -13,6 +13,7 @@ public static class PermissionCodes
     public const string LoggingAccessManage = "logging.access.manage";
     public const string LoggingExportRead = "logging.export.read";
     public const string ObservabilityRead = "observability.read";
+    public const string ObservabilityManage = "observability.manage";
     public const string AuditRead = "audit.read";
     public const string AuditManage = "audit.manage";
     public const string FilesRead = "files.read";
@@ -26,4 +27,8 @@ public static class PermissionCodes
     public const string NotificationSchedulesManage = "notifications.schedules.manage";
     public const string NotificationPermissionsManage = "notifications.permissions.manage";
     public const string NotificationReportsRead = "notifications.reports.read";
+    public const string ProfilesRead = "profiles.read";
+    public const string ProfilesWrite = "profiles.write";
+    public const string ProfilesPublicRead = "profiles.public.read";
+    public const string ProfilesAdminRead = "profiles.admin.read";
 }

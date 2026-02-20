@@ -5,6 +5,7 @@ using Domain.Files;
 using Infrastructure.Files;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Net.Http.Headers;
 using Web.Api.Endpoints.Users;
 using Web.Api.Extensions;
 
@@ -14,6 +15,9 @@ internal sealed class Manage : IEndpoint
 {
     private const string SubjectTypeUser = "User";
     private const string SubjectTypeRole = "Role";
+    private const string LinkModeInline = "inline";
+    private const string LinkModeDownload = "download";
+    private const string LinkModeStream = "stream";
 
     public sealed class UploadForm
     {
@@ -49,6 +53,7 @@ internal sealed class Manage : IEndpoint
         group.MapGet("/{fileId:guid}/stream", StreamAsync).HasPermission(Permissions.FilesRead);
         group.MapGet("/{fileId:guid}/link", GetSecureLinkAsync).HasPermission(Permissions.FilesShare);
         group.MapPost("/{fileId:guid}/share", ShareAsync).HasPermission(Permissions.FilesShare);
+        group.MapGet("/public/{token}", GetPublicByLinkAsync);
         group.MapGet("/audit/{fileId:guid}", GetAuditAsync).HasPermission(Permissions.FilesRead);
 
         group.MapDelete("/{fileId:guid}", DeleteAsync).HasPermission(Permissions.FilesDelete);
@@ -168,7 +173,6 @@ internal sealed class Manage : IEndpoint
         IApplicationReadDbContext readContext,
         IApplicationDbContext writeContext,
         IFileObjectStorage storage,
-        FileStorageOptions options,
         CancellationToken cancellationToken)
     {
         FileAsset? file = await readContext.FileAssets.SingleOrDefaultAsync(x => x.Id == fileId && !x.IsDeleted, cancellationToken);
@@ -177,14 +181,19 @@ internal sealed class Manage : IEndpoint
             return Results.NotFound();
         }
 
-        if (!await HasReadAccessAsync(file, userContext.UserId, readContext, cancellationToken))
+        if (!await HasOwnerOrAdminAccessAsync(file, userContext.UserId, readContext, cancellationToken))
         {
             return Results.Forbid();
         }
 
-        string url = await storage.CreatePresignedDownloadUrlAsync(file.ObjectKey, options.PresignedUrlExpiryMinutes * 60, cancellationToken);
+        (Stream content, string contentType) = await storage.OpenReadAsync(file.ObjectKey, cancellationToken);
         await WriteAccessAuditAsync(writeContext, httpContext, file.Id, userContext.UserId, "download", cancellationToken);
-        return Results.Redirect(url);
+
+        return Results.File(
+            content,
+            contentType,
+            fileDownloadName: file.FileName,
+            enableRangeProcessing: true);
     }
 
     private static Task<IResult> StreamAsync(
@@ -194,13 +203,19 @@ internal sealed class Manage : IEndpoint
         IApplicationReadDbContext readContext,
         IApplicationDbContext writeContext,
         IFileObjectStorage storage,
-        FileStorageOptions options,
         CancellationToken cancellationToken)
     {
-        return DownloadAsync(fileId, userContext, httpContext, readContext, writeContext, storage, options, cancellationToken);
+        return StreamInternalAsync(fileId, userContext, httpContext, readContext, writeContext, storage, cancellationToken);
     }
 
-    private static async Task<IResult> GetSecureLinkAsync(Guid fileId, IUserContext userContext, IApplicationReadDbContext readContext, IFileObjectStorage storage, FileStorageOptions options, CancellationToken cancellationToken)
+    private static async Task<IResult> StreamInternalAsync(
+        Guid fileId,
+        IUserContext userContext,
+        HttpContext httpContext,
+        IApplicationReadDbContext readContext,
+        IApplicationDbContext writeContext,
+        IFileObjectStorage storage,
+        CancellationToken cancellationToken)
     {
         FileAsset? file = await readContext.FileAssets.SingleOrDefaultAsync(x => x.Id == fileId && !x.IsDeleted, cancellationToken);
         if (file is null)
@@ -208,19 +223,100 @@ internal sealed class Manage : IEndpoint
             return Results.NotFound();
         }
 
-        if (!await HasReadAccessAsync(file, userContext.UserId, readContext, cancellationToken))
+        if (!await HasOwnerOrAdminAccessAsync(file, userContext.UserId, readContext, cancellationToken))
         {
             return Results.Forbid();
         }
 
-        int expirySeconds = options.PresignedUrlExpiryMinutes * 60;
-        string url = await storage.CreatePresignedDownloadUrlAsync(file.ObjectKey, expirySeconds, cancellationToken);
-        return Results.Ok(new { url, expiresAtUtc = DateTime.UtcNow.AddSeconds(expirySeconds) });
+        (Stream content, string contentType) = await storage.OpenReadAsync(file.ObjectKey, cancellationToken);
+        await WriteAccessAuditAsync(writeContext, httpContext, file.Id, userContext.UserId, "stream", cancellationToken);
+
+        httpContext.Response.Headers[HeaderNames.ContentDisposition] = $"inline; filename=\"{file.FileName}\"";
+
+        return Results.File(
+            content,
+            contentType,
+            fileDownloadName: null,
+            enableRangeProcessing: true);
     }
 
-    private static Task<IResult> ShareAsync(Guid fileId, IUserContext userContext, IApplicationReadDbContext readContext, IFileObjectStorage storage, FileStorageOptions options, CancellationToken cancellationToken)
+    private static async Task<IResult> GetSecureLinkAsync(
+        Guid fileId,
+        string? mode,
+        IUserContext userContext,
+        HttpContext httpContext,
+        IApplicationReadDbContext readContext,
+        FileAppLinkService linkService,
+        FileStorageOptions storageOptions,
+        CancellationToken cancellationToken)
     {
-        return GetSecureLinkAsync(fileId, userContext, readContext, storage, options, cancellationToken);
+        FileAsset? file = await readContext.FileAssets.SingleOrDefaultAsync(x => x.Id == fileId && !x.IsDeleted, cancellationToken);
+        if (file is null)
+        {
+            return Results.NotFound();
+        }
+
+        if (!await HasOwnerOrAdminAccessAsync(file, userContext.UserId, readContext, cancellationToken))
+        {
+            return Results.Forbid();
+        }
+
+        string normalizedMode = NormalizeLinkMode(mode);
+        string token = linkService.CreateToken(file.Id, normalizedMode, DateTime.UtcNow);
+        string url = BuildAppLinkUrl(httpContext, token, normalizedMode);
+
+        return Results.Ok(new
+        {
+            url,
+            mode = normalizedMode,
+            expiresAtUtc = DateTime.UtcNow.AddMinutes(Math.Max(1, storageOptions.AppLinkExpiryMinutes))
+        });
+    }
+
+    private static Task<IResult> ShareAsync(
+        Guid fileId,
+        string? mode,
+        IUserContext userContext,
+        HttpContext httpContext,
+        IApplicationReadDbContext readContext,
+        FileAppLinkService linkService,
+        FileStorageOptions storageOptions,
+        CancellationToken cancellationToken)
+    {
+        return GetSecureLinkAsync(fileId, mode, userContext, httpContext, readContext, linkService, storageOptions, cancellationToken);
+    }
+
+    private static async Task<IResult> GetPublicByLinkAsync(
+        string token,
+        HttpContext httpContext,
+        IApplicationReadDbContext readContext,
+        IFileObjectStorage storage,
+        FileAppLinkService linkService,
+        CancellationToken cancellationToken)
+    {
+        string mode = ResolveModeFromRequest(httpContext.Request.Query["mode"]);
+        if (!linkService.TryValidateToken(token, mode, DateTime.UtcNow, out Guid fileId))
+        {
+            return Results.Unauthorized();
+        }
+
+        FileAsset? file = await readContext.FileAssets
+            .SingleOrDefaultAsync(x => x.Id == fileId && !x.IsDeleted, cancellationToken);
+
+        if (file is null)
+        {
+            return Results.NotFound();
+        }
+
+        (Stream content, string contentType) = await storage.OpenReadAsync(file.ObjectKey, cancellationToken);
+
+        if (string.Equals(mode, LinkModeDownload, StringComparison.Ordinal))
+        {
+            return Results.File(content, contentType, file.FileName, enableRangeProcessing: true);
+        }
+
+        httpContext.Response.Headers[HeaderNames.ContentDisposition] = $"inline; filename=\"{file.FileName}\"";
+        return Results.File(content, contentType, fileDownloadName: null, enableRangeProcessing: true);
     }
 
     private static async Task<IResult> GetAuditAsync(Guid fileId, IUserContext userContext, IApplicationReadDbContext readContext, CancellationToken cancellationToken)
@@ -696,6 +792,40 @@ internal sealed class Manage : IEndpoint
         byte[] hash = SHA256.HashData(stream);
         stream.Position = 0;
         return Convert.ToHexString(hash);
+    }
+
+    private static async Task<bool> HasOwnerOrAdminAccessAsync(
+        FileAsset file,
+        Guid userId,
+        IApplicationReadDbContext readContext,
+        CancellationToken cancellationToken)
+    {
+        return file.OwnerUserId == userId || await IsAdminAsync(userId, readContext, cancellationToken);
+    }
+
+    private static string NormalizeLinkMode(string? mode)
+    {
+        if (string.Equals(mode, LinkModeDownload, StringComparison.OrdinalIgnoreCase))
+        {
+            return LinkModeDownload;
+        }
+
+        if (string.Equals(mode, LinkModeStream, StringComparison.OrdinalIgnoreCase))
+        {
+            return LinkModeStream;
+        }
+
+        return LinkModeInline;
+    }
+
+    private static string ResolveModeFromRequest(string? mode)
+    {
+        return NormalizeLinkMode(mode);
+    }
+
+    private static string BuildAppLinkUrl(HttpContext httpContext, string token, string mode)
+    {
+        return $"{httpContext.Request.Scheme}://{httpContext.Request.Host}/api/v1/files/public/{token}?mode={mode}";
     }
 
     private static string NormalizeSubjectType(string subjectType)

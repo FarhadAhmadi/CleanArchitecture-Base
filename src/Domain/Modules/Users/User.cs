@@ -6,6 +6,8 @@ namespace Domain.Users;
 
 public sealed class User : IdentityUser<Guid>
 {
+    private readonly List<IDomainEvent> _domainEvents = [];
+
     public User()
     {
         Id = Guid.NewGuid();
@@ -35,15 +37,15 @@ public sealed class User : IdentityUser<Guid>
     }
 
     [NotMapped]
-    public List<IDomainEvent> DomainEvents => [];
+    public List<IDomainEvent> DomainEvents => [.. _domainEvents];
 
     public void ClearDomainEvents()
     {
-        // Identity-based user aggregate does not buffer domain events.
+        _domainEvents.Clear();
     }
 
     public void Raise(IDomainEvent domainEvent)
     {
-        // Identity-based user aggregate does not emit domain events from this entity.
+        _domainEvents.Add(domainEvent);
     }
 }

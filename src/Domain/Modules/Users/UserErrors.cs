@@ -20,6 +20,10 @@ public static class UserErrors
         "Users.EmailNotUnique",
         "The provided email is not unique");
 
+    public static readonly Error EmailNotConfirmed = Error.Problem(
+        "Users.EmailNotConfirmed",
+        "Email is not confirmed.");
+
     public static readonly Error InvalidRefreshToken = Error.Problem(
         "Users.InvalidRefreshToken",
         "The provided refresh token is invalid.");
@@ -31,4 +35,8 @@ public static class UserErrors
     public static readonly Error RevokedRefreshToken = Error.Problem(
         "Users.RevokedRefreshToken",
         "The provided refresh token has been revoked.");
+
+    public static readonly Error RefreshTokenReuseDetected = Error.Problem(
+        "Users.RefreshTokenReuseDetected",
+        "Refresh token reuse detected. All sessions were revoked.");
 }

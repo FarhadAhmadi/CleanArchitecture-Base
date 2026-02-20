@@ -1,22 +1,15 @@
-﻿using Domain.Users;
+using Application.Abstractions.Users;
+using Domain.Users;
 using SharedKernel;
 
 namespace Application.Users.Register;
 
-internal sealed class UserRegisteredDomainEventHandler : IDomainEventHandler<UserRegisteredDomainEvent>
+internal sealed class UserRegisteredDomainEventHandler(
+    IUserRegistrationVerificationService verificationService)
+    : IDomainEventHandler<UserRegisteredDomainEvent>
 {
-    public Task Handle(UserRegisteredDomainEvent domainEvent, CancellationToken cancellationToken)
+    public async Task Handle(UserRegisteredDomainEvent domainEvent, CancellationToken cancellationToken)
     {
-        // TODO: Send an email verification link, etc.
-        return Task.CompletedTask;
-    }
-}
-
-internal sealed class UserRegisteredDomainEventHandler1 : IDomainEventHandler<UserRegisteredDomainEvent>
-{
-    public Task Handle(UserRegisteredDomainEvent domainEvent, CancellationToken cancellationToken)
-    {
-        // TODO: Send an email verification link, etc.
-        return Task.CompletedTask;
+        await verificationService.QueueVerificationAsync(domainEvent.UserId, cancellationToken);
     }
 }

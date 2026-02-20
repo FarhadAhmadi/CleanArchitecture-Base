@@ -1,4 +1,5 @@
 using System.Text;
+using System.Diagnostics;
 using Infrastructure.DomainEvents;
 using Infrastructure.Integration;
 using Microsoft.Extensions.DependencyInjection;
@@ -14,6 +15,8 @@ internal sealed class RabbitMqInboxWorker(
     IServiceScopeFactory scopeFactory,
     ILogger<RabbitMqInboxWorker> logger) : BackgroundService
 {
+    private static readonly ActivitySource ActivitySource = new("Infrastructure.RabbitMqInboxWorker");
+
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
         if (!options.Enabled || !options.ConsumerEnabled)
@@ -50,6 +53,7 @@ internal sealed class RabbitMqInboxWorker(
             string messageId = result.BasicProperties.MessageId ?? Guid.NewGuid().ToString("N");
             string messageType = result.BasicProperties.Type ?? "unknown";
             string payload = Encoding.UTF8.GetString(result.Body.Span);
+            string? correlationId = result.BasicProperties.CorrelationId;
 
             using IServiceScope scope = scopeFactory.CreateScope();
             IInboxStore inboxStore = scope.ServiceProvider.GetRequiredService<IInboxStore>();
@@ -58,6 +62,13 @@ internal sealed class RabbitMqInboxWorker(
 
             try
             {
+                using Activity? activity = ActivitySource.StartActivity(
+                    "inbox.process",
+                    ActivityKind.Consumer);
+                activity?.SetTag("messaging.message_id", messageId);
+                activity?.SetTag("messaging.message_type", messageType);
+                activity?.SetTag("messaging.correlation_id", correlationId ?? string.Empty);
+
                 bool started = await inboxStore.TryStartAsync(messageId, messageType, payload, stoppingToken);
                 if (!started)
                 {

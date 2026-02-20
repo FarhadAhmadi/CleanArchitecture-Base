@@ -44,6 +44,8 @@ public static class LoggingEndpoints
         group.MapGet("/alerts/rules", GetRules).HasPermission(LoggingPermissions.AlertsManage);
         group.MapPut("/alerts/rules/{id:guid}", UpdateRule).HasPermission(LoggingPermissions.AlertsManage);
         group.MapDelete("/alerts/rules/{id:guid}", DeleteRule).HasPermission(LoggingPermissions.AlertsManage);
+        group.MapGet("/alerts/incidents", GetAlertIncidents).HasPermission(LoggingPermissions.AlertsManage);
+        group.MapGet("/alerts/incidents/{id:guid}", GetAlertIncidentById).HasPermission(LoggingPermissions.AlertsManage);
         group.MapGet("/access-control", GetAccessControl).HasPermission(LoggingPermissions.AccessManage);
         group.MapPost("/access-control/roles", CreateRole).HasPermission(LoggingPermissions.AccessManage);
         group.MapPost("/access-control/assign", AssignAccess).HasPermission(LoggingPermissions.AccessManage);
@@ -441,6 +443,114 @@ public static class LoggingEndpoints
             cancellationToken);
 
         return Results.NoContent();
+    }
+
+    private static async Task<IResult> GetAlertIncidents(
+        IApplicationReadDbContext readContext,
+        int page,
+        int pageSize,
+        string? status,
+        CancellationToken cancellationToken)
+    {
+        int normalizedPage = Math.Max(1, page);
+        int normalizedPageSize = Math.Clamp(pageSize <= 0 ? 50 : pageSize, 1, 200);
+
+        IQueryable<AlertIncident> query = readContext.AlertIncidents;
+        if (!string.IsNullOrWhiteSpace(status))
+        {
+            query = query.Where(x => x.Status == status);
+        }
+
+        int total = await query.CountAsync(cancellationToken);
+        List<AlertIncident> incidents = await query
+            .OrderByDescending(x => x.TriggeredAtUtc)
+            .Skip((normalizedPage - 1) * normalizedPageSize)
+            .Take(normalizedPageSize)
+            .ToListAsync(cancellationToken);
+
+        var ruleIds = incidents.Select(x => x.RuleId).Distinct().ToList();
+        var eventIds = incidents.Select(x => x.TriggerEventId).Distinct().ToList();
+
+        Dictionary<Guid, AlertRule> rules = await readContext.AlertRules
+            .Where(x => ruleIds.Contains(x.Id))
+            .ToDictionaryAsync(x => x.Id, cancellationToken);
+
+        Dictionary<Guid, LogEvent> events = await readContext.LogEvents
+            .Where(x => eventIds.Contains(x.Id))
+            .ToDictionaryAsync(x => x.Id, cancellationToken);
+
+        var items = incidents.Select(x =>
+        {
+            rules.TryGetValue(x.RuleId, out AlertRule? rule);
+            events.TryGetValue(x.TriggerEventId, out LogEvent? logEvent);
+
+            return new
+            {
+                x.Id,
+                x.RuleId,
+                ruleName = rule?.Name,
+                x.TriggerEventId,
+                x.TriggeredAtUtc,
+                x.Status,
+                x.RetryCount,
+                x.NextRetryAtUtc,
+                x.LastError,
+                level = logEvent?.Level,
+                message = logEvent?.Message,
+                sourceService = logEvent?.SourceService,
+                sourceModule = logEvent?.SourceModule,
+                traceId = logEvent?.TraceId
+            };
+        });
+
+        return Results.Ok(new
+        {
+            page = normalizedPage,
+            pageSize = normalizedPageSize,
+            total,
+            items
+        });
+    }
+
+    private static async Task<IResult> GetAlertIncidentById(
+        Guid id,
+        IApplicationReadDbContext readContext,
+        CancellationToken cancellationToken)
+    {
+        AlertIncident? incident = await readContext.AlertIncidents.SingleOrDefaultAsync(x => x.Id == id, cancellationToken);
+        if (incident is null)
+        {
+            return Results.NotFound();
+        }
+
+        AlertRule? rule = await readContext.AlertRules.SingleOrDefaultAsync(x => x.Id == incident.RuleId, cancellationToken);
+        LogEvent? logEvent = await readContext.LogEvents.SingleOrDefaultAsync(x => x.Id == incident.TriggerEventId, cancellationToken);
+
+        return Results.Ok(new
+        {
+            incident.Id,
+            incident.RuleId,
+            ruleName = rule?.Name,
+            incident.TriggerEventId,
+            incident.TriggeredAtUtc,
+            incident.Status,
+            incident.RetryCount,
+            incident.NextRetryAtUtc,
+            incident.LastError,
+            trigger = logEvent is null
+                ? null
+                : new
+                {
+                    logEvent.Id,
+                    logEvent.Level,
+                    logEvent.Message,
+                    logEvent.SourceService,
+                    logEvent.SourceModule,
+                    logEvent.TraceId,
+                    logEvent.Outcome,
+                    logEvent.TimestampUtc
+                }
+        });
     }
 
     private static async Task<IResult> GetAccessControl(

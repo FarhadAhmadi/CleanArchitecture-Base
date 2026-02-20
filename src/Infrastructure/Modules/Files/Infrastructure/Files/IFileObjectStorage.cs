@@ -15,4 +15,8 @@ public interface IFileObjectStorage
         string objectKey,
         int expirySeconds,
         CancellationToken cancellationToken);
+
+    Task<(Stream Content, string ContentType)> OpenReadAsync(
+        string objectKey,
+        CancellationToken cancellationToken);
 }

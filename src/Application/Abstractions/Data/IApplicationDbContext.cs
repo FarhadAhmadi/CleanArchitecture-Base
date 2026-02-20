@@ -3,6 +3,7 @@ using Domain.Authorization;
 using Domain.Files;
 using Domain.Logging;
 using Domain.Notifications;
+using Domain.Profiles;
 using Domain.Todos;
 using Domain.Users;
 using Microsoft.EntityFrameworkCore;
@@ -34,6 +35,7 @@ public interface IApplicationDbContext
     DbSet<NotificationSchedule> NotificationSchedules { get; }
     DbSet<NotificationPermissionEntry> NotificationPermissionEntries { get; }
     DbSet<NotificationDeliveryAttempt> NotificationDeliveryAttempts { get; }
+    DbSet<UserProfile> UserProfiles { get; }
 
     Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
 }

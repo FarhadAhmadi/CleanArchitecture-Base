@@ -1,4 +1,5 @@
 using Minio;
+using Minio.DataModel;
 using Minio.DataModel.Args;
 
 namespace Infrastructure.Files;
@@ -49,6 +50,34 @@ internal sealed class MinioFileObjectStorage(
             .WithExpiry(Math.Max(60, expirySeconds));
 
         return await minioClient.PresignedGetObjectAsync(args);
+    }
+
+    public async Task<(Stream Content, string ContentType)> OpenReadAsync(
+        string objectKey,
+        CancellationToken cancellationToken)
+    {
+        await EnsureBucketAsync(cancellationToken);
+
+        StatObjectArgs statArgs = new StatObjectArgs()
+            .WithBucket(options.Bucket)
+            .WithObject(objectKey);
+
+        ObjectStat stat = await minioClient.StatObjectAsync(statArgs, cancellationToken);
+
+        var content = new MemoryStream();
+        GetObjectArgs getArgs = new GetObjectArgs()
+            .WithBucket(options.Bucket)
+            .WithObject(objectKey)
+            .WithCallbackStream(stream => stream.CopyTo(content));
+
+        await minioClient.GetObjectAsync(getArgs, cancellationToken);
+        content.Position = 0;
+
+        string contentType = string.IsNullOrWhiteSpace(stat.ContentType)
+            ? "application/octet-stream"
+            : stat.ContentType;
+
+        return (content, contentType);
     }
 
     private async Task EnsureBucketAsync(CancellationToken cancellationToken)
