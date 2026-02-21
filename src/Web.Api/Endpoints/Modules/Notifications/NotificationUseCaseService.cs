@@ -5,6 +5,7 @@ using Domain.Modules.Notifications;
 using Domain.Notifications;
 using Infrastructure.Notifications;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 
 namespace Web.Api.Endpoints.Notifications;
 
@@ -13,7 +14,8 @@ internal sealed class NotificationUseCaseService(
     IApplicationDbContext writeContext,
     IApplicationReadDbContext readContext,
     NotificationSensitiveDataProtector protector,
-    NotificationOptions options) : INotificationUseCaseService
+    NotificationOptions options,
+    ILogger<NotificationUseCaseService> logger) : INotificationUseCaseService
 {
     private const string SubjectTypeUser = "User";
     private const string SubjectTypeRole = "Role";
@@ -73,6 +75,7 @@ internal sealed class NotificationUseCaseService(
         };
 
         writeContext.NotificationMessages.Add(message);
+        message.Raise(new NotificationCreatedDomainEvent(message.Id, message.Channel, message.Priority, message.Status));
 
         if (message.ScheduledAtUtc.HasValue && message.ScheduledAtUtc.Value > now)
         {
@@ -83,9 +86,22 @@ internal sealed class NotificationUseCaseService(
                 RunAtUtc = message.ScheduledAtUtc.Value,
                 CreatedAtUtc = now
             });
+            message.Raise(new NotificationScheduledDomainEvent(message.Id, message.ScheduledAtUtc.Value));
         }
 
         await writeContext.SaveChangesAsync(cancellationToken);
+
+        if (logger.IsEnabled(LogLevel.Information))
+        {
+            logger.LogInformation(
+                "Notification created. NotificationId={NotificationId} Channel={Channel} Priority={Priority} Status={Status} ScheduledAtUtc={ScheduledAtUtc}",
+                message.Id,
+                message.Channel,
+                message.Priority,
+                message.Status,
+                message.ScheduledAtUtc);
+        }
+
         return Results.Ok(new { notificationId = message.Id, message.Status, message.Channel, message.Priority });
     }
 
@@ -303,6 +319,7 @@ internal sealed class NotificationUseCaseService(
         notification.Status = NotificationStatus.Scheduled;
         notification.ScheduledAtUtc = runAtUtc;
         notification.NextRetryAtUtc = runAtUtc;
+        notification.Raise(new NotificationScheduledDomainEvent(notification.Id, runAtUtc));
 
         NotificationSchedule? existing = await writeContext.NotificationSchedules
             .SingleOrDefaultAsync(x => x.NotificationId == notificationId && !x.IsCancelled, cancellationToken);
@@ -326,6 +343,16 @@ internal sealed class NotificationUseCaseService(
         }
 
         await writeContext.SaveChangesAsync(cancellationToken);
+
+        if (logger.IsEnabled(LogLevel.Information))
+        {
+            logger.LogInformation(
+                "Notification scheduled. NotificationId={NotificationId} RunAtUtc={RunAtUtc} RuleName={RuleName}",
+                notificationId,
+                runAtUtc,
+                ruleName);
+        }
+
         return Results.Ok(new { notificationId, status = notification.Status, runAtUtc });
     }
 
@@ -439,7 +466,14 @@ internal sealed class NotificationUseCaseService(
 
         notification.IsArchived = true;
         notification.ArchivedAtUtc = DateTime.UtcNow;
+        notification.Raise(new NotificationArchivedDomainEvent(notification.Id, notification.ArchivedAtUtc.Value));
         await writeContext.SaveChangesAsync(cancellationToken);
+
+        if (logger.IsEnabled(LogLevel.Information))
+        {
+            logger.LogInformation("Notification archived. NotificationId={NotificationId}", id);
+        }
+
         return Results.NoContent();
     }
 

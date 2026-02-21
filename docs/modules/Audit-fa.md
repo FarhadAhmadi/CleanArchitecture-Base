@@ -25,3 +25,18 @@
 ## سناریوهای خطا
 - خرابی زنجیره hash
 - mismatch ناشی از تغییرات غیرمجاز داده
+
+## روند استفاده و Workflow
+### مسیر اصلی
+1. عملیات حساس در ماژول‌های مختلف رخ می‌دهد.
+2. audit entry ایجاد می‌شود.
+3. integrity report بررسی می‌شود.
+
+### نمودار
+```mermaid
+flowchart LR
+    A[Sensitive action] --> B[Record audit]
+    B --> C[Checksum chain]
+    C --> D[Persist]
+    D --> E[GET /audit/integrity]
+```

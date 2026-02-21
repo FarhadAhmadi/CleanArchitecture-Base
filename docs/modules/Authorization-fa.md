@@ -32,3 +32,25 @@
 - نقش یا مجوز نامعتبر
 - کاربر هدف وجود ندارد
 - ناسازگاری موقت cache و دیتابیس
+
+## روند استفاده و Workflow
+### مسیر اصلی
+1. `POST /authorization/assign-role`
+2. `POST /authorization/assign-permission`
+3. اعمال policy روی endpointهای هدف
+
+### مسیر خطا
+- role/permission نامعتبر
+- cache stale
+
+### نمودار
+```mermaid
+flowchart LR
+    A[Admin] --> B[Assign role]
+    B --> C[Assign permission]
+    C --> D[Cache version bump]
+    D --> E[Policy check]
+    E --> F{Allowed?}
+    F -->|Yes| G[200/204]
+    F -->|No| H[403]
+```

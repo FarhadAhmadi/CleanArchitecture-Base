@@ -52,6 +52,7 @@ dotnet run --project src/Web.Api/Web.Api.csproj
 4. Kibana: `http://localhost:5601`
 5. RabbitMQ: `http://localhost:15672`
 6. MinIO Console: `http://localhost:9001`
+7. Scheduler APIs: `http://localhost:5000/api/v1/scheduler/*`
 
 ## 5) کانفیگ‌های ضروری
 جزئیات کامل در:
@@ -79,3 +80,10 @@ dotnet run --project src/Web.Api/Web.Api.csproj
 3. اعلان ارسال نمی‌شود: تنظیمات provider در `Notifications:*` را کامل کن.
 4. مشکل MinIO: `FileStorage:*` و دسترسی bucket را چک کن.
 5. خطای `ports are not available`: معمولاً یکی از پورت‌های host در حال استفاده یا داخل excluded range ویندوز است؛ خروجی pre-check اسکریپت `scripts/dev/dev-stack.ps1` را بررسی کن.
+
+## 9) گام‌های اعتبارسنجی بعد از Setup
+1. یک کاربر ثبت‌نام و login کن.
+2. یک job زمان‌بند ایجاد کن (`POST /api/v1/scheduler/jobs`).
+3. برای job زمان‌بندی ثبت کن (`POST /api/v1/scheduler/jobs/{jobId}/schedule`).
+4. وضعیت اجرا را در `GET /api/v1/scheduler/jobs/logs` بررسی کن.
+5. یک اعلان آزمایشی بساز و در `GET /api/v1/notifications/reports/summary` نتیجه را بررسی کن.

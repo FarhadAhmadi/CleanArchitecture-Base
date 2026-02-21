@@ -40,3 +40,15 @@ pwsh scripts/dr/drill.ps1 `
 - Capture start/end times for every drill.
 - Record measured `RPO` and `RTO`.
 - If `RTO` or `RPO` breaches policy, open incident and action plan.
+
+## Post-Restore Verification (Required)
+1. Run API health check: `GET /health`
+2. Verify critical module tables are accessible:
+```sql
+SELECT TOP 1 Id FROM users.Users;
+SELECT TOP 1 Id FROM notifications.NotificationMessages;
+SELECT TOP 1 Id FROM scheduler.ScheduledJobs;
+```
+3. Validate scheduler pipeline quickly:
+   - create a one-time job
+   - confirm at least one record in `scheduler.JobExecutions`

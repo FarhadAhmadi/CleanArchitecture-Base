@@ -42,3 +42,23 @@
 - file id نامعتبر در avatar/music
 - نقض policy حریم خصوصی
 - پارامترهای بازه گزارش نامعتبر
+
+## روند استفاده و Workflow
+### مسیر اصلی
+1. `POST /profiles/me`
+2. update بخش‌ها (`basic/bio/contact/privacy/preferences/social`)
+3. مدیریت avatar/music/interests
+4. `GET /profiles/{userId}/public`
+
+### نمودار
+```mermaid
+sequenceDiagram
+    actor User
+    participant P as Profiles API
+    participant F as Files API
+    User->>P: POST /profiles/me
+    User->>P: PUT /profiles/me/avatar
+    P->>F: Validate file id
+    User->>P: PATCH /profiles/me/privacy
+    User->>P: GET /profiles/{userId}/public
+```

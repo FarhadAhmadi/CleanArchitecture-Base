@@ -67,11 +67,11 @@ Detailed Persian quick guide:
 Persian required configuration guide:
 `docs/operations/Run-Required-Config-fa.md`
 
-Modular monolith structure guide:
-`docs/reports/Modular-Monolith-Structure-fa.md`
+Persian architecture index:
+`docs/architecture/README-fa.md`
 
-Scheduler module FSD (Persian):
-`docs/reports/SchedulerComponent-FSD-v1-fa.md`
+Persian module docs index:
+`docs/modules/README-fa.md`
 
 ## Operational baseline added
 

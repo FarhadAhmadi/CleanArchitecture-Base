@@ -3,6 +3,7 @@ using Infrastructure.Integration;
 using Infrastructure.DomainEvents;
 using Application.Abstractions.Observability;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using SharedKernel;
 
 namespace Infrastructure.Monitoring;
@@ -11,7 +12,8 @@ public sealed class OrchestrationReplayService(
     ApplicationDbContext dbContext,
     OutboxOptions outboxOptions,
     IntegrationEventSerializer serializer,
-    IDomainEventsDispatcher dispatcher) : IOrchestrationReplayService
+    IDomainEventsDispatcher dispatcher,
+    ILogger<OrchestrationReplayService> logger) : IOrchestrationReplayService
 {
     public async Task<int> ReplayFailedOutboxAsync(int take, CancellationToken cancellationToken)
     {
@@ -22,6 +24,15 @@ public sealed class OrchestrationReplayService(
             .OrderBy(x => x.OccurredOnUtc)
             .Take(normalizedTake)
             .ToListAsync(cancellationToken);
+
+        if (logger.IsEnabled(LogLevel.Information))
+        {
+            logger.LogInformation(
+                "Replay outbox requested. RequestedTake={RequestedTake} NormalizedTake={NormalizedTake} Selected={Selected}",
+                take,
+                normalizedTake,
+                failed.Count);
+        }
 
         foreach (OutboxMessage message in failed)
         {
@@ -43,6 +54,15 @@ public sealed class OrchestrationReplayService(
             .Take(normalizedTake)
             .ToListAsync(cancellationToken);
 
+        if (logger.IsEnabled(LogLevel.Information))
+        {
+            logger.LogInformation(
+                "Replay inbox requested. RequestedTake={RequestedTake} NormalizedTake={NormalizedTake} Selected={Selected}",
+                take,
+                normalizedTake,
+                failed.Count);
+        }
+
         int replayed = 0;
 
         foreach (InboxMessage message in failed)
@@ -59,10 +79,27 @@ public sealed class OrchestrationReplayService(
                 message.ProcessedOnUtc = DateTime.UtcNow;
                 message.Error = null;
                 replayed++;
+
+                if (logger.IsEnabled(LogLevel.Debug))
+                {
+                    logger.LogDebug(
+                        "Replay inbox message succeeded. MessageId={MessageId} Type={Type}",
+                        message.Id,
+                        message.Type);
+                }
             }
             catch (Exception ex)
             {
                 message.Error = ex.Message.Length > 2000 ? ex.Message[..2000] : ex.Message;
+
+                if (logger.IsEnabled(LogLevel.Warning))
+                {
+                    logger.LogWarning(
+                        ex,
+                        "Replay inbox message failed. MessageId={MessageId} Type={Type}",
+                        message.Id,
+                        message.Type);
+                }
             }
         }
 

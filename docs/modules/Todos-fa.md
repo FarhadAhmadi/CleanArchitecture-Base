@@ -35,3 +35,19 @@
 - دسترسی به todo غیرمجاز
 - payload نامعتبر در create
 - id ناموجود در complete/delete/copy
+
+## روند استفاده و Workflow
+### مسیر اصلی
+1. `POST /todos`
+2. `GET /todos`
+3. `PUT /todos/:id/complete` یا `DELETE /todos/:id`
+
+### نمودار
+```mermaid
+flowchart TD
+    A[POST /todos] --> B[GET /todos]
+    B --> C{Action}
+    C -->|Complete| D[PUT /todos/:id/complete]
+    C -->|Delete| E[DELETE /todos/:id]
+    C -->|Copy| F[POST /todos/:id/copy]
+```

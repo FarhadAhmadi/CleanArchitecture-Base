@@ -50,3 +50,30 @@
 - کد تایید منقضی/نامعتبر
 - refresh token revoked/reused
 - provider OAuth نامعتبر یا callback ناقص
+
+## روند استفاده و Workflow
+### مسیر اصلی
+1. `POST /users/register`
+2. `POST /users/verify-email`
+3. `POST /users/login`
+4. `POST /users/refresh`
+
+### مسیر خطا
+- verify code نامعتبر/منقضی
+- refresh token باطل یا reuse
+
+### نمودار
+```mermaid
+sequenceDiagram
+    actor User
+    participant API as Users API
+    participant DB as SQL
+    participant N as Notifications
+    User->>API: POST /users/register
+    API->>DB: Create User
+    API->>N: Send verification code
+    User->>API: POST /users/verify-email
+    API->>DB: Confirm Email
+    User->>API: POST /users/login
+    API-->>User: Access + Refresh
+```

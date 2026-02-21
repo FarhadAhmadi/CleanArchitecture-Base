@@ -63,6 +63,8 @@ internal sealed class CreateJobCommandHandler(
             MaxConsecutiveFailures = Math.Clamp(command.MaxConsecutiveFailures ?? 5, 1, 50)
         };
 
+        job.Raise(new SchedulerJobCreatedDomainEvent(job.Id, job.Name, job.Type));
+
         dbContext.ScheduledJobs.Add(job);
         await dbContext.SaveChangesAsync(cancellationToken);
 

@@ -77,9 +77,28 @@
 1. RabbitMQ: `RabbitMq:*`
 2. Redis: `RedisCache:*`
 3. Logging/Alerting: `Serilog:*`, `OperationalAlerting:*`
+4. Scheduler: `Scheduler:*`
+5. Outbox: `Outbox:*`
+
+## 5.1) کانفیگ مهم Scheduler
+1. `Scheduler:SeedDefaults`
+2. `Scheduler:PollingIntervalSeconds`
+3. `Scheduler:MaxDueJobsPerIteration`
+4. `Scheduler:LockLeaseSeconds`
+5. `Scheduler:MisfireGraceSeconds`
+6. `Scheduler:DefaultQuarantineMinutes`
+7. `Scheduler:NodeId`
+
+## 5.2) کانفیگ مهم Outbox
+1. `Outbox:BatchSize`
+2. `Outbox:PollingIntervalSeconds`
+3. `Outbox:MaxRetryCount`
+4. `Outbox:RetryDelaySeconds`
+5. `Outbox:MaxPendingMessages`
 
 ## 6) چک‌لیست قبل از Run
 1. DB connection درست است.
 2. JWT کامل است.
 3. Notification encryption key تنظیم شده است.
 4. اگر ارسال واقعی می‌خواهی، provider credentialها کامل است.
+5. Scheduler و Outbox در محیط هدف تنظیم شده‌اند.

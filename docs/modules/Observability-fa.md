@@ -28,3 +28,22 @@
 ## سناریوهای خطا
 - replay با حجم زیاد و اثر جانبی تکراری
 - هم‌زمانی replay با پردازش normal queue
+
+## روند استفاده و Workflow
+### مسیر اصلی
+1. مشاهده metrics/health
+2. تشخیص backlog
+3. replay inbox/outbox
+
+### نمودار
+```mermaid
+sequenceDiagram
+    actor Ops
+    participant O as Observability API
+    participant I as Integration
+    Ops->>O: GET /observability/metrics
+    Ops->>O: GET /dashboard/orchestration-health
+    Ops->>O: POST /observability/orchestration/replay/outbox
+    O->>I: Replay failed outbox
+    I-->>O: Replay result
+```

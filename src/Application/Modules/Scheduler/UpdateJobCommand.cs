@@ -84,6 +84,8 @@ internal sealed class UpdateJobCommandHandler(
             job.MaxConsecutiveFailures = Math.Clamp(command.MaxConsecutiveFailures.Value, 1, 50);
         }
 
+        job.Raise(new SchedulerJobUpdatedDomainEvent(job.Id, job.Name, job.Type));
+
         await dbContext.SaveChangesAsync(cancellationToken);
 
         await auditTrailService.RecordAsync(

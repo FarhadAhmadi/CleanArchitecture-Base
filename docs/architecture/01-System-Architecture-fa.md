@@ -61,7 +61,7 @@ Composition Root از `Program.cs` و `Infrastructure.DependencyInjection` ان�
 - Monitoring
 - Files
 - Notifications
-- Scheduler (planned)
+- Scheduler
 
 مرجع: `src/Web.Api/Program.cs`, `src/Infrastructure/DependencyInjection.cs`
 
@@ -75,7 +75,12 @@ Composition Root از `Program.cs` و `Infrastructure.DependencyInjection` ان�
 - Logging
 - Audit
 - Observability
-- Scheduler (planned, job orchestration)
+- Scheduler (job orchestration)
+
+## 5.1) وضعیت فعلی Scheduler
+- endpointهای scheduler در `src/Web.Api/Endpoints/Modules/Scheduler/*` فعال هستند.
+- worker زمان‌بند در `src/Infrastructure/Modules/Scheduler/Infrastructure/Scheduling/SchedulerWorker.cs` فعال است.
+- قابلیت‌های runtime شامل retry, misfire policy, replay, quarantine و dependency check است.
 
 جزئیات هر ماژول در `docs/architecture/03-Module-Catalog-fa.md` آمده است.
 
@@ -158,6 +163,8 @@ Composition Root از `Program.cs` و `Infrastructure.DependencyInjection` ان�
 - Sink به Seq یا Elasticsearch
 - OpenTelemetry tracing + metrics (OTLP optional)
 - Logging platform داخلی (ingest, schema, validation, alerts)
+- Logging Decorator در Application برای ثبت شروع/پایان/خطا و slow operation فعال است.
+- Domain event dispatch logging برای شمارش handlerها و رویدادهای بدون handler فعال است.
 
 مرجع: `src/Web.Api/Program.cs`, `src/Web.Api/DependencyInjection.cs`, `src/Infrastructure/Modules/Logging/*`
 
@@ -182,6 +189,7 @@ Composition Root از `Program.cs` و `Infrastructure.DependencyInjection` ان�
 - Module integration tests (Users, Profiles, Notifications, Audit)
 - OpenAPI snapshot contract tests
 - k6 load/soak assets
+- تست رفتار permission برای endpointهای scheduler
 
 مرجع: `tests/ArchitectureTests/*`, `tests/ContractTests/*`, `tests/Performance/*`
 

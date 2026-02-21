@@ -7,6 +7,7 @@ using Domain.Files;
 using Domain.Logging;
 using Infrastructure.Files;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using Microsoft.Net.Http.Headers;
 
 using Application.Modules.Files;
@@ -21,7 +22,8 @@ internal sealed class FileUseCaseService(
     IFileMalwareScanner scanner,
     FileValidationOptions validationOptions,
     FileStorageOptions storageOptions,
-    FileAppLinkService linkService) : IFileUseCaseService
+    FileAppLinkService linkService,
+    ILogger<FileUseCaseService> logger) : IFileUseCaseService
 {
     private const string SubjectTypeUser = "User";
     private const string SubjectTypeRole = "Role";
@@ -85,8 +87,19 @@ internal sealed class FileUseCaseService(
             uploadCompleted = true;
 
             writeContext.FileAssets.Add(entity);
+            entity.Raise(new FileUploadedDomainEvent(entity.Id, entity.OwnerUserId, entity.Module, entity.SizeBytes));
             await WriteAccessAuditAsync(httpContext, entity.Id, userContext.UserId, "upload", cancellationToken);
             await writeContext.SaveChangesAsync(cancellationToken);
+
+            if (logger.IsEnabled(LogLevel.Information))
+            {
+                logger.LogInformation(
+                    "File uploaded. FileId={FileId} OwnerUserId={OwnerUserId} Module={Module} SizeBytes={SizeBytes}",
+                    entity.Id,
+                    entity.OwnerUserId,
+                    entity.Module,
+                    entity.SizeBytes);
+            }
         }
         catch
         {
@@ -292,8 +305,18 @@ internal sealed class FileUseCaseService(
         file.IsDeleted = true;
         file.DeletedAtUtc = DateTime.UtcNow;
         file.UpdatedAtUtc = DateTime.UtcNow;
+        file.Raise(new FileDeletedDomainEvent(file.Id, file.OwnerUserId));
         await WriteAccessAuditAsync(httpContext, file.Id, userContext.UserId, "delete", cancellationToken);
         await writeContext.SaveChangesAsync(cancellationToken);
+
+        if (logger.IsEnabled(LogLevel.Information))
+        {
+            logger.LogInformation(
+                "File deleted. FileId={FileId} OwnerUserId={OwnerUserId}",
+                file.Id,
+                file.OwnerUserId);
+        }
+
         return Results.NoContent();
     }
 
@@ -527,8 +550,22 @@ internal sealed class FileUseCaseService(
         existing.CanRead = input.CanRead;
         existing.CanWrite = input.CanWrite;
         existing.CanDelete = input.CanDelete;
+        file.Raise(new FilePermissionUpsertedDomainEvent(file.Id, existing.SubjectType, existing.SubjectValue, existing.CanRead, existing.CanWrite, existing.CanDelete));
 
         await writeContext.SaveChangesAsync(cancellationToken);
+
+        if (logger.IsEnabled(LogLevel.Information))
+        {
+            logger.LogInformation(
+                "File permission upserted. FileId={FileId} SubjectType={SubjectType} SubjectValue={SubjectValue} CanRead={CanRead} CanWrite={CanWrite} CanDelete={CanDelete}",
+                file.Id,
+                existing.SubjectType,
+                existing.SubjectValue,
+                existing.CanRead,
+                existing.CanWrite,
+                existing.CanDelete);
+        }
+
         return Results.Ok(new { existing.Id, existing.SubjectType, existing.SubjectValue, existing.CanRead, existing.CanWrite, existing.CanDelete });
     }
 

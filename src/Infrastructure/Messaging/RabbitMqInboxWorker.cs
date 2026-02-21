@@ -55,6 +55,15 @@ internal sealed class RabbitMqInboxWorker(
             string payload = Encoding.UTF8.GetString(result.Body.Span);
             string? correlationId = result.BasicProperties.CorrelationId;
 
+            if (logger.IsEnabled(LogLevel.Debug))
+            {
+                logger.LogDebug(
+                    "Inbox message received. MessageId={MessageId} Type={Type} CorrelationId={CorrelationId}",
+                    messageId,
+                    messageType,
+                    correlationId);
+            }
+
             using IServiceScope scope = scopeFactory.CreateScope();
             IInboxStore inboxStore = scope.ServiceProvider.GetRequiredService<IInboxStore>();
             IIntegrationEventSerializer serializer = scope.ServiceProvider.GetRequiredService<IIntegrationEventSerializer>();
@@ -72,6 +81,14 @@ internal sealed class RabbitMqInboxWorker(
                 bool started = await inboxStore.TryStartAsync(messageId, messageType, payload, stoppingToken);
                 if (!started)
                 {
+                    if (logger.IsEnabled(LogLevel.Debug))
+                    {
+                        logger.LogDebug(
+                            "Inbox message ignored (already started/processed). MessageId={MessageId} Type={Type}",
+                            messageId,
+                            messageType);
+                    }
+
                     channel.BasicAck(result.DeliveryTag, multiple: false);
                     continue;
                 }
@@ -84,6 +101,14 @@ internal sealed class RabbitMqInboxWorker(
                 await dispatcher.DispatchAsync([domainEvent], stoppingToken);
                 await inboxStore.MarkProcessedAsync(messageId, stoppingToken);
                 channel.BasicAck(result.DeliveryTag, multiple: false);
+
+                if (logger.IsEnabled(LogLevel.Information))
+                {
+                    logger.LogInformation(
+                        "Inbox message processed successfully. MessageId={MessageId} Type={Type}",
+                        messageId,
+                        messageType);
+                }
             }
             catch (Exception ex)
             {

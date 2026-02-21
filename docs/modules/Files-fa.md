@@ -75,3 +75,31 @@
 - token لینک عمومی نامعتبر یا منقضی
 - upload فایل با content-type/size غیرمجاز
 - ACL conflict در اشتراک‌گذاری
+
+## روند استفاده و Workflow
+### مسیر اصلی
+1. validate + scan
+2. upload
+3. download/stream
+4. secure/public link
+5. ACL management
+
+### Workflow (upload تا share)
+```mermaid
+flowchart LR
+    A[POST /files/validate] --> B[POST /files/scan]
+    B --> C[POST /files]
+    C --> D[GET metadata/download/stream]
+    D --> E[GET link or POST share]
+    E --> F[GET /files/public/:token]
+    F --> G[Audit access + rate limit]
+```
+
+### Workflow (ACL)
+```mermaid
+flowchart TD
+    A[POST /files/permissions/:fileId] --> B[GET /files/permissions/:fileId]
+    B --> C{Need encryption?}
+    C -->|Yes| D[POST /files/encrypt/:fileId]
+    C -->|No| E[Continue]
+```

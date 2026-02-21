@@ -33,3 +33,21 @@
 ## ریسک‌ها
 - بزرگ‌شدن بیش از حد shared layer
 - coupling ناخواسته اگر قراردادها واضح نگه داشته نشوند
+
+## روند استفاده و Workflow
+### مسیر اصلی
+1. Application abstraction call
+2. Infrastructure adapter execution
+3. DB/Queue/Cache integration
+4. health and resilience checks
+
+### نمودار
+```mermaid
+flowchart LR
+    A[Application] --> B[Abstractions]
+    B --> C[Infrastructure adapters]
+    C --> D[(SQL)]
+    C --> E[(RabbitMQ)]
+    C --> F[(Redis)]
+    C --> G[Health + Resilience]
+```

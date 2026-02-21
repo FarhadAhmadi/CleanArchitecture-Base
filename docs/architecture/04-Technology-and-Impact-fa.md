@@ -56,3 +56,8 @@
 1. سرمایه گذاری روی secret governance (اجباری در production).
 2. ادامه توسعه روی همین معماری تا رسیدن به شاخص های بار/تیم مشخص.
 3. تعریف milestone رسمی برای service extraction فقط برای ماژول های پرمصرف.
+
+## 6) به‌روزرسانی‌های اخیر در Observability
+1. لاگ‌گذاری pipeline در Application با OperationId و Slow Operation detection.
+2. لاگ‌گذاری dispatch برای Domain Eventها (تعداد handler و وضعیت بدون handler).
+3. لاگ عملیاتی بیشتر در Outbox/Inbox/Replay برای تحلیل بهتر failure path.

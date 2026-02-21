@@ -1,6 +1,7 @@
 using Application.Abstractions.Authentication;
 using Application.Abstractions.Data;
 using Application.Abstractions.Messaging;
+using Domain.Modules.Scheduler;
 using Domain.Scheduler;
 using Infrastructure.Auditing;
 using Microsoft.EntityFrameworkCore;
@@ -25,6 +26,7 @@ internal sealed class DisableJobCommandHandler(
         }
 
         job.Status = JobStatus.Inactive;
+        job.Raise(new SchedulerJobStatusChangedDomainEvent(job.Id, job.Status, "disabled"));
         await dbContext.SaveChangesAsync(cancellationToken);
 
         await auditTrailService.RecordAsync(
@@ -39,4 +41,3 @@ internal sealed class DisableJobCommandHandler(
         return Results.Ok(new { job.Id, status = job.Status.ToString() });
     }
 }
-

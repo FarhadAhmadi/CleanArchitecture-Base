@@ -66,3 +66,27 @@
 - template نامعتبر یا channel ناسازگار
 - schedule در زمان گذشته
 - محدودیت provider یا credential failure
+
+## روند استفاده و Workflow
+### مسیر اصلی
+1. `POST /notifications`
+2. در صورت نیاز schedule
+3. dispatch توسط worker
+4. گزارش summary/details
+
+### نمودار
+```mermaid
+sequenceDiagram
+    actor Client
+    participant API as Notifications API
+    participant DB as SQL
+    participant W as Worker
+    participant P as Provider
+    Client->>API: POST /notifications
+    API->>DB: Save pending
+    Client->>API: POST /notifications/:id/schedule
+    W->>DB: Pull due message
+    W->>P: Send
+    P-->>W: Ack/Fail
+    W->>DB: Save attempt
+```

@@ -63,3 +63,22 @@
 - ingest payload نامعتبر
 - queue backlog و افزایش latency
 - rule misconfiguration و alert noise
+
+## روند استفاده و Workflow
+### مسیر اصلی
+1. ingest event (single/bulk)
+2. validate/transform
+3. rule match
+4. incident management
+
+### نمودار
+```mermaid
+flowchart TD
+    A[POST /logging/events] --> B[Validate]
+    B --> C[Transform]
+    C --> D[Persist]
+    D --> E{Rule matched?}
+    E -->|No| F[Done]
+    E -->|Yes| G[Create incident]
+    G --> H[Dispatch alert]
+```

@@ -1,10 +1,13 @@
 ﻿using System.Collections.Concurrent;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using SharedKernel;
 
 namespace Infrastructure.DomainEvents;
 
-internal sealed class DomainEventsDispatcher(IServiceProvider serviceProvider) : IDomainEventsDispatcher
+internal sealed class DomainEventsDispatcher(
+    IServiceProvider serviceProvider,
+    ILogger<DomainEventsDispatcher> logger) : IDomainEventsDispatcher
 {
     private static readonly ConcurrentDictionary<Type, Type> HandlerTypeDictionary = new();
     private static readonly ConcurrentDictionary<Type, Type> WrapperTypeDictionary = new();
@@ -23,6 +26,14 @@ internal sealed class DomainEventsDispatcher(IServiceProvider serviceProvider) :
                 et => typeof(IDomainEventHandler<>).MakeGenericType(et));
 
             IEnumerable<object?> handlers = scope.ServiceProvider.GetServices(handlerType);
+            int dispatchedHandlers = 0;
+
+            if (logger.IsEnabled(LogLevel.Information))
+            {
+                logger.LogInformation(
+                    "Dispatching domain event {DomainEventType}",
+                    domainEventType.Name);
+            }
 
             foreach (object? handler in handlers)
             {
@@ -34,6 +45,27 @@ internal sealed class DomainEventsDispatcher(IServiceProvider serviceProvider) :
                 var handlerWrapper = HandlerWrapper.Create(handler, domainEventType);
 
                 await handlerWrapper.Handle(domainEvent, cancellationToken);
+                dispatchedHandlers++;
+            }
+
+            if (dispatchedHandlers == 0)
+            {
+                if (logger.IsEnabled(LogLevel.Warning))
+                {
+                    logger.LogWarning(
+                        "No handlers found for domain event {DomainEventType}",
+                        domainEventType.Name);
+                }
+
+                continue;
+            }
+
+            if (logger.IsEnabled(LogLevel.Information))
+            {
+                logger.LogInformation(
+                    "Domain event {DomainEventType} dispatched to {HandlerCount} handler(s)",
+                    domainEventType.Name,
+                    dispatchedHandlers);
             }
         }
     }
@@ -48,7 +80,7 @@ internal sealed class DomainEventsDispatcher(IServiceProvider serviceProvider) :
                 domainEventType,
                 et => typeof(HandlerWrapper<>).MakeGenericType(et));
 
-            return (HandlerWrapper)Activator.CreateInstance(wrapperType, handler);
+            return (HandlerWrapper)Activator.CreateInstance(wrapperType, handler)!;
         }
     }
 

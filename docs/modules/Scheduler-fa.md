@@ -80,3 +80,27 @@
 - lock contention بین نودها
 - misfire شدید در downtime طولانی
 - dependency cycle یا dependency شکست‌خورده
+
+## روند استفاده و Workflow
+### مسیر اصلی
+1. create/update job
+2. set schedule
+3. worker execution with distributed lock
+4. retry/quarantine on failures
+5. logs/reports/permissions/dependencies management
+
+### نمودار
+```mermaid
+flowchart TD
+    A[Create Job] --> B[Set Schedule]
+    B --> C[Worker polling]
+    C --> D[Acquire lock]
+    D --> E[Execute handler]
+    E --> F{Result}
+    F -->|Success| G[Next run]
+    F -->|Retryable fail| H[Backoff retry]
+    F -->|Repeated fail| I[Quarantine]
+    G --> J[Persist execution log]
+    H --> J
+    I --> J
+```

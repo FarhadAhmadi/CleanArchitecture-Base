@@ -71,6 +71,7 @@ internal sealed class RunJobNowCommandHandler(
             if (job.Status == JobStatus.Quarantined)
             {
                 job.Status = JobStatus.Active;
+                job.Raise(new SchedulerJobStatusChangedDomainEvent(job.Id, job.Status, "manual-run-success"));
             }
         }
         else if (executionResult.Status is JobExecutionStatus.Failed or JobExecutionStatus.TimedOut or JobExecutionStatus.Canceled)
@@ -133,6 +134,7 @@ internal sealed class PauseJobCommandHandler(
         }
 
         job.Status = JobStatus.Paused;
+        job.Raise(new SchedulerJobStatusChangedDomainEvent(job.Id, job.Status, "paused"));
         await dbContext.SaveChangesAsync(cancellationToken);
 
         await auditTrailService.RecordAsync(
@@ -166,6 +168,7 @@ internal sealed class ResumeJobCommandHandler(
         job.Status = JobStatus.Active;
         job.IsQuarantined = false;
         job.QuarantinedUntilUtc = null;
+        job.Raise(new SchedulerJobStatusChangedDomainEvent(job.Id, job.Status, "resumed"));
         await dbContext.SaveChangesAsync(cancellationToken);
 
         await auditTrailService.RecordAsync(
@@ -204,6 +207,7 @@ internal sealed class ReplayDeadLetteredRunsCommandHandler(
         job.QuarantinedUntilUtc = null;
         job.ConsecutiveFailures = 0;
         job.DeadLetterReason = null;
+        job.Raise(new SchedulerJobStatusChangedDomainEvent(job.Id, job.Status, "replay-dead-lettered"));
 
         if (schedule is not null)
         {
@@ -248,6 +252,7 @@ internal sealed class QuarantineJobCommandHandler(
         job.IsQuarantined = true;
         job.QuarantinedUntilUtc = DateTime.UtcNow.AddMinutes(minutes);
         job.DeadLetterReason = string.IsNullOrWhiteSpace(command.Reason) ? "Manual quarantine" : command.Reason.Trim();
+        job.Raise(new SchedulerJobStatusChangedDomainEvent(job.Id, job.Status, "manual-quarantine"));
 
         JobSchedule? schedule = await dbContext.JobSchedules
             .SingleOrDefaultAsync(x => x.JobId == command.JobId, cancellationToken);

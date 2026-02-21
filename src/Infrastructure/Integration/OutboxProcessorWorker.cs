@@ -44,8 +44,18 @@ internal sealed class OutboxProcessorWorker(
 
             if (messages.Count == 0)
             {
+                if (logger.IsEnabled(LogLevel.Debug))
+                {
+                    logger.LogDebug("Outbox poll found no pending messages.");
+                }
+
                 await Task.Delay(TimeSpan.FromSeconds(options.PollingIntervalSeconds), stoppingToken);
                 continue;
+            }
+
+            if (logger.IsEnabled(LogLevel.Information))
+            {
+                logger.LogInformation("Outbox poll picked {Count} message(s).", messages.Count);
             }
 
             foreach (OutboxMessage message in messages)
@@ -80,6 +90,15 @@ internal sealed class OutboxProcessorWorker(
 
             message.ProcessedOnUtc = DateTime.UtcNow;
             message.Error = null;
+
+            if (logger.IsEnabled(LogLevel.Information))
+            {
+                logger.LogInformation(
+                    "Outbox message processed successfully. MessageId={MessageId} Type={Type} RetryCount={RetryCount}",
+                    message.Id,
+                    message.Type,
+                    message.RetryCount);
+            }
         }
         catch (Exception ex)
         {
