@@ -5,6 +5,7 @@
     <PackageReference Include="Microsoft.EntityFrameworkCore" />
     <PackageReference Include="Serilog" />
     <PackageReference Include="Scrutor" />
+    <PackageReference Include="Cronos" />
   </ItemGroup>
 
   <ItemGroup>

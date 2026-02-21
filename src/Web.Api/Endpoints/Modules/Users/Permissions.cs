@@ -27,4 +27,10 @@ internal static class Permissions
     internal const string ProfilesWrite = PermissionCodes.ProfilesWrite;
     internal const string ProfilesPublicRead = PermissionCodes.ProfilesPublicRead;
     internal const string ProfilesAdminRead = PermissionCodes.ProfilesAdminRead;
+    internal const string SchedulerRead = PermissionCodes.SchedulerRead;
+    internal const string SchedulerWrite = PermissionCodes.SchedulerWrite;
+    internal const string SchedulerExecute = PermissionCodes.SchedulerExecute;
+    internal const string SchedulerManage = PermissionCodes.SchedulerManage;
+    internal const string SchedulerPermissionsManage = PermissionCodes.SchedulerPermissionsManage;
+    internal const string SchedulerReportsRead = PermissionCodes.SchedulerReportsRead;
 }

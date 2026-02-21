@@ -6,6 +6,7 @@ using Domain.Logging;
 using Domain.Modules.Notifications;
 using Domain.Notifications;
 using Domain.Profiles;
+using Domain.Modules.Scheduler;
 using Domain.Todos;
 using Domain.Users;
 using Infrastructure.Integration;
@@ -40,6 +41,11 @@ public sealed class ApplicationReadDbContext(DbContextOptions<ApplicationReadDbC
     public IQueryable<NotificationPermissionEntry> NotificationPermissionEntries => Set<NotificationPermissionEntry>().AsNoTracking();
     public IQueryable<NotificationDeliveryAttempt> NotificationDeliveryAttempts => Set<NotificationDeliveryAttempt>().AsNoTracking();
     public IQueryable<UserProfile> UserProfiles => Set<UserProfile>().AsNoTracking();
+    public IQueryable<ScheduledJob> ScheduledJobs => Set<ScheduledJob>().AsNoTracking();
+    public IQueryable<JobSchedule> JobSchedules => Set<JobSchedule>().AsNoTracking();
+    public IQueryable<JobDependency> JobDependencies => Set<JobDependency>().AsNoTracking();
+    public IQueryable<JobExecution> JobExecutions => Set<JobExecution>().AsNoTracking();
+    public IQueryable<JobPermissionEntry> JobPermissionEntries => Set<JobPermissionEntry>().AsNoTracking();
 
     internal IQueryable<OutboxMessage> OutboxMessages => Set<OutboxMessage>().AsNoTracking();
 

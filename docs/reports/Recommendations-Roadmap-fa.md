@@ -24,8 +24,24 @@
 **DoD:** failureهای provider قابل رصد و قابل بازیابی باشند.
 
 ### P0-03 Scheduler Module
-**اقدام:** ماژول زمان‌بندی مستقل برای jobهای delayed/cron-based.  
-**DoD:** اعلان‌های زمان‌بندی‌شده وابسته به endpoint دستی نباشند.
+**اقدام:** پیاده‌سازی ماژول زمان‌بندی مستقل برای jobهای delayed/interval/cron-based.  
+**Scope MVP:**
+1. Job CRUD + فعال/غیرفعال
+2. Schedule CRUD (Cron/Interval/One-time + Start/End)
+3. Run/Pause/Resume
+4. Execution logs + status model
+5. Permission/ACL + Audit trail
+6. Integration با Notification برای failure/delay alert
+**API Target (v1):**
+- `/api/v1/scheduler/jobs`
+- `/api/v1/scheduler/jobs/{jobId}/schedule`
+- `/api/v1/scheduler/jobs/{jobId}/run|pause|resume`
+- `/api/v1/scheduler/jobs/{jobId}/logs`
+**DoD:**
+1. اعلان‌های زمان‌بندی‌شده وابسته به endpoint دستی نباشند.
+2. حداقل 1000 job فعال بدون افت عملکرد بحرانی مدیریت شود.
+3. لاگ/متریک/آلارم اجرایی برای Jobها در observability قابل مشاهده باشد.
+4. سناریوی failover پایه در محیط multi-node تست شود.
 
 ### P1-01 RuleEngine Module
 **اقدام:** موتور Rule برای trigger اعلان و workflow داخلی.  

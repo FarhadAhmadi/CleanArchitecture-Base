@@ -39,21 +39,45 @@
         ],
         "parameters": [
           {
-            "name": "actorId",
+            "name": "Page",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "PageIndex",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "PageSize",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "ActorId",
             "in": "query",
             "schema": {
               "type": "string"
             }
           },
           {
-            "name": "action",
+            "name": "Action",
             "in": "query",
             "schema": {
               "type": "string"
             }
           },
           {
-            "name": "from",
+            "name": "From",
             "in": "query",
             "schema": {
               "type": "string",
@@ -61,35 +85,11 @@
             }
           },
           {
-            "name": "to",
+            "name": "To",
             "in": "query",
             "schema": {
               "type": "string",
               "format": "date-time"
-            }
-          },
-          {
-            "name": "page",
-            "in": "query",
-            "schema": {
-              "type": "integer",
-              "format": "int32"
-            }
-          },
-          {
-            "name": "pageIndex",
-            "in": "query",
-            "schema": {
-              "type": "integer",
-              "format": "int32"
-            }
-          },
-          {
-            "name": "pageSize",
-            "in": "query",
-            "schema": {
-              "type": "integer",
-              "format": "int32"
             }
           }
         ],
@@ -709,7 +709,7 @@
         }
       }
     },
-    "/logging/v1/events": {
+    "/api/v1/logging/events": {
       "post": {
         "tags": [
           "Logging"
@@ -743,14 +743,52 @@
         ],
         "parameters": [
           {
-            "name": "level",
+            "name": "Page",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "PageIndex",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "PageSize",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "SortBy",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "SortOrder",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "Level",
             "in": "query",
             "schema": {
               "$ref": "#/components/schemas/Domain.Logging.LogLevelType"
             }
           },
           {
-            "name": "from",
+            "name": "From",
             "in": "query",
             "schema": {
               "type": "string",
@@ -758,7 +796,7 @@
             }
           },
           {
-            "name": "to",
+            "name": "To",
             "in": "query",
             "schema": {
               "type": "string",
@@ -766,91 +804,53 @@
             }
           },
           {
-            "name": "actorId",
+            "name": "ActorId",
             "in": "query",
             "schema": {
               "type": "string"
             }
           },
           {
-            "name": "service",
+            "name": "Service",
             "in": "query",
             "schema": {
               "type": "string"
             }
           },
           {
-            "name": "module",
+            "name": "Module",
             "in": "query",
             "schema": {
               "type": "string"
             }
           },
           {
-            "name": "traceId",
+            "name": "TraceId",
             "in": "query",
             "schema": {
               "type": "string"
             }
           },
           {
-            "name": "outcome",
+            "name": "Outcome",
             "in": "query",
             "schema": {
               "type": "string"
             }
           },
           {
-            "name": "text",
+            "name": "Text",
             "in": "query",
             "schema": {
               "type": "string"
             }
           },
           {
-            "name": "recalculateIntegrity",
+            "name": "RecalculateIntegrity",
             "in": "query",
             "required": true,
             "schema": {
               "type": "boolean"
-            }
-          },
-          {
-            "name": "sortBy",
-            "in": "query",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "sortOrder",
-            "in": "query",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "page",
-            "in": "query",
-            "schema": {
-              "type": "integer",
-              "format": "int32"
-            }
-          },
-          {
-            "name": "pageIndex",
-            "in": "query",
-            "schema": {
-              "type": "integer",
-              "format": "int32"
-            }
-          },
-          {
-            "name": "pageSize",
-            "in": "query",
-            "schema": {
-              "type": "integer",
-              "format": "int32"
             }
           }
         ],
@@ -868,7 +868,7 @@
         }
       }
     },
-    "/logging/v1/events/bulk": {
+    "/api/v1/logging/events/bulk": {
       "post": {
         "tags": [
           "Logging"
@@ -877,7 +877,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/Web.Api.Endpoints.Logging.BulkIngestRequest"
+                "$ref": "#/components/schemas/Application.Logging.BulkIngestRequest"
               }
             }
           },
@@ -897,7 +897,7 @@
         }
       }
     },
-    "/logging/v1/events/corrupted": {
+    "/api/v1/logging/events/corrupted": {
       "get": {
         "tags": [
           "Logging"
@@ -926,7 +926,7 @@
         }
       }
     },
-    "/logging/v1/events/{eventId}": {
+    "/api/v1/logging/events/{eventId}": {
       "get": {
         "tags": [
           "Logging"
@@ -992,7 +992,7 @@
         }
       }
     },
-    "/logging/v1/schema": {
+    "/api/v1/logging/schema": {
       "get": {
         "tags": [
           "Logging"
@@ -1011,7 +1011,7 @@
         }
       }
     },
-    "/logging/v1/validate": {
+    "/api/v1/logging/validate": {
       "post": {
         "tags": [
           "Logging"
@@ -1040,7 +1040,7 @@
         }
       }
     },
-    "/logging/v1/transform": {
+    "/api/v1/logging/transform": {
       "post": {
         "tags": [
           "Logging"
@@ -1069,7 +1069,7 @@
         }
       }
     },
-    "/logging/v1/health": {
+    "/api/v1/logging/health": {
       "get": {
         "tags": [
           "Logging"
@@ -1088,7 +1088,7 @@
         }
       }
     },
-    "/logging/v1/alerts/rules": {
+    "/api/v1/logging/alerts/rules": {
       "post": {
         "tags": [
           "Logging"
@@ -1097,7 +1097,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/Web.Api.Endpoints.Logging.CreateAlertRuleRequest"
+                "$ref": "#/components/schemas/Application.Logging.CreateAlertRuleRequest"
               }
             }
           },
@@ -1134,7 +1134,7 @@
         }
       }
     },
-    "/logging/v1/alerts/rules/{id}": {
+    "/api/v1/logging/alerts/rules/{id}": {
       "put": {
         "tags": [
           "Logging"
@@ -1154,7 +1154,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/Web.Api.Endpoints.Logging.UpdateAlertRuleRequest"
+                "$ref": "#/components/schemas/Application.Logging.UpdateAlertRuleRequest"
               }
             }
           },
@@ -1202,14 +1202,14 @@
         }
       }
     },
-    "/logging/v1/alerts/incidents": {
+    "/api/v1/logging/alerts/incidents": {
       "get": {
         "tags": [
           "Logging"
         ],
         "parameters": [
           {
-            "name": "page",
+            "name": "Page",
             "in": "query",
             "required": true,
             "schema": {
@@ -1218,7 +1218,7 @@
             }
           },
           {
-            "name": "pageSize",
+            "name": "PageSize",
             "in": "query",
             "required": true,
             "schema": {
@@ -1227,7 +1227,7 @@
             }
           },
           {
-            "name": "status",
+            "name": "Status",
             "in": "query",
             "schema": {
               "type": "string"
@@ -1248,7 +1248,7 @@
         }
       }
     },
-    "/logging/v1/alerts/incidents/{id}": {
+    "/api/v1/logging/alerts/incidents/{id}": {
       "get": {
         "tags": [
           "Logging"
@@ -1278,7 +1278,7 @@
         }
       }
     },
-    "/logging/v1/access-control": {
+    "/api/v1/logging/access-control": {
       "get": {
         "tags": [
           "Logging"
@@ -1297,7 +1297,7 @@
         }
       }
     },
-    "/logging/v1/access-control/roles": {
+    "/api/v1/logging/access-control/roles": {
       "post": {
         "tags": [
           "Logging"
@@ -1306,7 +1306,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/Web.Api.Endpoints.Logging.CreateRoleRequest"
+                "$ref": "#/components/schemas/Application.Logging.CreateRoleRequest"
               }
             }
           },
@@ -1326,7 +1326,7 @@
         }
       }
     },
-    "/logging/v1/access-control/assign": {
+    "/api/v1/logging/access-control/assign": {
       "post": {
         "tags": [
           "Logging"
@@ -1335,7 +1335,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/Web.Api.Endpoints.Logging.AssignAccessRequest"
+                "$ref": "#/components/schemas/Application.Logging.AssignAccessRequest"
               }
             }
           },
@@ -1382,21 +1382,45 @@
         ],
         "parameters": [
           {
-            "name": "channel",
+            "name": "Page",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "PageIndex",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "PageSize",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "Channel",
             "in": "query",
             "schema": {
               "$ref": "#/components/schemas/Domain.Notifications.NotificationChannel"
             }
           },
           {
-            "name": "status",
+            "name": "Status",
             "in": "query",
             "schema": {
               "$ref": "#/components/schemas/Domain.Notifications.NotificationStatus"
             }
           },
           {
-            "name": "from",
+            "name": "From",
             "in": "query",
             "schema": {
               "type": "string",
@@ -1404,35 +1428,11 @@
             }
           },
           {
-            "name": "to",
+            "name": "To",
             "in": "query",
             "schema": {
               "type": "string",
               "format": "date-time"
-            }
-          },
-          {
-            "name": "page",
-            "in": "query",
-            "schema": {
-              "type": "integer",
-              "format": "int32"
-            }
-          },
-          {
-            "name": "pageIndex",
-            "in": "query",
-            "schema": {
-              "type": "integer",
-              "format": "int32"
-            }
-          },
-          {
-            "name": "pageSize",
-            "in": "query",
-            "schema": {
-              "type": "integer",
-              "format": "int32"
             }
           }
         ],
@@ -1458,6 +1458,73 @@
               "format": "uuid"
             }
           }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/notifications/templates": {
+      "post": {
+        "tags": [
+          "Notifications"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Web.Api.Endpoints.Notifications.CreateNotificationTemplateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/notifications/templates/{templateId}": {
+      "put": {
+        "tags": [
+          "Notifications"
+        ],
+        "parameters": [
+          {
+            "name": "templateId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Web.Api.Endpoints.Notifications.UpdateNotificationTemplateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/notifications/schedules": {
+      "get": {
+        "tags": [
+          "Notifications"
         ],
         "responses": {
           "200": {
@@ -1492,72 +1559,6 @@
           },
           "required": true
         },
-        "responses": {
-          "200": {
-            "description": "OK"
-          }
-        }
-      }
-    },
-    "/api/v1/notifications/schedules": {
-      "get": {
-        "tags": [
-          "Notifications"
-        ],
-        "responses": {
-          "200": {
-            "description": "OK"
-          }
-        }
-      }
-    },
-    "/api/v1/notifications/{notificationId}/permissions": {
-      "post": {
-        "tags": [
-          "Notifications"
-        ],
-        "parameters": [
-          {
-            "name": "notificationId",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
-          }
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/Web.Api.Endpoints.Notifications.UpsertNotificationPermissionRequest"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "OK"
-          }
-        }
-      },
-      "get": {
-        "tags": [
-          "Notifications"
-        ],
-        "parameters": [
-          {
-            "name": "notificationId",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
-          }
-        ],
         "responses": {
           "200": {
             "description": "OK"
@@ -1611,6 +1612,60 @@
         }
       }
     },
+    "/api/v1/notifications/{notificationId}/permissions": {
+      "get": {
+        "tags": [
+          "Notifications"
+        ],
+        "parameters": [
+          {
+            "name": "notificationId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Notifications"
+        ],
+        "parameters": [
+          {
+            "name": "notificationId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Web.Api.Endpoints.Notifications.UpsertNotificationPermissionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/v1/notifications/reports/summary": {
       "get": {
         "tags": [
@@ -1648,7 +1703,31 @@
         ],
         "parameters": [
           {
-            "name": "from",
+            "name": "Page",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "PageIndex",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "PageSize",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "From",
             "in": "query",
             "schema": {
               "type": "string",
@@ -1656,7 +1735,7 @@
             }
           },
           {
-            "name": "to",
+            "name": "To",
             "in": "query",
             "schema": {
               "type": "string",
@@ -1664,89 +1743,17 @@
             }
           },
           {
-            "name": "channel",
+            "name": "Channel",
             "in": "query",
             "schema": {
               "$ref": "#/components/schemas/Domain.Notifications.NotificationChannel"
             }
           },
           {
-            "name": "status",
+            "name": "Status",
             "in": "query",
             "schema": {
               "$ref": "#/components/schemas/Domain.Notifications.NotificationStatus"
-            }
-          },
-          {
-            "name": "page",
-            "in": "query",
-            "schema": {
-              "type": "integer",
-              "format": "int32"
-            }
-          },
-          {
-            "name": "pageIndex",
-            "in": "query",
-            "schema": {
-              "type": "integer",
-              "format": "int32"
-            }
-          },
-          {
-            "name": "pageSize",
-            "in": "query",
-            "schema": {
-              "type": "integer",
-              "format": "int32"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK"
-          }
-        }
-      }
-    },
-    "/api/v1/notification-templates": {
-      "post": {
-        "tags": [
-          "Notifications"
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/Web.Api.Endpoints.Notifications.CreateNotificationTemplateRequest"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "OK"
-          }
-        }
-      },
-      "get": {
-        "tags": [
-          "Notifications"
-        ],
-        "parameters": [
-          {
-            "name": "language",
-            "in": "query",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "channel",
-            "in": "query",
-            "schema": {
-              "$ref": "#/components/schemas/Domain.Notifications.NotificationChannel"
             }
           }
         ],
@@ -1779,37 +1786,6 @@
           }
         }
       },
-      "put": {
-        "tags": [
-          "Notifications"
-        ],
-        "parameters": [
-          {
-            "name": "templateId",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
-          }
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/Web.Api.Endpoints.Notifications.UpdateNotificationTemplateRequest"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "OK"
-          }
-        }
-      },
       "delete": {
         "tags": [
           "Notifications"
@@ -1822,6 +1798,34 @@
             "schema": {
               "type": "string",
               "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/notification-templates": {
+      "get": {
+        "tags": [
+          "Notifications"
+        ],
+        "parameters": [
+          {
+            "name": "language",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "channel",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/Domain.Notifications.NotificationChannel"
             }
           }
         ],
@@ -2005,28 +2009,52 @@
         ],
         "parameters": [
           {
-            "name": "search",
+            "name": "Page",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "PageIndex",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "PageSize",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "Search",
             "in": "query",
             "schema": {
               "type": "string"
             }
           },
           {
-            "name": "isPublic",
+            "name": "IsProfilePublic",
             "in": "query",
             "schema": {
               "type": "boolean"
             }
           },
           {
-            "name": "language",
+            "name": "PreferredLanguage",
             "in": "query",
             "schema": {
               "type": "string"
             }
           },
           {
-            "name": "minCompletion",
+            "name": "MinCompleteness",
             "in": "query",
             "schema": {
               "type": "integer",
@@ -2034,7 +2062,7 @@
             }
           },
           {
-            "name": "maxCompletion",
+            "name": "MaxCompleteness",
             "in": "query",
             "schema": {
               "type": "integer",
@@ -2042,7 +2070,7 @@
             }
           },
           {
-            "name": "updatedFrom",
+            "name": "UpdatedFrom",
             "in": "query",
             "schema": {
               "type": "string",
@@ -2050,35 +2078,11 @@
             }
           },
           {
-            "name": "updatedTo",
+            "name": "UpdatedTo",
             "in": "query",
             "schema": {
               "type": "string",
               "format": "date-time"
-            }
-          },
-          {
-            "name": "page",
-            "in": "query",
-            "schema": {
-              "type": "integer",
-              "format": "int32"
-            }
-          },
-          {
-            "name": "pageIndex",
-            "in": "query",
-            "schema": {
-              "type": "integer",
-              "format": "int32"
-            }
-          },
-          {
-            "name": "pageSize",
-            "in": "query",
-            "schema": {
-              "type": "integer",
-              "format": "int32"
             }
           }
         ],
@@ -2189,7 +2193,7 @@
       }
     },
     "/api/v1/profiles/me/bio": {
-      "put": {
+      "patch": {
         "tags": [
           "Profiles"
         ],
@@ -2211,7 +2215,7 @@
       }
     },
     "/api/v1/profiles/me/contact": {
-      "put": {
+      "patch": {
         "tags": [
           "Profiles"
         ],
@@ -2233,7 +2237,7 @@
       }
     },
     "/api/v1/profiles/me/preferences": {
-      "put": {
+      "patch": {
         "tags": [
           "Profiles"
         ],
@@ -2255,7 +2259,7 @@
       }
     },
     "/api/v1/profiles/me/privacy": {
-      "put": {
+      "patch": {
         "tags": [
           "Profiles"
         ],
@@ -2277,7 +2281,7 @@
       }
     },
     "/api/v1/profiles/me/social-links": {
-      "put": {
+      "patch": {
         "tags": [
           "Profiles"
         ],
@@ -2286,6 +2290,521 @@
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/Web.Api.Endpoints.Profiles.UpdateProfileSocialLinksRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/scheduler/jobs": {
+      "post": {
+        "tags": [
+          "Scheduler"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Web.Api.Endpoints.Scheduler.CreateJobRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "Scheduler"
+        ],
+        "parameters": [
+          {
+            "name": "Page",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "PageIndex",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "PageSize",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "Status",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/Domain.Scheduler.JobStatus"
+            }
+          },
+          {
+            "name": "Search",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/scheduler/jobs/{jobId}": {
+      "get": {
+        "tags": [
+          "Scheduler"
+        ],
+        "parameters": [
+          {
+            "name": "jobId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Scheduler"
+        ],
+        "parameters": [
+          {
+            "name": "jobId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Web.Api.Endpoints.Scheduler.UpdateJobRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Scheduler"
+        ],
+        "parameters": [
+          {
+            "name": "jobId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/scheduler/jobs/{jobId}/schedule": {
+      "post": {
+        "tags": [
+          "Scheduler"
+        ],
+        "parameters": [
+          {
+            "name": "jobId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Web.Api.Endpoints.Scheduler.UpsertJobScheduleRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "Scheduler"
+        ],
+        "parameters": [
+          {
+            "name": "jobId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Scheduler"
+        ],
+        "parameters": [
+          {
+            "name": "jobId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/scheduler/jobs/{jobId}/run": {
+      "post": {
+        "tags": [
+          "Scheduler"
+        ],
+        "parameters": [
+          {
+            "name": "jobId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/scheduler/jobs/{jobId}/pause": {
+      "post": {
+        "tags": [
+          "Scheduler"
+        ],
+        "parameters": [
+          {
+            "name": "jobId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/scheduler/jobs/{jobId}/resume": {
+      "post": {
+        "tags": [
+          "Scheduler"
+        ],
+        "parameters": [
+          {
+            "name": "jobId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/scheduler/jobs/{jobId}/logs": {
+      "get": {
+        "tags": [
+          "Scheduler"
+        ],
+        "parameters": [
+          {
+            "name": "jobId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "Page",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "PageIndex",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "PageSize",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "jobId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "Status",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/Domain.Scheduler.JobExecutionStatus"
+            }
+          },
+          {
+            "name": "From",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "To",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/scheduler/jobs/logs": {
+      "get": {
+        "tags": [
+          "Scheduler"
+        ],
+        "parameters": [
+          {
+            "name": "Page",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "PageIndex",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "PageSize",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "JobId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "Status",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/Domain.Scheduler.JobExecutionStatus"
+            }
+          },
+          {
+            "name": "From",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "To",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/scheduler/jobs/report": {
+      "get": {
+        "tags": [
+          "Scheduler"
+        ],
+        "parameters": [
+          {
+            "name": "format",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/scheduler/jobs/{jobId}/permissions": {
+      "get": {
+        "tags": [
+          "Scheduler"
+        ],
+        "parameters": [
+          {
+            "name": "jobId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Scheduler"
+        ],
+        "parameters": [
+          {
+            "name": "jobId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Web.Api.Endpoints.Scheduler.UpsertJobPermissionRequest"
               }
             }
           },
@@ -2539,7 +3058,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/Web.Api.Endpoints.Users.ForgotPassword-Request"
+                "$ref": "#/components/schemas/Web.Api.Endpoints.Users.ForgotPasswordRequest"
               }
             }
           },
@@ -2703,7 +3222,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/Web.Api.Endpoints.Users.ResendVerificationCode-Request"
+                "$ref": "#/components/schemas/Web.Api.Endpoints.Users.ResendVerificationCodeRequest"
               }
             }
           },
@@ -2725,7 +3244,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/Web.Api.Endpoints.Modules.Users.ResetPassword-Request"
+                "$ref": "#/components/schemas/Web.Api.Endpoints.Users.ResetPasswordRequest"
               }
             }
           },
@@ -2781,7 +3300,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/Web.Api.Endpoints.Users.VerifyEmail-Request"
+                "$ref": "#/components/schemas/Web.Api.Endpoints.Users.VerifyEmailRequest"
               }
             }
           },
@@ -2797,6 +3316,107 @@
   },
   "components": {
     "schemas": {
+      "Application.Logging.AssignAccessRequest": {
+        "type": "object",
+        "properties": {
+          "roleName": {
+            "type": "string",
+            "nullable": true
+          },
+          "permissionCode": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "Application.Logging.BulkIngestRequest": {
+        "type": "object",
+        "properties": {
+          "events": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Infrastructure.Logging.IngestLogRequest"
+            },
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "Application.Logging.CreateAlertRuleRequest": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "nullable": true
+          },
+          "isEnabled": {
+            "type": "boolean"
+          },
+          "minimumLevel": {
+            "$ref": "#/components/schemas/Domain.Logging.LogLevelType"
+          },
+          "containsText": {
+            "type": "string",
+            "nullable": true
+          },
+          "windowSeconds": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "thresholdCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "action": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "Application.Logging.CreateRoleRequest": {
+        "type": "object",
+        "properties": {
+          "roleName": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "Application.Logging.UpdateAlertRuleRequest": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "nullable": true
+          },
+          "isEnabled": {
+            "type": "boolean"
+          },
+          "minimumLevel": {
+            "$ref": "#/components/schemas/Domain.Logging.LogLevelType"
+          },
+          "containsText": {
+            "type": "string",
+            "nullable": true
+          },
+          "windowSeconds": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "thresholdCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "action": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
       "Domain.Logging.LogLevelType": {
         "enum": [
           0,
@@ -2839,6 +3459,36 @@
           4,
           5,
           6
+        ],
+        "type": "integer",
+        "format": "int32"
+      },
+      "Domain.Scheduler.JobExecutionStatus": {
+        "enum": [
+          1,
+          2,
+          3,
+          4,
+          5,
+          6
+        ],
+        "type": "integer",
+        "format": "int32"
+      },
+      "Domain.Scheduler.JobStatus": {
+        "enum": [
+          1,
+          2,
+          3
+        ],
+        "type": "integer",
+        "format": "int32"
+      },
+      "Domain.Scheduler.ScheduleType": {
+        "enum": [
+          1,
+          2,
+          3
         ],
         "type": "integer",
         "format": "int32"
@@ -3144,125 +3794,6 @@
         },
         "additionalProperties": false
       },
-      "Web.Api.Endpoints.Logging.AssignAccessRequest": {
-        "type": "object",
-        "properties": {
-          "roleName": {
-            "type": "string",
-            "nullable": true
-          },
-          "permissionCode": {
-            "type": "string",
-            "nullable": true
-          }
-        },
-        "additionalProperties": false
-      },
-      "Web.Api.Endpoints.Logging.BulkIngestRequest": {
-        "type": "object",
-        "properties": {
-          "events": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/Infrastructure.Logging.IngestLogRequest"
-            },
-            "nullable": true
-          }
-        },
-        "additionalProperties": false
-      },
-      "Web.Api.Endpoints.Logging.CreateAlertRuleRequest": {
-        "type": "object",
-        "properties": {
-          "name": {
-            "type": "string",
-            "nullable": true
-          },
-          "isEnabled": {
-            "type": "boolean"
-          },
-          "minimumLevel": {
-            "$ref": "#/components/schemas/Domain.Logging.LogLevelType"
-          },
-          "containsText": {
-            "type": "string",
-            "nullable": true
-          },
-          "windowSeconds": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "thresholdCount": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "action": {
-            "type": "string",
-            "nullable": true
-          }
-        },
-        "additionalProperties": false
-      },
-      "Web.Api.Endpoints.Logging.CreateRoleRequest": {
-        "type": "object",
-        "properties": {
-          "roleName": {
-            "type": "string",
-            "nullable": true
-          }
-        },
-        "additionalProperties": false
-      },
-      "Web.Api.Endpoints.Logging.UpdateAlertRuleRequest": {
-        "type": "object",
-        "properties": {
-          "name": {
-            "type": "string",
-            "nullable": true
-          },
-          "isEnabled": {
-            "type": "boolean"
-          },
-          "minimumLevel": {
-            "$ref": "#/components/schemas/Domain.Logging.LogLevelType"
-          },
-          "containsText": {
-            "type": "string",
-            "nullable": true
-          },
-          "windowSeconds": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "thresholdCount": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "action": {
-            "type": "string",
-            "nullable": true
-          }
-        },
-        "additionalProperties": false
-      },
-      "Web.Api.Endpoints.Modules.Users.ResetPassword-Request": {
-        "type": "object",
-        "properties": {
-          "email": {
-            "type": "string",
-            "nullable": true
-          },
-          "code": {
-            "type": "string",
-            "nullable": true
-          },
-          "newPassword": {
-            "type": "string",
-            "nullable": true
-          }
-        },
-        "additionalProperties": false
-      },
       "Web.Api.Endpoints.Notifications.CreateNotificationRequest": {
         "type": "object",
         "properties": {
@@ -3284,13 +3815,13 @@
             "type": "string",
             "nullable": true
           },
+          "language": {
+            "type": "string",
+            "nullable": true
+          },
           "templateId": {
             "type": "string",
             "format": "uuid",
-            "nullable": true
-          },
-          "language": {
-            "type": "string",
             "nullable": true
           },
           "scheduledAtUtc": {
@@ -3557,6 +4088,87 @@
         },
         "additionalProperties": false
       },
+      "Web.Api.Endpoints.Scheduler.CreateJobRequest": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "nullable": true
+          },
+          "description": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "Web.Api.Endpoints.Scheduler.UpdateJobRequest": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "nullable": true
+          },
+          "description": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "Web.Api.Endpoints.Scheduler.UpsertJobPermissionRequest": {
+        "type": "object",
+        "properties": {
+          "subjectType": {
+            "type": "string",
+            "nullable": true
+          },
+          "subjectValue": {
+            "type": "string",
+            "nullable": true
+          },
+          "canRead": {
+            "type": "boolean"
+          },
+          "canManage": {
+            "type": "boolean"
+          }
+        },
+        "additionalProperties": false
+      },
+      "Web.Api.Endpoints.Scheduler.UpsertJobScheduleRequest": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "$ref": "#/components/schemas/Domain.Scheduler.ScheduleType"
+          },
+          "cronExpression": {
+            "type": "string",
+            "nullable": true
+          },
+          "intervalSeconds": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "oneTimeAtUtc": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "startAtUtc": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "endAtUtc": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
       "Web.Api.Endpoints.Todos.Create-Request": {
         "type": "object",
         "properties": {
@@ -3583,7 +4195,7 @@
         },
         "additionalProperties": false
       },
-      "Web.Api.Endpoints.Users.ForgotPassword-Request": {
+      "Web.Api.Endpoints.Users.ForgotPasswordRequest": {
         "type": "object",
         "properties": {
           "email": {
@@ -3639,10 +4251,28 @@
         },
         "additionalProperties": false
       },
-      "Web.Api.Endpoints.Users.ResendVerificationCode-Request": {
+      "Web.Api.Endpoints.Users.ResendVerificationCodeRequest": {
         "type": "object",
         "properties": {
           "email": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "Web.Api.Endpoints.Users.ResetPasswordRequest": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "nullable": true
+          },
+          "code": {
+            "type": "string",
+            "nullable": true
+          },
+          "newPassword": {
             "type": "string",
             "nullable": true
           }
@@ -3659,7 +4289,7 @@
         },
         "additionalProperties": false
       },
-      "Web.Api.Endpoints.Users.VerifyEmail-Request": {
+      "Web.Api.Endpoints.Users.VerifyEmailRequest": {
         "type": "object",
         "properties": {
           "email": {
@@ -3706,6 +4336,9 @@
     },
     {
       "name": "Profiles"
+    },
+    {
+      "name": "Scheduler"
     },
     {
       "name": "todos"

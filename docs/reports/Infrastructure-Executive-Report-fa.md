@@ -75,13 +75,13 @@
 
 ## 6) شکاف‌های اصلی
 1. module boundary tests برای enforce دقیق coupling.
-2. Scheduler module مستقل.
+2. Scheduler module مستقل (FSD آماده، وارد فاز اجرا).
 3. RuleEngine module برای triggerهای business-driven.
 4. security hardening تکمیلی (MFA, session mgmt, SSRF allowlist).
 
 ## 7) تصمیمات اجرایی پیشنهادی
 1. اولویت 1: معماری ماژولی را با test enforce کنید.
-2. اولویت 2: scheduler/rule-engine را به صورت ماژول مستقل اضافه کنید.
+2. اولویت 2: Scheduler را با scope MVP (job/schedule/run-control/logs/permissions) پیاده‌سازی کنید و سپس RuleEngine را روی آن سوار کنید.
 3. اولویت 3: Notification provider hardening و monitoring per-channel تکمیل شود.
 
 ## 8) مسیرهای مرجع
@@ -89,3 +89,4 @@
 - راه‌اندازی سریع: `docs/operations/Quick-Run-Guide-fa.md`
 - کانفیگ‌های لازم: `docs/operations/Run-Required-Config-fa.md`
 - فایل‌ها: `docs/reports/Notification-FSD-v2-fa.md`
+- زمان‌بند: `docs/reports/SchedulerComponent-FSD-v1-fa.md`

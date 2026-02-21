@@ -61,7 +61,13 @@ public sealed class AuthorizationSeeder(
             [PermissionCodes.ProfilesRead] = "Read own profile data",
             [PermissionCodes.ProfilesWrite] = "Create/update own profile data",
             [PermissionCodes.ProfilesPublicRead] = "Read public profile information",
-            [PermissionCodes.ProfilesAdminRead] = "Read profile analytics and admin reports"
+            [PermissionCodes.ProfilesAdminRead] = "Read profile analytics and admin reports",
+            [PermissionCodes.SchedulerRead] = "Read scheduler jobs and runtime states",
+            [PermissionCodes.SchedulerWrite] = "Create and update scheduler jobs and schedules",
+            [PermissionCodes.SchedulerExecute] = "Execute scheduler jobs manually",
+            [PermissionCodes.SchedulerManage] = "Manage scheduler control operations (pause/resume/disable)",
+            [PermissionCodes.SchedulerPermissionsManage] = "Manage scheduler job ACL permissions",
+            [PermissionCodes.SchedulerReportsRead] = "Read and export scheduler execution reports"
         };
 
         List<string> existingCodes = await dbContext.Permissions
@@ -189,7 +195,13 @@ public sealed class AuthorizationSeeder(
                 PermissionCodes.ProfilesRead,
                 PermissionCodes.ProfilesWrite,
                 PermissionCodes.ProfilesPublicRead,
-                PermissionCodes.ProfilesAdminRead
+                PermissionCodes.ProfilesAdminRead,
+                PermissionCodes.SchedulerRead,
+                PermissionCodes.SchedulerWrite,
+                PermissionCodes.SchedulerExecute,
+                PermissionCodes.SchedulerManage,
+                PermissionCodes.SchedulerPermissionsManage,
+                PermissionCodes.SchedulerReportsRead
             ]
         };
 

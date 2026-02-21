@@ -5,6 +5,7 @@ using Domain.Logging;
 using Domain.Modules.Notifications;
 using Domain.Notifications;
 using Domain.Profiles;
+using Domain.Modules.Scheduler;
 using Domain.Todos;
 using Domain.Users;
 using Microsoft.EntityFrameworkCore;
@@ -37,6 +38,11 @@ public interface IApplicationDbContext
     DbSet<NotificationPermissionEntry> NotificationPermissionEntries { get; }
     DbSet<NotificationDeliveryAttempt> NotificationDeliveryAttempts { get; }
     DbSet<UserProfile> UserProfiles { get; }
+    DbSet<ScheduledJob> ScheduledJobs { get; }
+    DbSet<JobSchedule> JobSchedules { get; }
+    DbSet<JobDependency> JobDependencies { get; }
+    DbSet<JobExecution> JobExecutions { get; }
+    DbSet<JobPermissionEntry> JobPermissionEntries { get; }
 
     Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
 }

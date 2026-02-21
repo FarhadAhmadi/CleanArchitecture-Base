@@ -1,6 +1,7 @@
 using Infrastructure.Authorization;
 using Infrastructure.Database;
 using Infrastructure.Notifications;
+using Infrastructure.Scheduler;
 using Microsoft.EntityFrameworkCore;
 using Web.Api.Infrastructure;
 
@@ -27,6 +28,10 @@ public static class MigrationExtensions
         NotificationTemplateSeeder notificationTemplateSeeder =
             scope.ServiceProvider.GetRequiredService<NotificationTemplateSeeder>();
         await notificationTemplateSeeder.SeedAsync(cancellationToken);
+
+        SchedulerDataSeeder schedulerDataSeeder =
+            scope.ServiceProvider.GetRequiredService<SchedulerDataSeeder>();
+        await schedulerDataSeeder.SeedAsync(cancellationToken);
     }
 
     public static async Task ApplyMigrationsIfEnabledAsync(

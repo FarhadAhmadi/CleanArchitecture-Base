@@ -18,4 +18,5 @@
 1. گزارش اجرایی زیرساخت: `docs/reports/Infrastructure-Executive-Report-fa.md`
 2. ساختار Modular Monolith: `docs/reports/Modular-Monolith-Structure-fa.md`
 3. سند FSD اعلان‌ها: `docs/reports/Notification-FSD-v2-fa.md`
-4. نقشه راه فنی: `docs/reports/Recommendations-Roadmap-fa.md`
+4. سند FSD زمان‌بند (Jobs): `docs/reports/SchedulerComponent-FSD-v1-fa.md`
+5. نقشه راه فنی: `docs/reports/Recommendations-Roadmap-fa.md`

@@ -31,4 +31,10 @@ public static class PermissionCodes
     public const string ProfilesWrite = "profiles.write";
     public const string ProfilesPublicRead = "profiles.public.read";
     public const string ProfilesAdminRead = "profiles.admin.read";
+    public const string SchedulerRead = "scheduler.read";
+    public const string SchedulerWrite = "scheduler.write";
+    public const string SchedulerExecute = "scheduler.execute";
+    public const string SchedulerManage = "scheduler.manage";
+    public const string SchedulerPermissionsManage = "scheduler.permissions.manage";
+    public const string SchedulerReportsRead = "scheduler.reports.read";
 }

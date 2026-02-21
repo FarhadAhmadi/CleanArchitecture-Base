@@ -11,5 +11,6 @@ internal static class Schemas
     public const string Files = "files";
     public const string Notifications = "notifications";
     public const string Profiles = "profiles";
+    public const string Scheduler = "scheduler";
     public const string Integration = "integration";
 }

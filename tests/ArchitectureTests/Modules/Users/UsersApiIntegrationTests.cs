@@ -82,7 +82,7 @@ public sealed class UsersApiIntegrationTests : IClassFixture<ApiWebApplicationFa
         HttpResponseMessage refresh = await client.PostAsJsonAsync("/api/v1/users/refresh", new { tokens.refreshToken });
         refresh.StatusCode.ShouldBe(HttpStatusCode.OK);
 
-        (string _, string rotatedRefreshToken) rotated = await TestIdentityHelper.ReadTokensAsync(refresh);
+        (string _, string rotatedRefreshToken) = await TestIdentityHelper.ReadTokensAsync(refresh);
         rotatedRefreshToken.ShouldNotBe(tokens.refreshToken);
     }
 

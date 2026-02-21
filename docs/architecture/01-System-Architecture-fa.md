@@ -61,6 +61,7 @@ Composition Root از `Program.cs` و `Infrastructure.DependencyInjection` ان�
 - Monitoring
 - Files
 - Notifications
+- Scheduler (planned)
 
 مرجع: `src/Web.Api/Program.cs`, `src/Infrastructure/DependencyInjection.cs`
 
@@ -74,6 +75,7 @@ Composition Root از `Program.cs` و `Infrastructure.DependencyInjection` ان�
 - Logging
 - Audit
 - Observability
+- Scheduler (planned, job orchestration)
 
 جزئیات هر ماژول در `docs/architecture/03-Module-Catalog-fa.md` آمده است.
 

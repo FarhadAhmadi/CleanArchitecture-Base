@@ -1,7 +1,8 @@
 # کاتالوگ کامل API (ماژول به ماژول)
 
 تاریخ: 2026-02-21  
-مبنای استخراج: تحلیل مستقیم endpointهای `src/Web.Api/Endpoints/Modules/*`
+مبنای استخراج: تحلیل مستقیم endpointهای `src/Web.Api/Endpoints/Modules/*`  
+یادداشت: بخش `Scheduler` در این نسخه بر اساس FSD طراحی شده و برای فاز پیاده‌سازی بعدی است.
 
 ## قواعد مسیر
 - همه endpointهای ماژولی با پیشوند: `/api/v1`
@@ -123,6 +124,27 @@
 | DELETE | `/api/v1/profiles/me/avatar` | `Permissions.ProfilesWrite` |
 | GET | `/api/v1/profiles/{userId:guid}/public` | `Permissions.ProfilesPublicRead` |
 | GET | `/api/v1/profiles/reports/admin` | `Permissions.ProfilesAdminRead` |
+
+## Scheduler (Planned)
+| Method | Path | Access |
+|---|---|---|
+| POST | `/api/v1/scheduler/jobs` | `Permissions.SchedulerWrite` |
+| GET | `/api/v1/scheduler/jobs` | `Permissions.SchedulerRead` |
+| GET | `/api/v1/scheduler/jobs/{jobId:guid}` | `Permissions.SchedulerRead` |
+| PUT | `/api/v1/scheduler/jobs/{jobId:guid}` | `Permissions.SchedulerWrite` |
+| DELETE | `/api/v1/scheduler/jobs/{jobId:guid}` | `Permissions.SchedulerManage` |
+| POST | `/api/v1/scheduler/jobs/{jobId:guid}/schedule` | `Permissions.SchedulerWrite` |
+| GET | `/api/v1/scheduler/jobs/{jobId:guid}/schedule` | `Permissions.SchedulerRead` |
+| PUT | `/api/v1/scheduler/jobs/{jobId:guid}/schedule` | `Permissions.SchedulerWrite` |
+| DELETE | `/api/v1/scheduler/jobs/{jobId:guid}/schedule` | `Permissions.SchedulerManage` |
+| POST | `/api/v1/scheduler/jobs/{jobId:guid}/run` | `Permissions.SchedulerExecute` |
+| POST | `/api/v1/scheduler/jobs/{jobId:guid}/pause` | `Permissions.SchedulerManage` |
+| POST | `/api/v1/scheduler/jobs/{jobId:guid}/resume` | `Permissions.SchedulerManage` |
+| GET | `/api/v1/scheduler/jobs/{jobId:guid}/logs` | `Permissions.SchedulerRead` |
+| GET | `/api/v1/scheduler/jobs/logs` | `Permissions.SchedulerReportsRead` |
+| GET | `/api/v1/scheduler/jobs/report?format=csv\|pdf` | `Permissions.SchedulerReportsRead` |
+| GET | `/api/v1/scheduler/jobs/{jobId:guid}/permissions` | `Permissions.SchedulerPermissionsManage` |
+| PUT | `/api/v1/scheduler/jobs/{jobId:guid}/permissions` | `Permissions.SchedulerPermissionsManage` |
 
 ## Todos
 | Method | Path | Access |

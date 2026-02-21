@@ -839,6 +839,365 @@ namespace Infrastructure.Database.Migrations
                     b.ToTable("NotificationMessages", "notifications");
                 });
 
+            modelBuilder.Entity("Domain.Modules.Scheduler.JobDependency", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("AuditCreatedAtUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("AuditCreatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("AuditUpdatedAtUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("AuditUpdatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid>("DependsOnJobId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("JobId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("DependsOnJobId");
+
+                    b.HasIndex("JobId", "DependsOnJobId")
+                        .IsUnique();
+
+                    b.ToTable("JobDependencies", "scheduler");
+                });
+
+            modelBuilder.Entity("Domain.Modules.Scheduler.JobExecution", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("Attempt")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("AuditCreatedAtUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("AuditCreatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("AuditUpdatedAtUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("AuditUpdatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("DeadLetterReason")
+                        .HasMaxLength(2000)
+                        .HasColumnType("nvarchar(2000)");
+
+                    b.Property<int>("DurationMs")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Error")
+                        .HasMaxLength(2000)
+                        .HasColumnType("nvarchar(2000)");
+
+                    b.Property<DateTime?>("FinishedAtUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("IsDeadLetter")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsReplay")
+                        .HasColumnType("bit");
+
+                    b.Property<Guid>("JobId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("MaxAttempts")
+                        .HasColumnType("int");
+
+                    b.Property<string>("NodeId")
+                        .HasMaxLength(150)
+                        .HasColumnType("nvarchar(150)");
+
+                    b.Property<string>("PayloadSnapshotJson")
+                        .HasMaxLength(8000)
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("ScheduledAtUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("StartedAtUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<string>("TriggeredBy")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("IsDeadLetter");
+
+                    b.HasIndex("Status");
+
+                    b.HasIndex("JobId", "ScheduledAtUtc");
+
+                    b.HasIndex("JobId", "StartedAtUtc");
+
+                    b.ToTable("JobExecutions", "scheduler");
+                });
+
+            modelBuilder.Entity("Domain.Modules.Scheduler.JobPermissionEntry", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("AuditCreatedAtUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("AuditCreatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("AuditUpdatedAtUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("AuditUpdatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("CanManage")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("CanRead")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid>("JobId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("SubjectType")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<string>("SubjectValue")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("nvarchar(150)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("JobId", "SubjectType", "SubjectValue")
+                        .IsUnique();
+
+                    b.ToTable("JobPermissionEntries", "scheduler");
+                });
+
+            modelBuilder.Entity("Domain.Modules.Scheduler.JobSchedule", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("AuditCreatedAtUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("AuditCreatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("AuditUpdatedAtUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("AuditUpdatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("CronExpression")
+                        .HasMaxLength(120)
+                        .HasColumnType("nvarchar(120)");
+
+                    b.Property<DateTime?>("EndAtUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int?>("IntervalSeconds")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("IsEnabled")
+                        .HasColumnType("bit");
+
+                    b.Property<Guid>("JobId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime?>("LastMisfireAtUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("MaxCatchUpRuns")
+                        .HasColumnType("int");
+
+                    b.Property<string>("MisfirePolicy")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<DateTime?>("NextRunAtUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("OneTimeAtUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("RetryAttempt")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("StartAtUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Type")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<DateTime?>("UpdatedAtUtc")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("JobId")
+                        .IsUnique();
+
+                    b.HasIndex("MisfirePolicy");
+
+                    b.HasIndex("IsEnabled", "NextRunAtUtc");
+
+                    b.ToTable("JobSchedules", "scheduler");
+                });
+
+            modelBuilder.Entity("Domain.Modules.Scheduler.ScheduledJob", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("AuditCreatedAtUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("AuditCreatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("AuditUpdatedAtUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("AuditUpdatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("ConsecutiveFailures")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("DeadLetterReason")
+                        .HasMaxLength(2000)
+                        .HasColumnType("nvarchar(2000)");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(2000)
+                        .HasColumnType("nvarchar(2000)");
+
+                    b.Property<bool>("IsQuarantined")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("LastExecutionStatus")
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<DateTime?>("LastFailureAtUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("LastRunAtUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("MaxConsecutiveFailures")
+                        .HasColumnType("int");
+
+                    b.Property<int>("MaxExecutionSeconds")
+                        .HasColumnType("int");
+
+                    b.Property<int>("MaxRetryAttempts")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<string>("PayloadJson")
+                        .HasMaxLength(8000)
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("QuarantinedUntilUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("RetryBackoffSeconds")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<string>("Type")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("IsQuarantined");
+
+                    b.HasIndex("Name")
+                        .IsUnique();
+
+                    b.HasIndex("Status");
+
+                    b.ToTable("ScheduledJobs", "scheduler");
+                });
+
+            modelBuilder.Entity("Domain.Modules.Scheduler.SchedulerLockLease", b =>
+                {
+                    b.Property<string>("LockName")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<DateTime>("AcquiredAtUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("ExpiresAtUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("OwnerNodeId")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("nvarchar(150)");
+
+                    b.HasKey("LockName");
+
+                    b.HasIndex("ExpiresAtUtc");
+
+                    b.ToTable("SchedulerLocks", "scheduler");
+                });
+
             modelBuilder.Entity("Domain.Notifications.NotificationPermissionEntry", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1699,6 +2058,48 @@ namespace Infrastructure.Database.Migrations
                         .WithMany()
                         .HasForeignKey("TemplateId")
                         .OnDelete(DeleteBehavior.SetNull);
+                });
+
+            modelBuilder.Entity("Domain.Modules.Scheduler.JobDependency", b =>
+                {
+                    b.HasOne("Domain.Modules.Scheduler.ScheduledJob", null)
+                        .WithMany()
+                        .HasForeignKey("DependsOnJobId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Domain.Modules.Scheduler.ScheduledJob", null)
+                        .WithMany()
+                        .HasForeignKey("JobId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Domain.Modules.Scheduler.JobExecution", b =>
+                {
+                    b.HasOne("Domain.Modules.Scheduler.ScheduledJob", null)
+                        .WithMany()
+                        .HasForeignKey("JobId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Domain.Modules.Scheduler.JobPermissionEntry", b =>
+                {
+                    b.HasOne("Domain.Modules.Scheduler.ScheduledJob", null)
+                        .WithMany()
+                        .HasForeignKey("JobId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Domain.Modules.Scheduler.JobSchedule", b =>
+                {
+                    b.HasOne("Domain.Modules.Scheduler.ScheduledJob", null)
+                        .WithMany()
+                        .HasForeignKey("JobId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("Domain.Notifications.NotificationPermissionEntry", b =>

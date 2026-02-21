@@ -5,6 +5,7 @@ using Domain.Logging;
 using Domain.Modules.Notifications;
 using Domain.Notifications;
 using Domain.Profiles;
+using Domain.Modules.Scheduler;
 using Domain.Todos;
 using Domain.Users;
 
@@ -36,4 +37,9 @@ public interface IApplicationReadDbContext
     IQueryable<NotificationPermissionEntry> NotificationPermissionEntries { get; }
     IQueryable<NotificationDeliveryAttempt> NotificationDeliveryAttempts { get; }
     IQueryable<UserProfile> UserProfiles { get; }
+    IQueryable<ScheduledJob> ScheduledJobs { get; }
+    IQueryable<JobSchedule> JobSchedules { get; }
+    IQueryable<JobDependency> JobDependencies { get; }
+    IQueryable<JobExecution> JobExecutions { get; }
+    IQueryable<JobPermissionEntry> JobPermissionEntries { get; }
 }

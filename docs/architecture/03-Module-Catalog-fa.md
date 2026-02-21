@@ -381,7 +381,60 @@
 
 ---
 
-## M10) پلتفرم مشترک (Cross-cutting)
+## M10) Scheduler (Job Management)
+
+### هدف
+زمان‌بندی و اجرای قابل اتکای Jobها به‌صورت delayed/interval/cron با قابلیت کنترل عملیاتی.
+
+### قابلیت ها
+- Job CRUD + فعال/غیرفعال
+- Schedule CRUD (Cron/Interval/One-time + Start/End)
+- اجرای دستی + pause/resume
+- ثبت execution logs و وضعیت
+- مدیریت وابستگی بین jobها
+- ACL سطح Job
+- گزارش CSV/PDF
+
+### مدل دامنه (پیشنهادی)
+- `ScheduledJob`
+- `JobSchedule`
+- `JobDependency`
+- `JobExecution`
+- `JobPermissionEntry`
+
+### use caseهای اصلی (پیشنهادی)
+- `CreateJobCommand`, `UpdateJobCommand`, `DisableJobCommand`
+- `UpsertJobScheduleCommand`, `DeleteJobScheduleCommand`
+- `RunJobNowCommand`, `PauseJobCommand`, `ResumeJobCommand`
+- `GetJobExecutionLogsQuery`, `GetJobsExecutionReportQuery`
+- `GetJobPermissionsQuery`, `UpsertJobPermissionsCommand`
+
+### سطح دسترسی (پیشنهادی)
+- `scheduler.read`, `scheduler.write`
+- `scheduler.execute`, `scheduler.manage`
+- `scheduler.permissions.manage`
+- `scheduler.reports.read`
+
+### وابستگی ها
+- Integration module (event publish + outbox)
+- Notification module (failure/delay alerts)
+- Logging + Observability (metrics + status)
+- Authorization + Audit
+
+### تست های مرتبط
+- unit: schedule parsing/validation
+- integration: multi-node execution + dependency checks
+- security: permission/ACL
+- performance: high-volume active jobs
+
+### ریسک ها
+- race condition در multi-node (نیاز به distributed lock)
+- drift/lag در بار بالا (نیاز به backpressure و tuning)
+- dependency cycle در graph jobها
+
+---
+
+## M11) پلتفرم مشترک (Cross-cutting)
 
 ### اجزا
 - Core module: time provider + domain event dispatcher

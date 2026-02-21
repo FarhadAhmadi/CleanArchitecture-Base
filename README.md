@@ -70,6 +70,9 @@ Persian required configuration guide:
 Modular monolith structure guide:
 `docs/reports/Modular-Monolith-Structure-fa.md`
 
+Scheduler module FSD (Persian):
+`docs/reports/SchedulerComponent-FSD-v1-fa.md`
+
 ## Operational baseline added
 
 - Secret management via `SecretManagement` section, optional Azure Key Vault provider.

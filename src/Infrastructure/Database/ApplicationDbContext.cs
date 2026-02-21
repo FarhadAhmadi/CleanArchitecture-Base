@@ -6,6 +6,7 @@ using Domain.Files;
 using Domain.Logging;
 using Domain.Notifications;
 using Domain.Profiles;
+using Domain.Modules.Scheduler;
 using Domain.Todos;
 using Domain.Users;
 using Infrastructure.Integration;
@@ -52,6 +53,12 @@ public sealed class ApplicationDbContext(
     public DbSet<NotificationPermissionEntry> NotificationPermissionEntries { get; set; }
     public DbSet<NotificationDeliveryAttempt> NotificationDeliveryAttempts { get; set; }
     public DbSet<UserProfile> UserProfiles { get; set; }
+    public DbSet<ScheduledJob> ScheduledJobs { get; set; }
+    public DbSet<JobSchedule> JobSchedules { get; set; }
+    public DbSet<JobDependency> JobDependencies { get; set; }
+    public DbSet<JobExecution> JobExecutions { get; set; }
+    public DbSet<JobPermissionEntry> JobPermissionEntries { get; set; }
+    public DbSet<SchedulerLockLease> SchedulerLockLeases { get; set; }
     internal DbSet<OutboxMessage> OutboxMessages => Set<OutboxMessage>();
     internal DbSet<InboxMessage> InboxMessages => Set<InboxMessage>();
     DbSet<User> IApplicationDbContext.Users => base.Users;
