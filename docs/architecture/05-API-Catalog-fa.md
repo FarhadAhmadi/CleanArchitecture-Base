@@ -2,7 +2,7 @@
 
 تاریخ: 2026-02-21  
 مبنای استخراج: تحلیل مستقیم endpointهای `src/Web.Api/Endpoints/Modules/*`  
-یادداشت: بخش `Scheduler` در این نسخه بر اساس FSD طراحی شده و برای فاز پیاده‌سازی بعدی است.
+یادداشت: بخش `Scheduler` در این نسخه بر اساس endpointهای پیاده‌سازی‌شده به‌روزرسانی شده است.
 
 ## قواعد مسیر
 - همه endpointهای ماژولی با پیشوند: `/api/v1`
@@ -125,7 +125,7 @@
 | GET | `/api/v1/profiles/{userId:guid}/public` | `Permissions.ProfilesPublicRead` |
 | GET | `/api/v1/profiles/reports/admin` | `Permissions.ProfilesAdminRead` |
 
-## Scheduler (Planned)
+## Scheduler
 | Method | Path | Access |
 |---|---|---|
 | POST | `/api/v1/scheduler/jobs` | `Permissions.SchedulerWrite` |
@@ -135,16 +135,20 @@
 | DELETE | `/api/v1/scheduler/jobs/{jobId:guid}` | `Permissions.SchedulerManage` |
 | POST | `/api/v1/scheduler/jobs/{jobId:guid}/schedule` | `Permissions.SchedulerWrite` |
 | GET | `/api/v1/scheduler/jobs/{jobId:guid}/schedule` | `Permissions.SchedulerRead` |
-| PUT | `/api/v1/scheduler/jobs/{jobId:guid}/schedule` | `Permissions.SchedulerWrite` |
 | DELETE | `/api/v1/scheduler/jobs/{jobId:guid}/schedule` | `Permissions.SchedulerManage` |
 | POST | `/api/v1/scheduler/jobs/{jobId:guid}/run` | `Permissions.SchedulerExecute` |
 | POST | `/api/v1/scheduler/jobs/{jobId:guid}/pause` | `Permissions.SchedulerManage` |
 | POST | `/api/v1/scheduler/jobs/{jobId:guid}/resume` | `Permissions.SchedulerManage` |
+| POST | `/api/v1/scheduler/jobs/{jobId:guid}/replay` | `Permissions.SchedulerManage` |
+| POST | `/api/v1/scheduler/jobs/{jobId:guid}/quarantine` | `Permissions.SchedulerManage` |
 | GET | `/api/v1/scheduler/jobs/{jobId:guid}/logs` | `Permissions.SchedulerRead` |
 | GET | `/api/v1/scheduler/jobs/logs` | `Permissions.SchedulerReportsRead` |
 | GET | `/api/v1/scheduler/jobs/report?format=csv\|pdf` | `Permissions.SchedulerReportsRead` |
 | GET | `/api/v1/scheduler/jobs/{jobId:guid}/permissions` | `Permissions.SchedulerPermissionsManage` |
 | PUT | `/api/v1/scheduler/jobs/{jobId:guid}/permissions` | `Permissions.SchedulerPermissionsManage` |
+| POST | `/api/v1/scheduler/jobs/{jobId:guid}/dependencies` | `Permissions.SchedulerManage` |
+| GET | `/api/v1/scheduler/jobs/{jobId:guid}/dependencies` | `Permissions.SchedulerRead` |
+| DELETE | `/api/v1/scheduler/jobs/{jobId:guid}/dependencies/{dependsOnJobId:guid}` | `Permissions.SchedulerManage` |
 
 ## Todos
 | Method | Path | Access |

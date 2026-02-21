@@ -4,9 +4,11 @@
 1. نمای کلی بسته معماری: `docs/architecture/README-fa.md`
 2. سند معماری سیستم: `docs/architecture/01-System-Architecture-fa.md`
 3. مدل استاندارد C4: `docs/architecture/02-C4-Model-fa.md`
-4. کاتالوگ ماژول ها و فیچرها: `docs/architecture/03-Module-Catalog-fa.md`
-5. فناوری ها و اثرات: `docs/architecture/04-Technology-and-Impact-fa.md`
-6. کاتالوگ کامل API: `docs/architecture/05-API-Catalog-fa.md`
+4. کاتالوگ ماژول ها (نسخه تفکیکی): `docs/architecture/03-Module-Catalog-fa.md`
+5. مستندات تفکیکی هر ماژول: `docs/modules/README-fa.md`
+6. فناوری ها و اثرات: `docs/architecture/04-Technology-and-Impact-fa.md`
+7. کاتالوگ کامل API: `docs/architecture/05-API-Catalog-fa.md`
+8. نقشه Integration سیستم: `docs/architecture/06-Integration-Map-fa.md`
 
 ## عملیات
 1. راهنمای سریع اجرا: `docs/operations/Quick-Run-Guide-fa.md`

@@ -11,13 +11,16 @@
 1. `docs/architecture/01-System-Architecture-fa.md`
 2. `docs/architecture/02-C4-Model-fa.md`
 3. `docs/architecture/03-Module-Catalog-fa.md`
-4. `docs/architecture/04-Technology-and-Impact-fa.md`
-5. `docs/architecture/05-API-Catalog-fa.md`
+4. `docs/modules/README-fa.md`
+5. `docs/architecture/04-Technology-and-Impact-fa.md`
+6. `docs/architecture/05-API-Catalog-fa.md`
+7. `docs/architecture/06-Integration-Map-fa.md`
 
 ## خروجی های کلیدی
 - شناسنامه معماری فعلی سیستم و منطق انتخاب آن
 - مدل C4 برای درک سریع از مرزهای سیستم
-- کاتالوگ کامل ماژول ها و فیچرها
+- کاتالوگ ماژولی تفکیک‌شده (هر ماژول یک سند مستقل)
 - تحلیل فناوری ها، اثرها، هزینه ها و ریسک ها
 - کاتالوگ API کامل با سطح دسترسی
-- مسیر توسعه ماژول‌های بعدی (Scheduler/RuleEngine) با ارجاع به FSD
+- نقشه Integration داخلی/بیرونی و dependency map
+- مسیر توسعه آتی ماژول‌ها با ارجاع به اسناد FSD
