@@ -9,11 +9,11 @@
 flowchart LR
     EndUser[کاربر نهایی]
     Admin[ادمین / اپراتور]
-    API[CleanArchitecture Web API\n(Modular Monolith)]
+    API["CleanArchitecture Web API<br/>(Modular Monolith)"]
 
     OAuth[Google / Meta OAuth]
-    KeyVault[Azure Key Vault\n(optional)]
-    Webhook[Webhook / PagerDuty\n(optional)]
+    KeyVault["Azure Key Vault<br/>(optional)"]
+    Webhook["Webhook / PagerDuty<br/>(optional)"]
 
     EndUser --> API
     Admin --> API
@@ -33,11 +33,11 @@ flowchart TB
     User[Users/Admins]
 
     subgraph System[CleanArchitecture Solution]
-        WebApi[Web.Api\nASP.NET Core Minimal API]
-        AppLayer[Application Layer\nCQRS + Validators + Behaviors]
-        Domain[Domain Layer\nEntities + Domain Events]
-        Infra[Infrastructure Layer\nAuth, Files, Notifications, Logging, Integration]
-        Workers[Background Workers\nOutbox/Inbox/Alerts/Notifications]
+        WebApi["Web.Api<br/>ASP.NET Core Minimal API"]
+        AppLayer["Application Layer<br/>CQRS + Validators + Behaviors"]
+        Domain["Domain Layer<br/>Entities + Domain Events"]
+        Infra["Infrastructure Layer<br/>Auth, Files, Notifications, Logging, Integration"]
+        Workers["Background Workers<br/>Outbox/Inbox/Alerts/Notifications"]
     end
 
     SQL[(SQL Server)]
@@ -70,9 +70,9 @@ flowchart TB
 
 ```mermaid
 flowchart LR
-    Endpoint[Endpoint Modules\nUsers/Todos/Files/...]
-    Filters[Endpoint Filters\nSanitization + Execution Logging]
-    Behaviors[Application Behaviors\nValidation + Logging Decorators]
+    Endpoint["Endpoint Modules<br/>Users/Todos/Files/..."]
+    Filters["Endpoint Filters<br/>Sanitization + Execution Logging"]
+    Behaviors["Application Behaviors<br/>Validation + Logging Decorators"]
     Handlers[Command/Query Handlers]
     Domain[Domain Entities + Events]
     WriteDb[ApplicationDbContext]
