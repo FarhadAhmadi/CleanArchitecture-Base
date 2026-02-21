@@ -7,7 +7,7 @@ public static class LoggingEndpoints
     public static IEndpointRouteBuilder MapLoggingEndpoints(this IEndpointRouteBuilder app)
     {
         RouteGroupBuilder group = app
-            .MapGroup("/logging/v1")
+            .MapGroup("/api/v1/logging")
             .WithTags("Logging")
             .AddEndpointFilterFactory(EndpointExecutionLoggingFilter.Create)
             .AddEndpointFilterFactory(RequestSanitizationEndpointFilter.Create);

@@ -104,7 +104,7 @@ flowchart LR
 3. rate limit ویژه + audit log برای public access
 
 ### سناریو C: رخداد لاگ تا اعلان هشدار
-1. ingest لاگ در `/logging/v1/events`
+1. ingest لاگ در `/api/v1/logging/events`
 2. بررسی ruleهای alert
 3. ایجاد `AlertIncident`
 4. queue شدن اعلان برای ادمین ها (Notification module)
@@ -119,5 +119,4 @@ flowchart LR
 - زیرساخت قابل تعویض است (Redis, RabbitMQ, MinIO, ClamAV, sinks).
 
 ## 6) نکته معماری مهم
-تمام endpointهای ماژولی (به جز logging) زیر `/api/v1/*` map می شوند.  
-ماژول Logging به صورت جداگانه زیر `/logging/v1/*` ارائه شده است.
+تمام endpointهای ماژولی زیر `/api/v1/*` map می شوند.

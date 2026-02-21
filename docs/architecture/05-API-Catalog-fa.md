@@ -4,8 +4,7 @@
 مبنای استخراج: تحلیل مستقیم endpointهای `src/Web.Api/Endpoints/Modules/*`
 
 ## قواعد مسیر
-- همه endpointهای ماژولی (به جز Logging) با پیشوند: `/api/v1`
-- Logging با پیشوند مستقل: `/logging/v1`
+- همه endpointهای ماژولی با پیشوند: `/api/v1`
 - endpoint سلامت عمومی: `/health`
 
 ## سطح دسترسی
@@ -56,25 +55,25 @@
 ## Logging
 | Method | Path | Access |
 |---|---|---|
-| POST | `/logging/v1/events` | `LoggingPermissions.EventsWrite` |
-| POST | `/logging/v1/events/bulk` | `LoggingPermissions.EventsWrite` |
-| GET | `/logging/v1/events` | `LoggingPermissions.EventsRead` |
-| GET | `/logging/v1/events/{eventId:guid}` | `LoggingPermissions.EventsRead` |
-| GET | `/logging/v1/events/corrupted` | `LoggingPermissions.EventsRead` |
-| DELETE | `/logging/v1/events/{eventId:guid}` | `LoggingPermissions.EventsDelete` |
-| GET | `/logging/v1/schema` | `LoggingPermissions.EventsRead` |
-| POST | `/logging/v1/validate` | `LoggingPermissions.EventsWrite` |
-| POST | `/logging/v1/transform` | `LoggingPermissions.EventsWrite` |
-| GET | `/logging/v1/health` | `LoggingPermissions.EventsRead` |
-| POST | `/logging/v1/alerts/rules` | `LoggingPermissions.AlertsManage` |
-| GET | `/logging/v1/alerts/rules` | `LoggingPermissions.AlertsManage` |
-| PUT | `/logging/v1/alerts/rules/{id:guid}` | `LoggingPermissions.AlertsManage` |
-| DELETE | `/logging/v1/alerts/rules/{id:guid}` | `LoggingPermissions.AlertsManage` |
-| GET | `/logging/v1/alerts/incidents` | `LoggingPermissions.AlertsManage` |
-| GET | `/logging/v1/alerts/incidents/{id:guid}` | `LoggingPermissions.AlertsManage` |
-| GET | `/logging/v1/access-control` | `LoggingPermissions.AccessManage` |
-| POST | `/logging/v1/access-control/roles` | `LoggingPermissions.AccessManage` |
-| POST | `/logging/v1/access-control/assign` | `LoggingPermissions.AccessManage` |
+| POST | `/api/v1/logging/events` | `LoggingPermissions.EventsWrite` |
+| POST | `/api/v1/logging/events/bulk` | `LoggingPermissions.EventsWrite` |
+| GET | `/api/v1/logging/events` | `LoggingPermissions.EventsRead` |
+| GET | `/api/v1/logging/events/{eventId:guid}` | `LoggingPermissions.EventsRead` |
+| GET | `/api/v1/logging/events/corrupted` | `LoggingPermissions.EventsRead` |
+| DELETE | `/api/v1/logging/events/{eventId:guid}` | `LoggingPermissions.EventsDelete` |
+| GET | `/api/v1/logging/schema` | `LoggingPermissions.EventsRead` |
+| POST | `/api/v1/logging/validate` | `LoggingPermissions.EventsWrite` |
+| POST | `/api/v1/logging/transform` | `LoggingPermissions.EventsWrite` |
+| GET | `/api/v1/logging/health` | `LoggingPermissions.EventsRead` |
+| POST | `/api/v1/logging/alerts/rules` | `LoggingPermissions.AlertsManage` |
+| GET | `/api/v1/logging/alerts/rules` | `LoggingPermissions.AlertsManage` |
+| PUT | `/api/v1/logging/alerts/rules/{id:guid}` | `LoggingPermissions.AlertsManage` |
+| DELETE | `/api/v1/logging/alerts/rules/{id:guid}` | `LoggingPermissions.AlertsManage` |
+| GET | `/api/v1/logging/alerts/incidents` | `LoggingPermissions.AlertsManage` |
+| GET | `/api/v1/logging/alerts/incidents/{id:guid}` | `LoggingPermissions.AlertsManage` |
+| GET | `/api/v1/logging/access-control` | `LoggingPermissions.AccessManage` |
+| POST | `/api/v1/logging/access-control/roles` | `LoggingPermissions.AccessManage` |
+| POST | `/api/v1/logging/access-control/assign` | `LoggingPermissions.AccessManage` |
 
 ## Notifications
 | Method | Path | Access |
