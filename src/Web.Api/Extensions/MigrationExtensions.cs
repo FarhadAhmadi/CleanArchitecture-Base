@@ -2,6 +2,7 @@ using Infrastructure.Authorization;
 using Infrastructure.Database;
 using Infrastructure.Notifications;
 using Infrastructure.Scheduler;
+using Infrastructure.Seeding;
 using Microsoft.EntityFrameworkCore;
 using Web.Api.Infrastructure;
 
@@ -9,7 +10,11 @@ namespace Web.Api.Extensions;
 
 public static class MigrationExtensions
 {
-    public static async Task ApplyMigrationsAsync(this IApplicationBuilder app, bool runAuthorizationSeed = true, CancellationToken cancellationToken = default)
+    public static async Task ApplyMigrationsAsync(
+        this IApplicationBuilder app,
+        bool runAuthorizationSeed = true,
+        bool runSampleDataSeed = false,
+        CancellationToken cancellationToken = default)
     {
         using IServiceScope scope = app.ApplicationServices.CreateScope();
 
@@ -32,6 +37,13 @@ public static class MigrationExtensions
         SchedulerDataSeeder schedulerDataSeeder =
             scope.ServiceProvider.GetRequiredService<SchedulerDataSeeder>();
         await schedulerDataSeeder.SeedAsync(cancellationToken);
+
+        if (runSampleDataSeed)
+        {
+            SampleDataSeeder sampleDataSeeder =
+                scope.ServiceProvider.GetRequiredService<SampleDataSeeder>();
+            await sampleDataSeeder.SeedAsync(cancellationToken);
+        }
     }
 
     public static async Task ApplyMigrationsIfEnabledAsync(
@@ -44,7 +56,10 @@ public static class MigrationExtensions
             return;
         }
 
-        await app.ApplyMigrationsAsync(options.RunAuthorizationSeed, cancellationToken);
+        await app.ApplyMigrationsAsync(
+            options.RunAuthorizationSeed,
+            options.RunSampleDataSeed,
+            cancellationToken);
     }
 }
 

@@ -80,6 +80,11 @@
 4. Scheduler: `Scheduler:*`
 5. Outbox: `Outbox:*`
 
+## 5.0) کانفیگ مهم Migration/Seeding
+1. `DatabaseMigrations:ApplyOnStartup`
+2. `DatabaseMigrations:RunAuthorizationSeed`
+3. `DatabaseMigrations:RunSampleDataSeed`
+
 ## 5.1) کانفیگ مهم Scheduler
 1. `Scheduler:SeedDefaults`
 2. `Scheduler:PollingIntervalSeconds`

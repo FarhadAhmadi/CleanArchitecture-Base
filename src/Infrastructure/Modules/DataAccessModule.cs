@@ -1,5 +1,6 @@
 using Application.Abstractions.Data;
 using Infrastructure.Database;
+using Infrastructure.Seeding;
 using Infrastructure.Integration;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Migrations;
@@ -46,6 +47,7 @@ internal static class DataAccessModule
             sp.GetRequiredService<ApplicationDbContext>());
         services.AddScoped<IApplicationReadDbContext>(sp =>
             sp.GetRequiredService<ApplicationReadDbContext>());
+        services.AddScoped<SampleDataSeeder>();
 
         return services;
     }

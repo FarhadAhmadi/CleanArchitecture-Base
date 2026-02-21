@@ -6,4 +6,5 @@ public sealed class DatabaseMigrationOptions
 
     public bool ApplyOnStartup { get; init; }
     public bool RunAuthorizationSeed { get; init; } = true;
+    public bool RunSampleDataSeed { get; init; }
 }
