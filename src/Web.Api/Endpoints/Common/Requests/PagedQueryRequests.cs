@@ -17,9 +17,9 @@ public class PagedQueryRequest
 
     protected virtual int DefaultPage => 1;
 
-    protected virtual int DefaultPageSize => 20;
+    protected virtual int DefaultPageSize => 10;
 
-    protected virtual int MaxPageSize => 200;
+    protected virtual int MaxPageSize => 100;
 
     public (int Page, int PageSize) NormalizePaging()
     {
@@ -38,4 +38,11 @@ public class PagedSortedQueryRequest : PagedQueryRequest
     [FromQuery(Name = "sortOrder")]
     [SanitizeIdentifier(10)]
     public string? SortOrder { get; set; }
+}
+
+public class PagedSortedSearchQueryRequest : PagedSortedQueryRequest
+{
+    [FromQuery(Name = "search")]
+    [SanitizeText(200)]
+    public string? Search { get; set; }
 }

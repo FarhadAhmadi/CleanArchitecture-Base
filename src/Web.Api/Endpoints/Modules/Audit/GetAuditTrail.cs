@@ -1,16 +1,14 @@
 using Application.Abstractions.Messaging;
 using Application.Audit;
 using Microsoft.AspNetCore.Mvc;
+using Web.Api.Endpoints.Common.Requests;
 using Web.Api.Endpoints.Users;
 using Web.Api.Extensions;
 
 namespace Web.Api.Endpoints.Audit;
 
-public sealed class GetAuditEntriesRequest
+public sealed class GetAuditEntriesRequest : PagedSortedQueryRequest
 {
-    public int? Page { get; set; }
-    public int? PageIndex { get; set; }
-    public int? PageSize { get; set; }
     public string? ActorId { get; set; }
     public string? Action { get; set; }
     public DateTime? From { get; set; }

@@ -2,16 +2,14 @@ using Microsoft.AspNetCore.Mvc;
 using Application.Abstractions.Messaging;
 using Application.Notifications;
 using Domain.Notifications;
+using Web.Api.Endpoints.Common.Requests;
 using Web.Api.Endpoints.Users;
 using Web.Api.Extensions;
 
 namespace Web.Api.Endpoints.Notifications;
 
-public sealed class NotificationReportDetailsRequest
+public sealed class NotificationReportDetailsRequest : PagedSortedQueryRequest
 {
-    public int? Page { get; set; }
-    public int? PageIndex { get; set; }
-    public int? PageSize { get; set; }
     public DateTime? From { get; set; }
     public DateTime? To { get; set; }
     public NotificationChannel? Channel { get; set; }

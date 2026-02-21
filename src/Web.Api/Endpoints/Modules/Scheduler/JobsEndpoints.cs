@@ -2,6 +2,7 @@ using Application.Abstractions.Messaging;
 using Application.Scheduler;
 using Domain.Scheduler;
 using Microsoft.AspNetCore.Mvc;
+using Web.Api.Endpoints.Common.Requests;
 using Web.Api.Endpoints.Users;
 using Web.Api.Extensions;
 
@@ -27,13 +28,9 @@ public sealed record UpdateJobRequest(
     int? MaxExecutionSeconds,
     int? MaxConsecutiveFailures);
 
-public sealed class ListJobsRequest
+public sealed class ListJobsRequest : PagedSortedSearchQueryRequest
 {
-    public int? Page { get; set; }
-    public int? PageIndex { get; set; }
-    public int? PageSize { get; set; }
     public JobStatus? Status { get; set; }
-    public string? Search { get; set; }
 }
 
 internal sealed class CreateJobEndpoint : IEndpoint, IOrderedEndpoint

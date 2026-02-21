@@ -1,16 +1,13 @@
 using Application.Abstractions.Messaging;
 using Microsoft.AspNetCore.Mvc;
+using Web.Api.Endpoints.Common.Requests;
 using Web.Api.Extensions;
 using Web.Api.Infrastructure;
 
 namespace Web.Api.Endpoints.Profiles;
 
-public sealed class ProfileAdminReportRequest
+public sealed class ProfileAdminReportRequest : PagedSortedSearchQueryRequest
 {
-    public int? Page { get; set; }
-    public int? PageIndex { get; set; }
-    public int? PageSize { get; set; }
-    public string? Search { get; set; }
     public bool? IsProfilePublic { get; set; }
     public string? PreferredLanguage { get; set; }
     public int? MinCompleteness { get; set; }

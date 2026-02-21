@@ -2,16 +2,14 @@ using Application.Abstractions.Messaging;
 using Application.Scheduler;
 using Domain.Scheduler;
 using Microsoft.AspNetCore.Mvc;
+using Web.Api.Endpoints.Common.Requests;
 using Web.Api.Endpoints.Users;
 using Web.Api.Extensions;
 
 namespace Web.Api.Endpoints.Scheduler;
 
-public sealed class ListSchedulerLogsRequest
+public sealed class ListSchedulerLogsRequest : PagedSortedQueryRequest
 {
-    public int? Page { get; set; }
-    public int? PageIndex { get; set; }
-    public int? PageSize { get; set; }
     public Guid? JobId { get; set; }
     public JobExecutionStatus? Status { get; set; }
     public DateTime? From { get; set; }
@@ -78,4 +76,3 @@ internal sealed class GetJobsExecutionReportEndpoint : IEndpoint, IOrderedEndpoi
             .WithTags(Tags.Scheduler);
     }
 }
-

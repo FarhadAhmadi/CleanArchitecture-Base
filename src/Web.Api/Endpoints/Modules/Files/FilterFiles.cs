@@ -9,14 +9,11 @@ using Web.Api.Infrastructure;
 
 namespace Web.Api.Endpoints.Files;
 
-public sealed class FilterFilesRequest : PagedQueryRequest
+public sealed class FilterFilesRequest : PagedSortedQueryRequest
 {
     [FromQuery(Name = "module")]
     [SanitizeIdentifier(100)]
     public string? Module { get; set; }
-
-    protected override int DefaultPageSize => 50;
-    protected override int MaxPageSize => 200;
 }
 
 internal sealed class FilterFiles : IEndpoint, IOrderedEndpoint

@@ -9,7 +9,7 @@ using Web.Api.Infrastructure;
 
 namespace Web.Api.Endpoints.Files;
 
-public sealed class SearchFilesRequest : PagedQueryRequest
+public sealed class SearchFilesRequest : PagedSortedQueryRequest
 {
     [FromQuery(Name = "query")]
     [SanitizeText(200)]
@@ -27,9 +27,6 @@ public sealed class SearchFilesRequest : PagedQueryRequest
 
     [FromQuery(Name = "to")]
     public DateTime? To { get; set; }
-
-    protected override int DefaultPageSize => 50;
-    protected override int MaxPageSize => 200;
 }
 
 internal sealed class SearchFiles : IEndpoint, IOrderedEndpoint
