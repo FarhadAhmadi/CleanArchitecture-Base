@@ -1,42 +1,37 @@
-# ماژول Todos
+﻿# ماژول Todos
 
 تاریخ به‌روزرسانی: 2026-02-21
 
 ## هدف
-مدیریت کارهای شخصی کاربر با عملیات CRUD و قابلیت جستجو/صفحه‌بندی.
+مدیریت کارهای شخصی کاربر با CRUD و فیلتر.
 
-## مسئولیت‌های اصلی
-- ایجاد، دریافت لیست، دریافت موردی
-- تکمیل، حذف، کپی تسک
-- فیلتر، جستجو و مرتب‌سازی
+## ترتیب IOrderedEndpoint
+این ماژول از `IOrderedEndpoint` استفاده نمی‌کند.
 
-## مدل دامنه
-- `TodoItem`
-- `Priority`
-- رویدادهای دامنه‌ای: `Created`, `Completed`, `Deleted`
+## کاتالوگ کامل Endpointها
+| Method | Path | دسترسی | دلیل وجود | ورودی‌ها |
+|---|---|---|---|---|
+| GET | `/api/v1/todos` | `todos:read` | لیست تسک‌های کاربر | Query: `page/pageIndex`, `pageSize`, `search`, `isCompleted`, `sortBy`, `sortOrder` |
+| GET | `/api/v1/todos/{id:guid}` | `todos:read` | مشاهده تسک مشخص | Path: `id` |
+| POST | `/api/v1/todos` | `todos:write` | ایجاد تسک جدید | Body: `description`, `dueDate`, `labels[]`, `priority` |
+| PUT | `/api/v1/todos/{id:guid}/complete` | `todos:write` | تکمیل تسک | Path: `id` |
+| DELETE | `/api/v1/todos/{id:guid}` | `todos:write` | حذف تسک | Path: `id` |
+| POST | `/api/v1/todos/{todoId:guid}/copy` | `todos:write` | کپی تسک برای کاربر جاری | Path: `todoId` |
 
-## Use caseهای کلیدی
-- `CreateTodoCommand`
-- `GetTodosQuery`
-- `GetTodoByIdQuery`
-- `CompleteTodoCommand`
-- `DeleteTodoCommand`
-- `CopyTodoCommand`
+## نکات طراحی مهم
+- لیست تسک‌ها paging نرمال‌شده دارد (Default/Max page size).
+- owner context از `IUserContext` گرفته می‌شود.
+- `copy` برای ایجاد duplicate سریع تسک طراحی شده است.
 
-## API و سطح دسترسی
-- مسیرها: `/api/v1/todos/*`
-- خواندن: `todos:read`
-- نوشتن: `todos:write`
+## مدل ورودی‌های مهم
+- `GetTodosRequest`: جستجو، وضعیت تکمیل، paging/sort
+- `Create.Request`: توضیح، ددلاین، برچسب‌ها، اولویت
 
 ## وابستگی‌ها
-- user context برای owner-based access
-- EF Core برای persistence
+- UserContext
+- EF Core (`todos` schema)
 
-## داده و نگهداشت
-- اسکیما: `todos`
-
-## نکات عملیاتی
-- برای داده حجیم، محدودیت page size باید enforce شود.
-
-## ریسک‌ها
-- پایین؛ ماژول سبک با coupling محدود به سایر بخش‌ها.
+## سناریوهای خطا
+- دسترسی به todo غیرمجاز
+- payload نامعتبر در create
+- id ناموجود در complete/delete/copy

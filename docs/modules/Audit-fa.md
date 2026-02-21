@@ -1,36 +1,27 @@
-# ماژول Audit
+﻿# ماژول Audit
 
 تاریخ به‌روزرسانی: 2026-02-21
 
 ## هدف
-ایجاد trail تغییرات حساس به‌صورت tamper-evident برای نیازهای امنیتی و انطباق.
+ثبت و بررسی trail عملیات حساس به‌صورت tamper-evident.
 
-## مسئولیت‌های اصلی
-- ثبت رکورد audit با hash payload
-- اتصال رکوردها با checksum chain
-- گزارش یکپارچگی (integrity report)
-- جستجو/صفحه‌بندی trail
+## ترتیب IOrderedEndpoint
+این ماژول از `IOrderedEndpoint` استفاده نمی‌کند.
 
-## مدل دامنه
-- `AuditEntry`
+## کاتالوگ کامل Endpointها
+| Method | Path | دسترسی | دلیل وجود | ورودی‌ها |
+|---|---|---|---|---|
+| GET | `/api/v1/audit` | `audit.read` | جستجوی trail و تحلیل فعالیت‌ها | Query: `page/pageIndex`, `pageSize`, `actorId`, `action`, `from`, `to` |
+| GET | `/api/v1/audit/integrity` | `audit.read` | بررسی صحت زنجیره checksum | Query: `updateFlags` |
 
-## Use caseهای کلیدی
-- `GetAuditEntriesQuery`
-- `GetAuditIntegrityReportQuery`
-
-## API و سطح دسترسی
-- مسیرها: `/api/v1/audit/*`
-- `audit.read`
+## نکات طراحی مهم
+- `audit/integrity` علاوه بر گزارش می‌تواند (با `updateFlags=true`) وضعیت رکوردها را update کند.
+- این ماژول endpoint مدیریتی نوشتن مستقیم ندارد؛ نوشتن audit توسط سرویس‌های دیگر انجام می‌شود.
 
 ## وابستگی‌ها
-- مصرف توسط سایر ماژول‌ها هنگام رخدادهای حساس
+- سایر ماژول‌ها (producer)
+- schema `audit`
 
-## داده و نگهداشت
-- اسکیما: `audit`
-- برای حجم بلندمدت باید policy آرشیو تعریف شود.
-
-## نکات عملیاتی
-- integrity check دوره‌ای باید در runbook عملیات ثبت شود.
-
-## ریسک‌ها
-- افزایش حجم داده و هزینه نگهداشت در دوره طولانی.
+## سناریوهای خطا
+- خرابی زنجیره hash
+- mismatch ناشی از تغییرات غیرمجاز داده

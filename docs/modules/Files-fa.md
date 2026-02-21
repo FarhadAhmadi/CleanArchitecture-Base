@@ -1,48 +1,77 @@
-# ماژول Files
+﻿# ماژول Files
 
 تاریخ به‌روزرسانی: 2026-02-21
 
 ## هدف
-ارائه سرویس مدیریت فایل سازمانی با امنیت، ACL، لینک عمومی امن و audit دسترسی.
+سرویس مدیریت فایل با قابلیت upload/download/stream، اشتراک امن، ACL و audit دسترسی.
 
-## مسئولیت‌های اصلی
-- آپلود و اعتبارسنجی/اسکن فایل
-- نگهداری metadata، دانلود و stream
-- اشتراک‌گذاری از طریق secure/public link
-- مدیریت تگ، جستجو و فیلتر
-- مدیریت ACL و مجوزهای فایل
-- مدیریت وضعیت رمزنگاری فایل
+## ترتیب IOrderedEndpoint
+این ماژول از `IOrderedEndpoint` استفاده می‌کند. نکته: چند endpoint دارای Order یکسان هستند؛ ترتیب نهایی بین آن‌ها به ترتیب registration وابسته است.
 
-## مدل دامنه
-- `FileAsset`
-- `FileTag`
-- `FilePermissionEntry`
-- `FileAccessAudit`
+| Order | Endpoint |
+|---|---|
+| 1 | `POST files` |
+| 2 | `POST files/validate`, `GET files/{fileId}` |
+| 3 | `POST files/scan`, `GET files/{fileId}/download` |
+| 4 | `GET files/{fileId}/stream` |
+| 5 | `GET files/{fileId}/link` |
+| 6 | `POST files/{fileId}/share`, `GET files/audit/{fileId}` |
+| 7 | `DELETE files/{fileId}`, `GET files/public/{token}` |
+| 8 | `PUT files/{fileId}` |
+| 9 | `PATCH files/{fileId}/move` |
+| 10 | `GET files/search` |
+| 11 | `GET files/filter` |
+| 12 | `POST files/{fileId}/tags` |
+| 13 | `GET files/tags/{tag}`, `POST files/permissions/{fileId}` |
+| 14 | `GET files/permissions/{fileId}`, `POST files/encrypt/{fileId}` |
+| 15 | `POST files/decrypt/{fileId}` |
 
-## Use caseهای کلیدی
-- `UploadFileCommand`, `ValidateFileCommand`, `ScanFileCommand`
-- `GetFileMetadataQuery`, `DownloadFileQuery`, `StreamFileQuery`
-- `GetSecureFileLinkQuery`, `GetPublicFileByLinkQuery`
-- `SearchFilesQuery`, `FilterFilesQuery`, `SearchFilesByTagQuery`
-- `UpsertFilePermissionCommand`, `GetFilePermissionsQuery`
+## کاتالوگ کامل Endpointها
+| Method | Path | دسترسی | دلیل وجود | ورودی‌ها |
+|---|---|---|---|---|
+| POST | `/api/v1/files` | `files.write` | آپلود فایل | Form: `file`, `module`, `folder`, `description` |
+| POST | `/api/v1/files/validate` | `files.write` | اعتبارسنجی فایل قبل از upload کامل | Body: `fileName`, `sizeBytes`, `contentType` |
+| POST | `/api/v1/files/scan` | `files.write` | اسکن امنیتی فایل | Form: `file`, `module`, `folder`, `description` |
+| GET | `/api/v1/files/{fileId:guid}` | `files.read` | دریافت metadata فایل | Path: `fileId` |
+| PUT | `/api/v1/files/{fileId:guid}` | `files.write` | بروزرسانی metadata | Path: `fileId`, Body: `fileName`, `description` |
+| DELETE | `/api/v1/files/{fileId:guid}` | `files.delete` | حذف فایل | Path: `fileId` |
+| GET | `/api/v1/files/{fileId:guid}/download` | `files.read` | دانلود فایل | Path: `fileId` |
+| GET | `/api/v1/files/{fileId:guid}/stream` | `files.read` | stream فایل | Path: `fileId` |
+| GET | `/api/v1/files/{fileId:guid}/link` | `files.share` | تولید لینک امن | Path: `fileId`, Query: `mode` |
+| POST | `/api/v1/files/{fileId:guid}/share` | `files.share` | اشتراک‌گذاری فایل | Path: `fileId`, Query: `mode` |
+| PATCH | `/api/v1/files/{fileId:guid}/move` | `files.write` | جابجایی فایل بین module/folder | Path: `fileId`, Body: `module`, `folder` |
+| POST | `/api/v1/files/{fileId:guid}/tags` | `files.write` | افزودن tag | Path: `fileId`, Body: `tag` |
+| GET | `/api/v1/files/tags/{tag}` | `files.read` | جستجو بر اساس tag | Path: `tag` |
+| GET | `/api/v1/files/search` | `files.read` | جستجوی پیشرفته | Query: `query`, `fileType`, `uploaderId`, `from`, `to`, paging |
+| GET | `/api/v1/files/filter` | `files.read` | فیلتر بر اساس module | Query: `module`, paging |
+| GET | `/api/v1/files/audit/{fileId:guid}` | `files.read` | مشاهده trail دسترسی فایل | Path: `fileId` |
+| POST | `/api/v1/files/permissions/{fileId:guid}` | `files.permissions.manage` | upsert مجوز فایل | Path: `fileId`, Body: `subjectType`, `subjectValue`, `canRead`, `canWrite`, `canDelete` |
+| GET | `/api/v1/files/permissions/{fileId:guid}` | `files.permissions.manage` | دریافت ACL فایل | Path: `fileId` |
+| POST | `/api/v1/files/encrypt/{fileId:guid}` | `files.permissions.manage` | علامت‌گذاری/اجرای encryption | Path: `fileId` |
+| POST | `/api/v1/files/decrypt/{fileId:guid}` | `files.permissions.manage` | decrypt کنترل‌شده | Path: `fileId` |
+| GET | `/api/v1/files/public/{token}` | عمومی/Contextual | دانلود/دسترسی از لینک عمومی | Path: `token` |
 
-## API و سطح دسترسی
-- مسیرها: `/api/v1/files/*`
-- `files.read`, `files.write`, `files.delete`, `files.share`, `files.permissions.manage`
-- مسیر عمومی: `/api/v1/files/public/{token}` بدون JWT ولی با token contextual
+## نکات امنیتی و عملیاتی
+- `Upload` و `Scan` با `DisableAntiforgery` و rate limit تنظیم شده‌اند.
+- `files/public/{token}` policy rate-limit اختصاصی دارد.
+- `GetSecureFileLink/Share` از `mode` برای کنترل رفتار لینک استفاده می‌کنند.
+- برای محیط production، scan واقعی (ClamAV) و rotation کلید لینک ضروری است.
+
+## مدل‌های ورودی مهم
+- `UploadFileRequest`: file/form fields
+- `ValidateFileRequest`: نام، حجم، نوع محتوا
+- `ScanFileRequest`: ورودی مشابه upload
+- `MoveFileRequest`: module/folder
+- `UpdateFileMetadataRequest`: نام فایل/توضیح
+- `UpsertFilePermissionRequest`: subject + سطح دسترسی
 
 ## وابستگی‌ها
-- MinIO/Object Storage
-- ClamAV (اختیاری) برای اسکن بدافزار
-- Logging برای audit لینک‌های عمومی
+- MinIO/ObjectStorage
+- ClamAV (اختیاری)
+- Audit trail داخلی فایل‌ها
+- Logging برای لینک عمومی
 
-## داده و نگهداشت
-- اسکیما: `files`
-- مسیرهای public باید rate limit و expiry داشته باشند.
-
-## نکات عملیاتی
-- کلید signing لینک عمومی باید در secret manager نگهداری شود.
-- اسکن بدافزار در production باید فعال و monitor شود.
-
-## ریسک‌ها
-- نشتی token لینک عمومی یا expiry نادرست می‌تواند منجر به افشای فایل شود.
+## سناریوهای خطا
+- token لینک عمومی نامعتبر یا منقضی
+- upload فایل با content-type/size غیرمجاز
+- ACL conflict در اشتراک‌گذاری

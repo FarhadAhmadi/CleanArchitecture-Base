@@ -1,54 +1,68 @@
-# ماژول Notifications
+﻿# ماژول Notifications
 
 تاریخ به‌روزرسانی: 2026-02-21
 
 ## هدف
-ارسال اعلان چندکاناله با template، schedule، ACL و گزارش‌گیری.
+مدیریت اعلان چندکاناله شامل پیام، template، schedule، permission و گزارش.
 
-## مسئولیت‌های اصلی
-- ایجاد/خواندن/آرشیو اعلان
-- مدیریت template و revision
-- زمان‌بندی و لغو ارسال
-- مدیریت permission در سطح اعلان
-- تولید گزارش summary/details
-- اجرای dispatch با retry/backoff
+## ترتیب IOrderedEndpoint
+این ماژول از `IOrderedEndpoint` استفاده می‌کند. چند endpoint Order یکسان دارند.
 
-## مدل دامنه
-- `NotificationMessage`
-- `NotificationTemplate`
-- `NotificationTemplateRevision`
-- `NotificationSchedule`
-- `NotificationPermissionEntry`
-- `NotificationDeliveryAttempt`
+| Order | Endpoint |
+|---|---|
+| 1 | `POST notifications` |
+| 2 | `GET notifications/{notificationId}` |
+| 3 | `GET notifications` |
+| 4 | `POST notifications/templates` |
+| 5 | `PUT notifications/templates/{templateId}` |
+| 6 | `POST notifications/{notificationId}/schedule`, `GET notifications/schedules` |
+| 7 | `DELETE notifications/archive/{id}`, `DELETE notifications/schedules/{scheduleId}`, `PUT notifications/{notificationId}/permissions`, `GET notifications/{notificationId}/permissions` |
+| 8 | `GET notifications/reports/summary` |
+| 9 | `GET notifications/reports/details` |
+| 10 | `GET notification-templates/{templateId}` |
+| 12 | `DELETE notification-templates/{templateId}` |
+| 13 | `GET notification-templates` |
 
-## Use caseهای کلیدی
-- `CreateNotificationCommand`
-- `ScheduleNotificationCommand`
-- `CreateNotificationTemplateCommand`
-- `UpdateNotificationTemplateCommand`
-- `DeleteNotificationTemplateCommand`
-- `ListNotificationsQuery`, `GetNotificationQuery`
-- `GetNotificationSummaryReportQuery`, `GetNotificationDetailsReportQuery`
+## کاتالوگ کامل Endpointها
+| Method | Path | دسترسی | دلیل وجود | ورودی‌ها |
+|---|---|---|---|---|
+| POST | `/api/v1/notifications` | `notifications.write` | ایجاد اعلان جدید | Body: `channel`, `priority`, `recipient`, `subject`, `body`, `language`, `templateId`, `scheduledAtUtc` |
+| GET | `/api/v1/notifications` | `notifications.read` | لیست اعلان‌ها | Query: paging + `channel`, `status`, `from`, `to` |
+| GET | `/api/v1/notifications/{notificationId:guid}` | `notifications.read` | جزئیات اعلان | Path: `notificationId` |
+| DELETE | `/api/v1/notifications/archive/{id:guid}` | `notifications.write` | آرشیو اعلان | Path: `id` |
+| POST | `/api/v1/notifications/{notificationId:guid}/schedule` | `notifications.schedules.manage` | زمان‌بندی ارسال | Path: `notificationId`, Body: `runAtUtc`, `ruleName` |
+| GET | `/api/v1/notifications/schedules` | `notifications.schedules.manage` | لیست scheduleها | - |
+| DELETE | `/api/v1/notifications/schedules/{scheduleId:guid}` | `notifications.schedules.manage` | حذف schedule | Path: `scheduleId` |
+| PUT | `/api/v1/notifications/{notificationId:guid}/permissions` | `notifications.permissions.manage` | upsert ACL اعلان | Path: `notificationId`, Body: `subjectType`, `subjectValue`, `canRead`, `canManage` |
+| GET | `/api/v1/notifications/{notificationId:guid}/permissions` | `notifications.permissions.manage` | دریافت ACL اعلان | Path: `notificationId` |
+| GET | `/api/v1/notifications/reports/summary` | `notifications.reports.read` | گزارش تجمیعی | Query: `from`, `to` |
+| GET | `/api/v1/notifications/reports/details` | `notifications.reports.read` | گزارش جزئیات با فیلتر | Query: paging + `from`, `to`, `channel`, `status` |
+| POST | `/api/v1/notifications/templates` | `notifications.templates.manage` | ایجاد template | Body: `name`, `channel`, `language`, `subjectTemplate`, `bodyTemplate` |
+| PUT | `/api/v1/notifications/templates/{templateId:guid}` | `notifications.templates.manage` | بروزرسانی template | Path: `templateId`, Body: `subjectTemplate`, `bodyTemplate` |
+| GET | `/api/v1/notification-templates` | `notifications.templates.manage` | لیست templateها | Query: `language`, `channel` |
+| GET | `/api/v1/notification-templates/{templateId:guid}` | `notifications.templates.manage` | دریافت template | Path: `templateId` |
+| DELETE | `/api/v1/notification-templates/{templateId:guid}` | `notifications.templates.manage` | حذف template | Path: `templateId` |
 
-## API و سطح دسترسی
-- مسیرها: `/api/v1/notifications/*` و `/api/v1/notification-templates/*`
-- `notifications.read`, `notifications.write`
-- `notifications.templates.manage`
-- `notifications.schedules.manage`
-- `notifications.permissions.manage`
-- `notifications.reports.read`
+## نکات طراحی مهم
+- template lifecycle جدا شده تا versioning و governance مستقل بماند.
+- ACL اعلان مستقل از مجوزهای سراسری ماژول است.
+- گزارش summary/details برای monitoring تحویل و SLA کاربرد دارد.
+
+## مدل‌های ورودی مهم
+- `CreateNotificationRequest`
+- `ListNotificationsRequest`
+- `ScheduleNotificationRequest`
+- `UpsertNotificationPermissionRequest`
+- `NotificationReportDetailsRequest`
+- `CreateNotificationTemplateRequest`
+- `UpdateNotificationTemplateRequest`
 
 ## وابستگی‌ها
-- providerهای کانال (Email/SMS/Slack/Teams/Push/InApp)
-- مکانیزم رمزنگاری/هش recipient
+- providerهای ارسال (Email/SMS/Push/...) 
+- Logging برای ثبت outcome
+- schema `notifications`
 
-## داده و نگهداشت
-- اسکیما: `notifications`
-- تلاش‌های ارسال (attempts) برای troubleshooting و SLA tracking ذخیره می‌شود.
-
-## نکات عملیاتی
-- credential providerها باید دوره‌ای rotate شوند.
-- مانیتور نرخ خطای delivery برای هر کانال ضروری است.
-
-## ریسک‌ها
-- اختلال provider بیرونی مستقیما روی delivery impact می‌گذارد.
+## سناریوهای خطا
+- template نامعتبر یا channel ناسازگار
+- schedule در زمان گذشته
+- محدودیت provider یا credential failure

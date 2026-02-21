@@ -1,44 +1,34 @@
-# ماژول Authorization
+﻿# ماژول Authorization
 
 تاریخ به‌روزرسانی: 2026-02-21
 
 ## هدف
-پیاده‌سازی مدل کنترل دسترسی مبتنی بر Role و Permission برای کل سیستم.
+مدیریت RBAC و policyهای permission-based برای کل سیستم.
 
-## مسئولیت‌های اصلی
-- تخصیص نقش به کاربر
-- تخصیص مجوز به نقش
-- ارائه ماتریس دسترسی (Access Control Matrix)
-- ساخت Policy پویا بر اساس کد مجوز
+## ترتیب IOrderedEndpoint
+این ماژول از `IOrderedEndpoint` استفاده نمی‌کند.
 
-## مدل دامنه
-- `Role`
-- `Permission`
-- `UserRole`
-- `RolePermission`
-- `UserPermission`
+## کاتالوگ کامل Endpointها
+| Method | Path | دسترسی | دلیل وجود | ورودی‌ها |
+|---|---|---|---|---|
+| GET | `/api/v1/authorization` | `authorization:manage` | دریافت ماتریس نقش/مجوز | ورودی ندارد |
+| POST | `/api/v1/authorization/assign-role` | `authorization:manage` | تخصیص نقش به کاربر | Body: `userId`, `roleName` |
+| POST | `/api/v1/authorization/assign-permission` | `authorization:manage` | تخصیص مجوز به نقش | Body: `roleName`, `permissionCode` |
 
-## Use caseهای کلیدی
-- `AssignRoleToUserCommand`
-- `AssignPermissionToRoleCommand`
-- `GetAccessControlQuery`
+## نکات طراحی مهم
+- هر تغییر مهم در نقش/مجوز در Audit ثبت می‌شود.
+- policyها به‌صورت permission code در endpointها enforce می‌شوند.
+- cache مجوز باید بعد از تغییرات invalidate/version شود.
 
-## API و سطح دسترسی
-- مسیرها: `/api/v1/authorization/*`
-- کل APIهای این ماژول نیازمند `authorization:manage`
+## مدل ورودی‌های مهم
+- `AssignRoleToUser.Request`: `Guid UserId`, `string RoleName`
+- `AssignPermissionToRole.Request`: `string RoleName`, `string PermissionCode`
 
 ## وابستگی‌ها
-- لایه caching برای versioning مجوزها (Redis/Memory)
-- ماژول Audit برای ردگیری تغییرات سیاست دسترسی
+- Audit trail
+- Permission cache/versioning (Redis/Memory)
 
-## داده و نگهداشت
-- اسکیما: `auth`
-- هر تغییر در نقش/مجوز باید cache invalidation درست داشته باشد.
-
-## نکات عملیاتی
-- بازسازی cache permission بعد از هر تغییر اجباری است.
-- دسترسی endpointهای مدیریت نقش فقط برای ادمین‌های محدود تعریف شود.
-
-## ریسک‌ها
-- رشد ماتریس نقش/مجوز در سازمان بزرگ می‌تواند پیچیدگی عملیاتی ایجاد کند.
-- ناهماهنگی کش مجوز با دیتابیس می‌تواند باعث خطای دسترسی شود.
+## سناریوهای خطا
+- نقش یا مجوز نامعتبر
+- کاربر هدف وجود ندارد
+- ناسازگاری موقت cache و دیتابیس

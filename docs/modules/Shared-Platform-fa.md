@@ -1,35 +1,35 @@
-# پلتفرم مشترک (Cross-cutting)
+﻿# پلتفرم مشترک (Cross-cutting)
 
 تاریخ به‌روزرسانی: 2026-02-21
 
 ## هدف
-ارائه زیرساخت فنی مشترک برای همه ماژول‌ها با حداقل تکرار و حداکثر پایداری.
+فراهم‌کردن زیرساخت مشترک برای تمام ماژول‌ها: persistence، messaging، caching، resilience و health.
+
+## ترتیب IOrderedEndpoint
+این ماژول endpoint مستقل با `IOrderedEndpoint` ندارد.
+
+## Endpointهای مرتبط پلتفرمی
+| Method | Path | دسترسی | دلیل وجود | ورودی‌ها |
+|---|---|---|---|---|
+| GET | `/health` | عمومی | health سراسری سرویس | - |
 
 ## اجزای اصلی
-- `Core`: time provider، domain event dispatcher
-- `DataAccess`: DbContext، migration، SQL resilience
-- `Caching`: Redis/Memory و versioning cache
-- `Integration`: outbox/inbox، workerهای پیام
-- `HealthChecks`: health probes و readiness
-- `Shared`: primitiveها و قراردادهای مشترک
+- `Core`: time provider، dispatcher رویداد
+- `DataAccess`: DbContext، migration، retry SQL
+- `Caching`: Redis/Memory
+- `Integration`: outbox/inbox + workers
+- `HealthChecks`: readiness/liveness
 
-## نقش معماری
-- یکسان‌سازی الگوهای فنی بین ماژول‌ها
-- کاهش coupling مستقیم ماژول‌ها
-- افزایش قابلیت عملیات و عیب‌یابی
+## دلیل وجود
+- حذف تکرار قابلیت‌های پایه در ماژول‌ها
+- enforce الگوهای یکسان امنیت، resilience و logging
+- ساده‌سازی عملیات و دیباگ cross-module
 
-## وابستگی‌های عملیاتی
-- SQL Server
-- RabbitMQ
-- Redis
-- ابزارهای observability (مانند Seq/Elastic/OpenTelemetry)
-
-## کنترل کیفیت
-- لایه‌بندی با تست معماری enforce می‌شود:
-  - Domain مستقل از Application/Infrastructure/Web
-  - Application مستقل از Infrastructure/Web
-  - Infrastructure مستقل از Web
+## نکات طراحی
+- dependency مستقیم از Domain به Infrastructure ممنوع است.
+- abstractionها در Application نگه داشته می‌شوند.
+- health/retry باید برای همه adapterها یکنواخت اعمال شود.
 
 ## ریسک‌ها
-- بزرگ‌شدن بیش از حد اجزای مشترک می‌تواند به God-module منجر شود.
-- ناهماهنگی نسخه dependencyهای زیرساختی روی همه ماژول‌ها اثر مستقیم دارد.
+- بزرگ‌شدن بیش از حد shared layer
+- coupling ناخواسته اگر قراردادها واضح نگه داشته نشوند

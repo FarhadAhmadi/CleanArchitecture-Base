@@ -1,202 +1,402 @@
-# روند استفاده و Workflow ماژول‌ها
+﻿# روند استفاده و Workflow ماژول‌ها (نسخه عملیاتی پیشرفته)
 
 تاریخ: 2026-02-21
 
+## راهنمای خواندن سند
+- این سند مکمل `docs/modules/*.md` است و روی «نحوه استفاده واقعی»، «مسیر خطا» و «رفتار عملیاتی» تمرکز دارد.
+- برای هر ماژول، ابتدا مسیر happy path و بعد مسیر failure آورده شده است.
+- دیاگرام‌ها با Mermaid هستند و برای مرور سریع تیم توسعه/عملیات طراحی شده‌اند.
+
+---
+
 ## 1) Users/Auth
-### Integrationها
-- Notification برای OTP/Verification
-- Audit برای رخدادهای امنیتی
+### بازیگران
+- کاربر نهایی
+- سرویس احراز هویت
+- سرویس اعلان
 
-### روند استفاده
+### پیش‌نیازها
+- تنظیم JWT و کلیدها
+- فعال بودن provider اعلان برای verification/reset
+
+### مسیر اصلی استفاده
 1. کاربر `register` می‌کند.
-2. کد تایید ایمیل ارسال می‌شود.
-3. کاربر تایید ایمیل انجام می‌دهد.
-4. کاربر `login` می‌کند و access/refresh می‌گیرد.
-5. در انقضا، `refresh` انجام می‌شود.
+2. سیستم کاربر را می‌سازد و کد تایید می‌فرستد.
+3. کاربر ایمیل را verify می‌کند.
+4. کاربر login می‌کند و access/refresh می‌گیرد.
+5. در انقضا، refresh token برای تمدید استفاده می‌شود.
 
-### Workflow
+### مسیرهای خطا
+- کد تایید منقضی -> درخواست resend verification
+- refresh token مصرف‌شده/ابطال‌شده -> re-login
+- lockout بعد از تلاش ناموفق متعدد -> تاخیر امنیتی + audit
+
+### سیگنال‌های مانیتورینگ
+- نرخ موفقیت `auth.login.success` در مقابل `auth.login.failed`
+- تعداد revoke-all session
+- زمان متوسط صدور token
+
+### Workflow اصلی
 ```mermaid
 sequenceDiagram
     actor User
     participant API as Users API
-    participant N as Notifications
     participant DB as SQL
+    participant N as Notifications
     User->>API: POST /users/register
-    API->>DB: Create User
+    API->>DB: Create User + default role
     API->>N: Send verification code
     User->>API: POST /users/verify-email
-    API->>DB: Mark EmailConfirmed
+    API->>DB: Confirm Email
     User->>API: POST /users/login
-    API-->>User: Access + Refresh Token
+    API-->>User: Access + Refresh
+    User->>API: POST /users/refresh
+    API-->>User: Rotated Tokens
 ```
 
-## 2) Authorization
-### Integrationها
-- Caching (Redis/Memory) برای versioning permission
-- Audit برای ثبت تغییرات کنترل دسترسی
+### چک‌لیست عملیات
+- اگر نرخ login failure بالا رفت: lockout + IP pattern را بررسی کن.
+- اگر verify-email شکست خورد: provider اعلان و queue delivery را بررسی کن.
 
-### روند استفاده
-1. ادمین نقش را به کاربر اختصاص می‌دهد.
-2. ادمین مجوز را به نقش اختصاص می‌دهد.
-3. APIها با policy پویا مجوز را enforce می‌کنند.
+---
+
+## 2) Authorization
+### بازیگران
+- ادمین امنیت
+- سرویس Authorization
+
+### پیش‌نیازها
+- نقش‌ها و permission codeها seed شده باشند.
+- cache invalidation برای policy فعال باشد.
+
+### مسیر اصلی استفاده
+1. ادمین نقش را به user می‌دهد.
+2. مجوز را به role می‌دهد.
+3. کاربر در endpoint هدف policy check می‌شود.
+
+### مسیرهای خطا
+- role/permission نامعتبر
+- cache stale و اختلاف با DB
+
+### سیگنال‌های مانیتورینگ
+- نرخ `403 Forbidden` به تفکیک endpoint
+- تاخیر بازیابی ماتریس access-control
 
 ### Workflow
 ```mermaid
 flowchart LR
-    A[Admin] --> B[Assign Role]
-    B --> C[Assign Permission]
-    C --> D[Update Permission Cache Version]
-    D --> E[Policy Check on API]
-    E --> F[Allow/Deny]
+    A[Admin] --> B[POST assign-role]
+    B --> C[POST assign-permission]
+    C --> D[Cache version bump]
+    D --> E[Policy evaluation on request]
+    E --> F{Has permission?}
+    F -->|Yes| G[Allow]
+    F -->|No| H[Deny 403]
 ```
 
-## 3) Todos
-### Integrationها
-- وابستگی مستقیم به user context
+### چک‌لیست عملیات
+- بعد از تغییر role/permission، cache version را verify کن.
 
-### روند استفاده
-1. کاربر todo ایجاد می‌کند.
-2. لیست todo را با paging می‌بیند.
-3. مورد را complete یا delete می‌کند.
+---
+
+## 3) Todos
+### بازیگران
+- کاربر نهایی
+
+### پیش‌نیازها
+- کاربر احرازشده با `todos.read` یا `todos.write`
+
+### مسیر اصلی استفاده
+1. ایجاد todo
+2. مشاهده لیست با paging/filter
+3. complete یا delete
+
+### مسیرهای خطا
+- id ناموجود
+- دسترسی خارج از owner scope
+
+### سیگنال‌های مانیتورینگ
+- latency `GET /todos`
+- error rate در `complete/delete`
 
 ### Workflow
 ```mermaid
 flowchart TD
-    U[User] --> C[Create Todo]
-    C --> L[List Todos]
-    L --> X{Action}
-    X -->|Complete| M[Mark Completed]
-    X -->|Delete| D[Delete Todo]
+    A[POST /todos] --> B[GET /todos]
+    B --> C{Action}
+    C -->|Complete| D[PUT /todos/{id}/complete]
+    C -->|Delete| E[DELETE /todos/{id}]
+    C -->|Copy| F[POST /todos/{id}/copy]
 ```
 
-## 4) Profiles
-### Integrationها
-- Files برای avatar/music
-- Logging/Notifications برای رویداد تغییرات مهم
+### چک‌لیست عملیات
+- page size بالا را محدود نگه دار تا فشار query زیاد نشود.
 
-### روند استفاده
-1. کاربر پروفایل خود را می‌سازد.
-2. بخش‌های مختلف را patch می‌کند.
-3. public profile برای نمایش عمومی خوانده می‌شود.
+---
+
+## 4) Profiles
+### بازیگران
+- کاربر نهایی
+- ادمین گزارش
+
+### پیش‌نیازها
+- دسترسی `profiles.*`
+- لینک معتبر به فایل avatar/music
+
+### مسیر اصلی استفاده
+1. ایجاد پروفایل
+2. تکمیل gradual بخش‌ها (bio/contact/privacy/preferences/social)
+3. تنظیم avatar/music
+4. مشاهده public profile
+
+### مسیرهای خطا
+- فایل avatar نامعتبر
+- policy privacy ناسازگار
+- داده ناقص در گزارش ادمین
+
+### سیگنال‌های مانیتورینگ
+- completeness متوسط پروفایل
+- نرخ update بخش‌های privacy
 
 ### Workflow
 ```mermaid
 sequenceDiagram
     actor User
-    participant API as Profiles API
-    participant F as Files
+    participant P as Profiles API
+    participant F as Files API
     participant DB as SQL
-    User->>API: POST /profiles/me
-    API->>DB: Create Profile
-    User->>API: PUT /profiles/me/avatar
-    API->>F: Validate File Ownership
-    API->>DB: Save AvatarFileId
-    User->>API: GET /profiles/{id}/public
-    API-->>User: Public Profile
+    User->>P: POST /profiles/me
+    P->>DB: Create profile
+    User->>P: PUT /profiles/me/avatar
+    P->>F: Validate file reference
+    P->>DB: Save AvatarFileId
+    User->>P: PATCH /profiles/me/privacy
+    P->>DB: Persist privacy settings
 ```
+
+### چک‌لیست عملیات
+- تغییرات privacy را در audit/analytics دوره‌ای مرور کن.
+
+---
 
 ## 5) Files
-### Integrationها
-- MinIO برای object storage
-- ClamAV (اختیاری) برای scan
-- Logging برای audit دسترسی عمومی
+### بازیگران
+- کاربر داخلی
+- گیرنده لینک عمومی
+- سرویس امنیت/اسکن
 
-### روند استفاده
-1. کاربر فایل upload می‌کند.
-2. validate/scan انجام می‌شود.
-3. metadata ثبت و فایل قابل دانلود/stream می‌شود.
-4. برای اشتراک، secure/public link تولید می‌شود.
+### پیش‌نیازها
+- object storage فعال
+- policy validation/scan تنظیم شده
 
-### Workflow
+### مسیر اصلی استفاده
+1. validate/scan فایل
+2. upload و ذخیره metadata
+3. download/stream
+4. share با secure/public link
+5. مدیریت ACL/permissions
+
+### مسیرهای خطا
+- scan fail (malware)
+- token عمومی نامعتبر یا منقضی
+- ACL conflict
+
+### سیگنال‌های مانیتورینگ
+- upload success/error rate
+- public link access count
+- scan failure ratio
+
+### Workflow (upload تا share)
 ```mermaid
 flowchart LR
-    U[User] --> UP[Upload]
-    UP --> V[Validate]
-    V --> S[Scan]
-    S --> M[Save Metadata]
-    M --> L[Generate Link]
-    L --> A[Access with Token]
-    A --> G[Audit Access]
+    A[POST /files/validate] --> B[POST /files/scan]
+    B --> C[POST /files]
+    C --> D[GET metadata/download/stream]
+    D --> E[GET link or POST share]
+    E --> F[GET /files/public/{token}]
+    F --> G[Audit access + rate limit]
 ```
 
-## 6) Notifications
-### Integrationها
-- Providerهای بیرونی ارسال
-- Logging برای ثبت نتیجه ارسال
+### Workflow (ACL)
+```mermaid
+flowchart TD
+    A[POST /files/permissions/{fileId}] --> B[GET /files/permissions/{fileId}]
+    B --> C{Need encryption?}
+    C -->|Yes| D[POST /files/encrypt/{fileId}]
+    C -->|No| E[Continue]
+```
 
-### روند استفاده
-1. اعلان با template یا payload خام ساخته می‌شود.
-2. در صورت نیاز schedule ثبت می‌شود.
-3. worker اعلان را dispatch می‌کند.
-4. نتیجه در attempts ذخیره می‌شود.
+### چک‌لیست عملیات
+- کلید signing لینک عمومی را rotate کن.
+- روی endpoint عمومی نرخ درخواست غیرعادی را alert کن.
+
+---
+
+## 6) Notifications
+### بازیگران
+- سرویس‌های تولیدکننده اعلان
+- worker dispatch
+- provider بیرونی
+
+### پیش‌نیازها
+- templateهای معتبر
+- credential provider معتبر
+
+### مسیر اصلی استفاده
+1. ایجاد اعلان (مستقیم یا template-based)
+2. schedule در صورت نیاز
+3. dispatch توسط worker
+4. ثبت attempt/result
+5. گزارش summary/details
+
+### مسیرهای خطا
+- provider down/timeout
+- template invalid
+- schedule در گذشته
+
+### سیگنال‌های مانیتورینگ
+- delivery success rate per channel
+- retry count distribution
+- queue delay
 
 ### Workflow
 ```mermaid
 sequenceDiagram
-    actor Admin
+    actor Client
     participant API as Notifications API
-    participant W as Dispatch Worker
-    participant P as Provider
     participant DB as SQL
-    Admin->>API: POST /notifications
-    API->>DB: Save Pending Message
-    API->>DB: Optional Schedule
-    W->>DB: Pull due messages
+    participant W as Worker
+    participant P as Provider
+    Client->>API: POST /notifications
+    API->>DB: Save pending
+    Client->>API: POST /notifications/{id}/schedule
+    W->>DB: Pull due notification
     W->>P: Send
-    P-->>W: Delivery result
-    W->>DB: Save attempt/status
+    P-->>W: Ack/Fail
+    W->>DB: Save attempt + status
 ```
 
-## 7) Logging
-### Integrationها
-- مصرف‌کننده رخداد از ماژول‌های مختلف
-- اتصال به Notifications برای incident alert
+### Workflow (template lifecycle)
+```mermaid
+flowchart LR
+    A[POST templates] --> B[PUT template]
+    B --> C[GET template/list]
+    C --> D[DELETE template]
+```
 
-### روند استفاده
-1. رخداد single/bulk ingest می‌شود.
-2. validate/transform انجام می‌شود.
-3. ruleها incident تولید می‌کنند.
-4. incident قابل query و پیگیری است.
+### چک‌لیست عملیات
+- failure provider را با fallback channel مدیریت کن.
+- در surge ارسال، throttle provider را فعال کن.
+
+---
+
+## 7) Logging
+### بازیگران
+- سرویس‌های تولیدکننده رخداد
+- تیم عملیات و امنیت
+
+### پیش‌نیازها
+- schema و ruleها تعریف شده باشند.
+- Idempotency-Key در client ingest ارسال شود.
+
+### مسیر اصلی استفاده
+1. ingest (single/bulk)
+2. validate/transform
+3. ذخیره رخداد
+4. match rule و تولید incident
+5. مشاهده incident و اعمال action
+
+### مسیرهای خطا
+- payload ناقص/ناسازگار
+- رشد ناگهانی حجم ingest
+- alert noise بر اثر rule اشتباه
+
+### سیگنال‌های مانیتورینگ
+- ingest throughput
+- corrupted events count
+- incident creation rate
+- logging health status
 
 ### Workflow
 ```mermaid
 flowchart TD
-    I[Ingest Event] --> V[Validate Schema]
-    V --> T[Transform]
-    T --> W[Write LogEvent]
-    W --> R{Rule Match?}
-    R -->|Yes| N[Create Incident]
-    R -->|No| E[End]
-    N --> A[Notify Admin]
+    A[POST /logging/events] --> B[Validate]
+    B --> C[Transform]
+    C --> D[Persist log event]
+    D --> E{Rule matched?}
+    E -->|No| F[Done]
+    E -->|Yes| G[Create incident]
+    G --> H[Notify / escalate]
 ```
 
-## 8) Audit
-### Integrationها
-- دریافت عملیات حساس از ماژول‌های مختلف
+### Workflow (access-control)
+```mermaid
+flowchart LR
+    A[POST /logging/access-control/roles] --> B[POST /logging/access-control/assign]
+    B --> C[GET /logging/access-control]
+```
 
-### روند استفاده
-1. عملیات حساس ثبت می‌شود.
-2. checksum chain کامل می‌شود.
-3. گزارش integrity به‌صورت دوره‌ای بررسی می‌شود.
+### چک‌لیست عملیات
+- ruleهای جدید را ابتدا روی محیط staging تست کن.
+- alertهای تکراری را با threshold و window تنظیم کن.
+
+---
+
+## 8) Audit
+### بازیگران
+- همه ماژول‌های producer
+- تیم امنیت
+
+### پیش‌نیازها
+- ثبت audit برای عملیات حساس فعال باشد.
+
+### مسیر اصلی استفاده
+1. عملیات حساس انجام می‌شود.
+2. audit entry با checksum chain ثبت می‌شود.
+3. integrity report دوره‌ای بررسی می‌شود.
+
+### مسیرهای خطا
+- شکست integrity report
+- قطع ثبت audit در ماژول producer
+
+### سیگنال‌های مانیتورینگ
+- تعداد رویداد audit در بازه زمانی
+- integrity failure count
 
 ### Workflow
 ```mermaid
 flowchart LR
-    O[Sensitive Operation] --> H[Hash Payload]
-    H --> C[Link with Previous Checksum]
-    C --> S[Store AuditEntry]
-    S --> R[Integrity Report]
+    A[Sensitive operation] --> B[Create audit record]
+    B --> C[Link checksum chain]
+    C --> D[Persist]
+    D --> E[GET /audit/integrity]
 ```
 
-## 9) Observability
-### Integrationها
-- Integration (outbox/inbox)
-- Logging و Notifications برای KPI
+### چک‌لیست عملیات
+- integrity report را در بازه‌های ثابت (مثلا روزانه) اجرا کن.
 
-### روند استفاده
-1. تیم عملیات متریک‌ها و health را مانیتور می‌کند.
-2. خطاهای inbox/outbox را replay می‌کند.
-3. نتیجه replay را ارزیابی می‌کند.
+---
+
+## 9) Observability
+### بازیگران
+- تیم عملیات (SRE/DevOps)
+
+### پیش‌نیازها
+- متریک‌ها و health endpoints در dashboard متصل باشند.
+
+### مسیر اصلی استفاده
+1. مشاهده metrics و orchestration health
+2. تشخیص failure backlog
+3. replay inbox/outbox با batch کنترل‌شده
+
+### مسیرهای خطا
+- replay بیش از حد و اثرات تکراری
+- تحلیل اشتباه health snapshot
+
+### سیگنال‌های مانیتورینگ
+- failed outbox/inbox count
+- replay success ratio
+- health degradation trend
 
 ### Workflow
 ```mermaid
@@ -205,58 +405,129 @@ sequenceDiagram
     participant O as Observability API
     participant I as Integration
     Ops->>O: GET /observability/metrics
-    O-->>Ops: KPI Snapshot
-    Ops->>O: POST /observability/orchestration/replay/outbox
-    O->>I: Replay failed messages
-    I-->>O: Replay result
-    O-->>Ops: Summary
+    O-->>Ops: metrics snapshot
+    Ops->>O: GET /dashboard/orchestration-health
+    O-->>Ops: health status
+    Ops->>O: POST replay/outbox (take=N)
+    O->>I: replay failed entries
+    I-->>O: replay result
 ```
+
+### چک‌لیست عملیات
+- replay را در batchهای کوچک و با مانیتور اثر جانبی اجرا کن.
+
+---
 
 ## 10) Scheduler
-### Integrationها
-- Notifications (jobهای اعلان)
-- Logging/Metrics برای پایش اجرا
-- Authorization/Audit برای کنترل و ردیابی
+### بازیگران
+- ادمین عملیات
+- Scheduler worker
+- Job handlers
 
-### روند استفاده
-1. Job ایجاد می‌شود.
-2. Schedule تعریف می‌شود.
-3. Worker due job را پیدا می‌کند.
-4. lock گرفته می‌شود و handler اجرا می‌شود.
-5. نتیجه اجرا/Retry/Quarantine ثبت می‌شود.
+### پیش‌نیازها
+- تعریف job و schedule معتبر
+- lock provider و worker فعال
 
-### Workflow
+### مسیر اصلی استفاده
+1. تعریف job
+2. تعریف schedule
+3. worker jobهای due را شناسایی می‌کند
+4. lock می‌گیرد و handler اجرا می‌کند
+5. نتیجه ثبت می‌شود و next run محاسبه می‌گردد
+
+### مسیرهای خطا
+- dependency unsatisfied
+- timeout/cancel/fail
+- retry exhausted -> dead-letter/quarantine
+
+### سیگنال‌های مانیتورینگ
+- queue lag (ms)
+- execution duration
+- retry attempts
+- quarantine count
+
+### Workflow اصلی
 ```mermaid
 flowchart TD
-    J[Create Job] --> S[Set Schedule]
-    S --> D[Worker Detect Due Job]
-    D --> L[Acquire Distributed Lock]
-    L --> X[Execute Handler]
-    X --> R{Result}
-    R -->|Success| N[Compute NextRun]
-    R -->|Fail & Retry| B[Backoff + Retry]
-    R -->|Repeated Fail| Q[Quarantine Job]
-    N --> E[Write Execution Log]
-    B --> E
-    Q --> E
+    A[Create Job] --> B[Set Schedule]
+    B --> C[Worker polling]
+    C --> D[Acquire iteration lock]
+    D --> E[Find due jobs]
+    E --> F[Acquire per-job lock]
+    F --> G[Dependency check]
+    G --> H[Execute handler]
+    H --> I{Result}
+    I -->|Success| J[NextRun + reset retry]
+    I -->|Fail retryable| K[Backoff + retry attempt]
+    I -->|Fail repeated| L[DeadLetter/Quarantine]
+    J --> M[Persist execution log]
+    K --> M
+    L --> M
 ```
 
-## 11) Shared Platform
-### Integrationها
-- DataAccess/Caching/Integration/HealthChecks برای همه ماژول‌ها
+### Workflow کنترل دستی
+```mermaid
+flowchart LR
+    A[POST run] --> B[POST pause]
+    B --> C[POST resume]
+    C --> D[POST replay]
+    D --> E[POST quarantine]
+```
 
-### روند استفاده
-1. هر ماژول از abstractionهای Application استفاده می‌کند.
-2. پیاده‌سازی‌های Infrastructure تزریق می‌شوند.
-3. health و retry به‌صورت مرکزی اعمال می‌شود.
+### چک‌لیست عملیات
+- اگر lag بالا رفت: `MaxDueJobsPerIteration` و polling را tune کن.
+- اگر lock contention بالا رفت: lease و node distribution را بررسی کن.
+- اگر quarantine زیاد شد: payload validator و handler stability را بررسی کن.
+
+---
+
+## 11) Shared Platform
+### بازیگران
+- همه ماژول‌های سیستم
+- تیم عملیات زیرساخت
+
+### پیش‌نیازها
+- SQL/Redis/RabbitMQ/HealthChecks فعال
+
+### مسیر اصلی استفاده
+1. ماژول Application فقط abstraction را فراخوانی می‌کند.
+2. Infrastructure implementation تزریق می‌شود.
+3. resilience (retry/timeout) و health centrally اعمال می‌شود.
+
+### مسیرهای خطا
+- قطع dependency زیرساختی
+- misconfiguration در connection/policy
+
+### سیگنال‌های مانیتورینگ
+- health overall
+- retry rate روی DB/MQ
+- queue depth
 
 ### Workflow
 ```mermaid
 flowchart LR
-    A[Application Module] --> AB[Abstractions]
-    AB --> INF[Infrastructure Implementations]
-    INF --> DB[(SQL)]
-    INF --> MQ[(RabbitMQ)]
-    INF --> R[(Redis)]
-    INF --> H[HealthChecks/Resilience]
+    A[Application module] --> B[Abstractions]
+    B --> C[Infrastructure adapter]
+    C --> D[(SQL)]
+    C --> E[(Redis)]
+    C --> F[(RabbitMQ)]
+    C --> G[Health/Resilience]
 ```
+
+### چک‌لیست عملیات
+- health endpoint `/health` را به alerting وصل کن.
+- connection pool و retry policy را متناسب با بار تنظیم کن.
+
+---
+
+## ماتریس سریع تصمیم عملیاتی
+| وضعیت | ماژول | اقدام فوری |
+|---|---|---|
+| افزایش خطای ورود | Users/Auth | بررسی lockout، provider اعلان، audit login |
+| موج 403 | Authorization | بررسی assignment جدید و cache version |
+| رشد تاخیر دانلود فایل | Files | بررسی object storage + rate limits |
+| افت نرخ تحویل اعلان | Notifications | بررسی provider credentials + retry queue |
+| رشد incidentها | Logging | بررسی ruleها و noisy alerts |
+| شکست integrity | Audit | اجرای گزارش integrity و بررسی tamper flags |
+| backlog orchestration | Observability/Integration | replay batch با `take` کنترل‌شده |
+| رشد quarantine job | Scheduler | بررسی handler، payload، retry policy |

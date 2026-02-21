@@ -1,38 +1,30 @@
-# ماژول Observability
+﻿# ماژول Observability
 
 تاریخ به‌روزرسانی: 2026-02-21
 
 ## هدف
-ارائه نمای عملیاتی سیستم شامل KPI، سلامت orchestration و ابزار replay شکست‌ها.
+مانیتورینگ سلامت عملیاتی و کنترل replay خطاهای orchestration.
 
-## مسئولیت‌های اصلی
-- ارائه snapshot متریک‌های عملیاتی
-- ارائه سلامت orchestration
-- ارائه catalog قراردادهای رویداد
-- replay پیام‌های شکست‌خورده inbox/outbox
+## ترتیب IOrderedEndpoint
+این ماژول از `IOrderedEndpoint` استفاده نمی‌کند.
 
-## Use caseهای کلیدی
-- `GetOperationalMetricsQuery`
-- `GetOrchestrationHealthQuery`
-- `GetEventCatalogQuery`
-- `ReplayFailedOutboxCommand`
-- `ReplayFailedInboxCommand`
+## کاتالوگ کامل Endpointها
+| Method | Path | دسترسی | دلیل وجود | ورودی‌ها |
+|---|---|---|---|---|
+| GET | `/api/v1/observability/metrics` | `observability.read` | snapshot KPIهای عملیاتی | - |
+| GET | `/api/v1/dashboard/orchestration-health` | `observability.read` | وضعیت سلامت orchestration | - |
+| GET | `/api/v1/observability/events/catalog` | `observability.read` | کاتالوگ event contractها | - |
+| POST | `/api/v1/observability/orchestration/replay/outbox` | `observability.manage` | replay خطاهای outbox | Body: `take` (default: 100) |
+| POST | `/api/v1/observability/orchestration/replay/inbox` | `observability.manage` | replay خطاهای inbox | Body: `take` (default: 100) |
 
-## API و سطح دسترسی
-- مسیرها: `/api/v1/observability/*` و `/api/v1/dashboard/*`
-- `observability.read`
-- `observability.manage`
+## نکات طراحی مهم
+- replayها action عملیاتی هستند و باید با SOP اجرا شوند.
+- برای جلوگیری از فشار ناگهانی، `take` محدود و مرحله‌ای انتخاب شود.
 
 ## وابستگی‌ها
-- Integration (outbox/inbox)
+- Integration inbox/outbox
 - Logging و Notifications برای شاخص‌های سلامت
 
-## داده و نگهداشت
-- تمرکز ماژول روی خواندن state عملیاتی و اجرای actionهای replay است.
-
-## نکات عملیاتی
-- replay باید با SOP مشخص و ثبت audit انجام شود.
-- شاخص SLO باید روی dashboard عملیاتی تعریف و پیگیری شود.
-
-## ریسک‌ها
-- replay اشتباه می‌تواند باعث تکرار اثرات جانبی در سیستم شود.
+## سناریوهای خطا
+- replay با حجم زیاد و اثر جانبی تکراری
+- هم‌زمانی replay با پردازش normal queue
