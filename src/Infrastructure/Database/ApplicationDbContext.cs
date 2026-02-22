@@ -18,7 +18,7 @@ using Domain.Modules.Notifications;
 
 namespace Infrastructure.Database;
 
-public sealed class ApplicationDbContext(
+    public sealed class ApplicationDbContext(
     DbContextOptions<ApplicationDbContext> options,
     IntegrationEventSerializer integrationEventSerializer,
     IUserContext? userContext = null)
@@ -30,7 +30,17 @@ public sealed class ApplicationDbContext(
         UserRole,
         IdentityUserLogin<Guid>,
         IdentityRoleClaim<Guid>,
-        IdentityUserToken<Guid>>(options), IApplicationDbContext
+        IdentityUserToken<Guid>>(options),
+        IApplicationDbContext,
+        IUsersWriteDbContext,
+        IAuthorizationWriteDbContext,
+        ITodosWriteDbContext,
+        IAuditWriteDbContext,
+        ILoggingWriteDbContext,
+        IProfilesWriteDbContext,
+        INotificationsWriteDbContext,
+        IFilesWriteDbContext,
+        ISchedulerWriteDbContext
 {
     public DbSet<LogEvent> LogEvents { get; set; }
     public DbSet<AlertRule> AlertRules { get; set; }
@@ -61,9 +71,6 @@ public sealed class ApplicationDbContext(
     public DbSet<SchedulerLockLease> SchedulerLockLeases { get; set; }
     internal DbSet<OutboxMessage> OutboxMessages => Set<OutboxMessage>();
     internal DbSet<InboxMessage> InboxMessages => Set<InboxMessage>();
-    DbSet<User> IApplicationDbContext.Users => base.Users;
-    DbSet<Role> IApplicationDbContext.Roles => base.Roles;
-    DbSet<UserRole> IApplicationDbContext.UserRoles => base.UserRoles;
 
     protected override void OnModelCreating(ModelBuilder builder)
     {

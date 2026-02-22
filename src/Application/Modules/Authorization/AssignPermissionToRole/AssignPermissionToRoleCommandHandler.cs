@@ -8,7 +8,7 @@ using SharedKernel;
 namespace Application.Authorization.AssignPermissionToRole;
 
 internal sealed class AssignPermissionToRoleCommandHandler(
-    IApplicationDbContext context,
+    IAuthorizationWriteDbContext context,
     IPermissionCacheVersionService permissionCacheVersionService)
     : ICommandHandler<AssignPermissionToRoleCommand>
 {
@@ -50,3 +50,5 @@ internal sealed class AssignPermissionToRoleCommandHandler(
         return Result.Success();
     }
 }
+
+

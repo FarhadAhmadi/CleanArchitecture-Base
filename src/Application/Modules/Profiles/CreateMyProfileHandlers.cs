@@ -22,7 +22,7 @@ internal sealed class CreateMyProfileCommandValidator : AbstractValidator<Create
 
 internal sealed class CreateMyProfileCommandHandler(
     IUserContext userContext,
-    IApplicationDbContext writeContext,
+    IProfilesWriteDbContext writeContext,
     IValidator<CreateMyProfileCommand> validator) : ResultWrappingCommandHandler<CreateMyProfileCommand>
 {
     protected override async Task<IResult> HandleCore(CreateMyProfileCommand command, CancellationToken cancellationToken) =>
@@ -31,7 +31,7 @@ internal sealed class CreateMyProfileCommandHandler(
     private static async Task<IResult> CreateAsync(
         CreateMyProfileCommand request,
         IUserContext userContext,
-        IApplicationDbContext writeContext,
+        IProfilesWriteDbContext writeContext,
         IValidator<CreateMyProfileCommand> validator,
         CancellationToken cancellationToken)
     {
@@ -79,6 +79,8 @@ internal sealed class CreateMyProfileCommandHandler(
         return Results.Ok(ProfileEndpointCommon.ToPrivateResponse(profile));
     }
 }
+
+
 
 
 

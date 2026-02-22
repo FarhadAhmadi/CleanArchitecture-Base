@@ -1,3 +1,4 @@
+using Application.Abstractions.Auditing;
 using Infrastructure.Auditing;
 using Microsoft.Extensions.DependencyInjection;
 

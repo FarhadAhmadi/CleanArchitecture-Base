@@ -4,7 +4,7 @@ using Application.Abstractions.Messaging;
 using Application.Abstractions.Scheduler;
 using Domain.Modules.Scheduler;
 using Domain.Scheduler;
-using Infrastructure.Auditing;
+using Application.Abstractions.Auditing;
 using Microsoft.EntityFrameworkCore;
 
 namespace Application.Scheduler;
@@ -16,7 +16,7 @@ public sealed record ReplayDeadLetteredRunsCommand(Guid JobId) : ICommand<IResul
 public sealed record QuarantineJobCommand(Guid JobId, int? QuarantineMinutes, string? Reason) : ICommand<IResult>;
 
 internal sealed class RunJobNowCommandHandler(
-    IApplicationDbContext dbContext,
+    ISchedulerWriteDbContext dbContext,
     IUserContext userContext,
     ISchedulerExecutionService schedulerExecutionService,
     IAuditTrailService auditTrailService) : ResultWrappingCommandHandler<RunJobNowCommand>
@@ -119,7 +119,7 @@ internal sealed class RunJobNowCommandHandler(
 }
 
 internal sealed class PauseJobCommandHandler(
-    IApplicationDbContext dbContext,
+    ISchedulerWriteDbContext dbContext,
     IUserContext userContext,
     IAuditTrailService auditTrailService) : ResultWrappingCommandHandler<PauseJobCommand>
 {
@@ -151,7 +151,7 @@ internal sealed class PauseJobCommandHandler(
 }
 
 internal sealed class ResumeJobCommandHandler(
-    IApplicationDbContext dbContext,
+    ISchedulerWriteDbContext dbContext,
     IUserContext userContext,
     IAuditTrailService auditTrailService) : ResultWrappingCommandHandler<ResumeJobCommand>
 {
@@ -185,7 +185,7 @@ internal sealed class ResumeJobCommandHandler(
 }
 
 internal sealed class ReplayDeadLetteredRunsCommandHandler(
-    IApplicationDbContext dbContext,
+    ISchedulerWriteDbContext dbContext,
     IUserContext userContext,
     IAuditTrailService auditTrailService) : ResultWrappingCommandHandler<ReplayDeadLetteredRunsCommand>
 {
@@ -233,7 +233,7 @@ internal sealed class ReplayDeadLetteredRunsCommandHandler(
 }
 
 internal sealed class QuarantineJobCommandHandler(
-    IApplicationDbContext dbContext,
+    ISchedulerWriteDbContext dbContext,
     IUserContext userContext,
     IAuditTrailService auditTrailService) : ResultWrappingCommandHandler<QuarantineJobCommand>
 {
@@ -283,3 +283,5 @@ internal sealed class QuarantineJobCommandHandler(
         schedule.IsEnabled = false;
     }
 }
+
+

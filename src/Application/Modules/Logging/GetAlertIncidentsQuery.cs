@@ -3,8 +3,8 @@ using Application.Abstractions.Data;
 using Application.Abstractions.Messaging;
 using Domain.Authorization;
 using Domain.Logging;
-using Infrastructure.Auditing;
-using Infrastructure.Logging;
+using Application.Abstractions.Auditing;
+using Application.Abstractions.Logging;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using SharedKernel;
@@ -13,7 +13,7 @@ using Application.Shared;
 namespace Application.Logging;
 
 public sealed record GetAlertIncidentsQuery(int Page, int PageSize, string? Status) : IQuery<IResult>;
-internal sealed class GetAlertIncidentsQueryHandler(IApplicationReadDbContext readContext) : ResultWrappingQueryHandler<GetAlertIncidentsQuery>
+internal sealed class GetAlertIncidentsQueryHandler(ILoggingReadDbContext readContext) : ResultWrappingQueryHandler<GetAlertIncidentsQuery>
 {
     protected override async Task<IResult> HandleCore(GetAlertIncidentsQuery query, CancellationToken cancellationToken)
     {
@@ -77,6 +77,8 @@ internal sealed class GetAlertIncidentsQueryHandler(IApplicationReadDbContext re
         });
     }
 }
+
+
 
 
 

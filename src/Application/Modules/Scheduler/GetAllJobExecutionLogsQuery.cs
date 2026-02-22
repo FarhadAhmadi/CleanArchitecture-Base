@@ -14,7 +14,7 @@ public sealed record GetAllJobExecutionLogsQuery(
     DateTime? From,
     DateTime? To) : IQuery<IResult>;
 
-internal sealed class GetAllJobExecutionLogsQueryHandler(IApplicationReadDbContext readDbContext) : ResultWrappingQueryHandler<GetAllJobExecutionLogsQuery>
+internal sealed class GetAllJobExecutionLogsQueryHandler(ISchedulerReadDbContext readDbContext) : ResultWrappingQueryHandler<GetAllJobExecutionLogsQuery>
 {
     protected override async Task<IResult> HandleCore(GetAllJobExecutionLogsQuery query, CancellationToken cancellationToken)
     {
@@ -73,3 +73,5 @@ internal sealed class GetAllJobExecutionLogsQueryHandler(IApplicationReadDbConte
         return Results.Ok(new { page = normalizedPage, pageSize = normalizedPageSize, total, items });
     }
 }
+
+

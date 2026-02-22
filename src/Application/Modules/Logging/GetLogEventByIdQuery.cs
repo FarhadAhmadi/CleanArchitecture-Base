@@ -3,8 +3,8 @@ using Application.Abstractions.Data;
 using Application.Abstractions.Messaging;
 using Domain.Authorization;
 using Domain.Logging;
-using Infrastructure.Auditing;
-using Infrastructure.Logging;
+using Application.Abstractions.Auditing;
+using Application.Abstractions.Logging;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using SharedKernel;
@@ -14,8 +14,8 @@ namespace Application.Logging;
 
 public sealed record GetLogEventByIdQuery(Guid EventId, bool RecalculateIntegrity) : IQuery<IResult>;
 internal sealed class GetLogEventByIdQueryHandler(
-    IApplicationReadDbContext readContext,
-    IApplicationDbContext writeContext,
+    ILoggingReadDbContext readContext,
+    ILoggingWriteDbContext writeContext,
     ILogIntegrityService integrityService) : ResultWrappingQueryHandler<GetLogEventByIdQuery>
 {
     protected override async Task<IResult> HandleCore(GetLogEventByIdQuery query, CancellationToken cancellationToken)
@@ -42,6 +42,8 @@ internal sealed class GetLogEventByIdQueryHandler(
         return Results.Ok(item.ToView(isCorrupted));
     }
 }
+
+
 
 
 

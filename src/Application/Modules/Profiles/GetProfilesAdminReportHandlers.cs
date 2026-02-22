@@ -35,7 +35,7 @@ internal sealed class GetProfilesAdminReportQueryValidator : AbstractValidator<G
 }
 
 internal sealed class GetProfilesAdminReportQueryHandler(
-    IApplicationReadDbContext readContext,
+    IProfilesReadDbContext readContext,
     IValidator<GetProfilesAdminReportQuery> validator) : ResultWrappingQueryHandler<GetProfilesAdminReportQuery>
 {
     protected override async Task<IResult> HandleCore(GetProfilesAdminReportQuery query, CancellationToken cancellationToken) =>
@@ -43,7 +43,7 @@ internal sealed class GetProfilesAdminReportQueryHandler(
 
     private static async Task<IResult> GetAsync(
         GetProfilesAdminReportQuery request,
-        IApplicationReadDbContext readContext,
+        IProfilesReadDbContext readContext,
         IValidator<GetProfilesAdminReportQuery> validator,
         CancellationToken cancellationToken)
     {
@@ -144,6 +144,8 @@ internal sealed class GetProfilesAdminReportQueryHandler(
         });
     }
 }
+
+
 
 
 

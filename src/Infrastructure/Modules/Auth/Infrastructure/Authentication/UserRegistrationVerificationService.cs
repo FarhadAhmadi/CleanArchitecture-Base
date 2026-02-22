@@ -1,25 +1,26 @@
 using System.Globalization;
 using System.Security.Cryptography;
 using System.Text;
+using Application.Abstractions.Notifications;
 using Application.Abstractions.Security;
 using Application.Abstractions.Users;
 using Application.Users.Register;
 using Domain.Modules.Notifications;
 using Domain.Notifications;
 using Domain.Users;
-using Infrastructure.Database;
 using Infrastructure.Notifications;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.Extensions.Logging;
 
 namespace Infrastructure.Authentication;
 
 internal sealed class UserRegistrationVerificationService(
     UserManager<User> userManager,
-    ApplicationDbContext dbContext,
     AuthSecurityOptions authSecurityOptions,
     NotificationOptions notificationOptions,
-    NotificationSensitiveDataProtector protector,
-    NotificationTemplateRenderer templateRenderer) : IUserRegistrationVerificationService
+    INotificationMessageWriter notificationMessageWriter,
+    NotificationTemplateRenderer templateRenderer,
+    ILogger<UserRegistrationVerificationService> logger) : IUserRegistrationVerificationService
 {
     public DateTime GetVerificationExpiryUtc(DateTime nowUtc)
     {
@@ -48,11 +49,19 @@ internal sealed class UserRegistrationVerificationService(
         User? user = await userManager.FindByIdAsync(userId.ToString("D"));
         if (user is null || string.IsNullOrWhiteSpace(user.Email))
         {
+            if (logger.IsEnabled(LogLevel.Debug))
+            {
+                logger.LogDebug("Verification email queue ignored because user/email was not found. UserId={UserId}", userId);
+            }
             return (false, null, null, "UserNotFound");
         }
 
         if (user.EmailConfirmed)
         {
+            if (logger.IsEnabled(LogLevel.Debug))
+            {
+                logger.LogDebug("Verification email queue ignored because email is already confirmed. UserId={UserId}", userId);
+            }
             return (false, null, null, "AlreadyVerified");
         }
 
@@ -71,6 +80,10 @@ internal sealed class UserRegistrationVerificationService(
                 DateTime cooldownEndsAtUtc = lastSentAtUtc.AddSeconds(resendCooldownSeconds);
                 if (cooldownEndsAtUtc > nowUtc)
                 {
+                    if (logger.IsEnabled(LogLevel.Debug))
+                    {
+                        logger.LogDebug("Verification email queue blocked by cooldown. UserId={UserId} CooldownEndsAtUtc={CooldownEndsAtUtc}", userId, cooldownEndsAtUtc);
+                    }
                     return (false, null, cooldownEndsAtUtc, "CooldownActive");
                 }
             }
@@ -125,24 +138,31 @@ internal sealed class UserRegistrationVerificationService(
             variables,
             cancellationToken);
 
-        dbContext.NotificationMessages.Add(new NotificationMessage
-        {
-            Id = Guid.NewGuid(),
-            CreatedByUserId = user.Id,
-            Channel = NotificationChannel.Email,
-            Priority = NotificationPriority.High,
-            Status = NotificationStatus.Pending,
-            RecipientEncrypted = protector.Protect(user.Email),
-            RecipientHash = NotificationSensitiveDataProtector.ComputeDeterministicHash(user.Email),
-            Subject = rendered?.Subject ?? "تایید ثبت نام",
-            Body = rendered?.Body ?? $"کد تایید شما: {code}",
-            Language = "fa-IR",
-            TemplateId = rendered?.TemplateId,
-            CreatedAtUtc = DateTime.UtcNow,
-            MaxRetryCount = Math.Max(1, notificationOptions.MaxRetries)
-        });
+        bool queued = await notificationMessageWriter.TryQueueAsync(
+            new NotificationMessageDraft(
+                Id: Guid.NewGuid(),
+                CreatedByUserId: user.Id,
+                Channel: NotificationChannel.Email,
+                Priority: NotificationPriority.High,
+                Status: NotificationStatus.Pending,
+                RecipientRaw: user.Email,
+                Subject: rendered?.Subject ?? "Verify your registration",
+                Body: rendered?.Body ?? $"Your verification code is: {code}",
+                Language: "fa-IR",
+                CreatedAtUtc: DateTime.UtcNow,
+                MaxRetryCount: Math.Max(1, notificationOptions.MaxRetries),
+                TemplateId: rendered?.TemplateId),
+            cancellationToken);
 
-        await dbContext.SaveChangesAsync(cancellationToken);
+        if (logger.IsEnabled(LogLevel.Information))
+        {
+            logger.LogInformation(
+                "Verification email notification processed. UserId={UserId} NotificationQueued={Queued} ExpiresAtUtc={ExpiresAtUtc}",
+                user.Id,
+                queued,
+                verificationExpiresAtUtc);
+        }
+
         return (true, verificationExpiresAtUtc, nowUtc.AddSeconds(resendCooldownSeconds), null);
     }
 

@@ -12,7 +12,7 @@ internal static class ProfileEndpointCommon
 
     internal static async Task<UserProfile?> GetCurrentProfileForUpdateAsync(
         Guid userId,
-        IApplicationDbContext writeContext,
+        IProfilesWriteDbContext writeContext,
         CancellationToken cancellationToken)
     {
         return await writeContext.UserProfiles
@@ -186,5 +186,7 @@ internal static class ProfileEndpointCommon
         return (int)Math.Round(score / (double)total * 100, MidpointRounding.AwayFromZero);
     }
 }
+
+
 
 

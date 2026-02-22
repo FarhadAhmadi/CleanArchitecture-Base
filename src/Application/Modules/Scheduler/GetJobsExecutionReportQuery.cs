@@ -8,7 +8,7 @@ namespace Application.Scheduler;
 
 public sealed record GetJobsExecutionReportQuery(string Format) : IQuery<IResult>;
 
-internal sealed class GetJobsExecutionReportQueryHandler(IApplicationReadDbContext readDbContext) : ResultWrappingQueryHandler<GetJobsExecutionReportQuery>
+internal sealed class GetJobsExecutionReportQueryHandler(ISchedulerReadDbContext readDbContext) : ResultWrappingQueryHandler<GetJobsExecutionReportQuery>
 {
     protected override async Task<IResult> HandleCore(GetJobsExecutionReportQuery query, CancellationToken cancellationToken)
     {
@@ -83,3 +83,5 @@ internal sealed class GetJobsExecutionReportQueryHandler(IApplicationReadDbConte
         bool IsDeadLetter,
         string? Error);
 }
+
+

@@ -1,7 +1,7 @@
 using Application.Abstractions.Messaging;
 using Application.Abstractions.Users;
 using Domain.Users;
-using Infrastructure.Auditing;
+using Application.Abstractions.Auditing;
 using Microsoft.AspNetCore.Identity;
 
 namespace Application.Users.Auth;

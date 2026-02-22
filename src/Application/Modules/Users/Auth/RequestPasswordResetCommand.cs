@@ -1,6 +1,6 @@
 using Application.Abstractions.Messaging;
 using Application.Abstractions.Users;
-using Infrastructure.Auditing;
+using Application.Abstractions.Auditing;
 
 namespace Application.Users.Auth;
 

@@ -4,7 +4,7 @@ using Application.Abstractions.Data;
 using Application.Abstractions.Messaging;
 using Application.Abstractions.Security;
 using Domain.Users;
-using Infrastructure.Auditing;
+using Application.Abstractions.Auditing;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.EntityFrameworkCore;
 
@@ -13,7 +13,7 @@ namespace Application.Users.Auth;
 public sealed record CompleteOAuthCommand(HttpContext HttpContext) : ICommand<IResult>;
 
 internal sealed class CompleteOAuthCommandHandler(
-    IApplicationDbContext context,
+    IUsersWriteDbContext context,
     ITokenProvider tokenProvider,
     IRefreshTokenProvider refreshTokenProvider,
     ITokenLifetimeProvider tokenLifetimeProvider,
@@ -133,3 +133,5 @@ internal sealed class CompleteOAuthCommandHandler(
             refreshExpiresAt));
     }
 }
+
+

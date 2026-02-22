@@ -11,7 +11,7 @@ namespace Application.Profiles;
 public sealed record DeleteMyProfileAvatarCommand : ICommand<IResult>;
 internal sealed class DeleteMyProfileAvatarCommandHandler(
     IUserContext userContext,
-    IApplicationDbContext writeContext) : ResultWrappingCommandHandler<DeleteMyProfileAvatarCommand>
+    IProfilesWriteDbContext writeContext) : ResultWrappingCommandHandler<DeleteMyProfileAvatarCommand>
 {
     protected override async Task<IResult> HandleCore(DeleteMyProfileAvatarCommand command, CancellationToken cancellationToken)
     {
@@ -21,7 +21,7 @@ internal sealed class DeleteMyProfileAvatarCommandHandler(
 
     private static async Task<IResult> DeleteAsync(
         IUserContext userContext,
-        IApplicationDbContext writeContext,
+        IProfilesWriteDbContext writeContext,
         CancellationToken cancellationToken)
     {
         UserProfile? profile = await ProfileEndpointCommon.GetCurrentProfileForUpdateAsync(
@@ -44,6 +44,8 @@ internal sealed class DeleteMyProfileAvatarCommandHandler(
         return Results.Ok(ProfileEndpointCommon.ToPrivateResponse(profile));
     }
 }
+
+
 
 
 

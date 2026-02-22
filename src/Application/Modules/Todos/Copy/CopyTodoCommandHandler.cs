@@ -9,7 +9,7 @@ using SharedKernel;
 namespace Application.Todos.Copy;
 
 internal sealed class CopyTodoCommandHandler(
-    IApplicationDbContext context,
+    ITodosWriteDbContext context,
     IDateTimeProvider dateTimeProvider,
     IUserContext userContext)
     : ICommandHandler<CopyTodoCommand, Guid>
@@ -49,3 +49,5 @@ internal sealed class CopyTodoCommandHandler(
         return copiedTodoItem.Id;
     }
 }
+
+

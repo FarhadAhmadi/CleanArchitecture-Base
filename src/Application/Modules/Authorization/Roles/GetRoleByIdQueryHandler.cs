@@ -5,7 +5,7 @@ using SharedKernel;
 
 namespace Application.Authorization.Roles;
 
-internal sealed class GetRoleByIdQueryHandler(IApplicationReadDbContext context)
+internal sealed class GetRoleByIdQueryHandler(IAuthorizationReadDbContext context)
     : IQueryHandler<GetRoleByIdQuery, RoleCrudResponse>
 {
     public async Task<Result<RoleCrudResponse>> Handle(
@@ -30,3 +30,5 @@ internal sealed class GetRoleByIdQueryHandler(IApplicationReadDbContext context)
         return role;
     }
 }
+
+

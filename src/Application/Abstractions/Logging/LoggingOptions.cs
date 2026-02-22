@@ -1,4 +1,4 @@
-namespace Infrastructure.Logging;
+namespace Application.Abstractions.Logging;
 
 public sealed class LoggingOptions
 {

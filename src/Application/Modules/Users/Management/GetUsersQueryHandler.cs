@@ -6,7 +6,7 @@ using SharedKernel;
 
 namespace Application.Users.Management;
 
-internal sealed class GetUsersQueryHandler(IApplicationReadDbContext context)
+internal sealed class GetUsersQueryHandler(IUsersReadDbContext context)
     : IQueryHandler<GetUsersQuery, List<UserAdminResponse>>
 {
     public async Task<Result<List<UserAdminResponse>>> Handle(
@@ -30,3 +30,5 @@ internal sealed class GetUsersQueryHandler(IApplicationReadDbContext context)
         return users;
     }
 }
+
+

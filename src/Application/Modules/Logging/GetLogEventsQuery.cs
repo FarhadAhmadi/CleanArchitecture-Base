@@ -3,8 +3,8 @@ using Application.Abstractions.Data;
 using Application.Abstractions.Messaging;
 using Domain.Authorization;
 using Domain.Logging;
-using Infrastructure.Auditing;
-using Infrastructure.Logging;
+using Application.Abstractions.Auditing;
+using Application.Abstractions.Logging;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using SharedKernel;
@@ -14,8 +14,8 @@ namespace Application.Logging;
 
 public sealed record GetLogEventsQuery(GetLogEventsRequest Request) : IQuery<IResult>;
 internal sealed class GetLogEventsQueryHandler(
-    IApplicationReadDbContext readContext,
-    IApplicationDbContext writeContext,
+    ILoggingReadDbContext readContext,
+    ILoggingWriteDbContext writeContext,
     ILogIntegrityService integrityService,
     ILoggerFactory loggerFactory) : ResultWrappingQueryHandler<GetLogEventsQuery>
 {
@@ -123,6 +123,8 @@ internal sealed class GetLogEventsQueryHandler(
         });
     }
 }
+
+
 
 
 

@@ -2,7 +2,7 @@ using Application.Abstractions.Authentication;
 using Application.Abstractions.Data;
 using Application.Abstractions.Messaging;
 using Domain.Modules.Scheduler;
-using Infrastructure.Auditing;
+using Application.Abstractions.Auditing;
 using Microsoft.EntityFrameworkCore;
 
 namespace Application.Scheduler;
@@ -12,7 +12,7 @@ public sealed record RemoveJobDependencyCommand(Guid JobId, Guid DependsOnJobId)
 public sealed record GetJobDependenciesQuery(Guid JobId) : IQuery<IResult>;
 
 internal sealed class AddJobDependencyCommandHandler(
-    IApplicationDbContext dbContext,
+    ISchedulerWriteDbContext dbContext,
     IUserContext userContext,
     IAuditTrailService auditTrailService) : ResultWrappingCommandHandler<AddJobDependencyCommand>
 {
@@ -70,7 +70,7 @@ internal sealed class AddJobDependencyCommandHandler(
 }
 
 internal sealed class RemoveJobDependencyCommandHandler(
-    IApplicationDbContext dbContext,
+    ISchedulerWriteDbContext dbContext,
     IUserContext userContext,
     IAuditTrailService auditTrailService) : ResultWrappingCommandHandler<RemoveJobDependencyCommand>
 {
@@ -102,7 +102,7 @@ internal sealed class RemoveJobDependencyCommandHandler(
     }
 }
 
-internal sealed class GetJobDependenciesQueryHandler(IApplicationReadDbContext readDbContext) : ResultWrappingQueryHandler<GetJobDependenciesQuery>
+internal sealed class GetJobDependenciesQueryHandler(ISchedulerReadDbContext readDbContext) : ResultWrappingQueryHandler<GetJobDependenciesQuery>
 {
     protected override async Task<IResult> HandleCore(GetJobDependenciesQuery query, CancellationToken cancellationToken)
     {
@@ -121,4 +121,6 @@ internal sealed class GetJobDependenciesQueryHandler(IApplicationReadDbContext r
         return Results.Ok(new { total = items.Count, items });
     }
 }
+
+
 

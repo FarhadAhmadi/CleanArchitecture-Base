@@ -7,7 +7,7 @@ using SharedKernel;
 
 namespace Application.Users.GetByEmail;
 
-internal sealed class GetUserByEmailQueryHandler(IApplicationReadDbContext context, IUserContext userContext)
+internal sealed class GetUserByEmailQueryHandler(IUsersReadDbContext context, IUserContext userContext)
     : IQueryHandler<GetUserByEmailQuery, UserResponse>
 {
     public async Task<Result<UserResponse>> Handle(GetUserByEmailQuery query, CancellationToken cancellationToken)
@@ -30,3 +30,5 @@ internal sealed class GetUserByEmailQueryHandler(IApplicationReadDbContext conte
         return user;
     }
 }
+
+

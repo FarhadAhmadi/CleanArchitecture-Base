@@ -6,14 +6,14 @@ using Microsoft.EntityFrameworkCore;
 namespace Application.Profiles;
 
 public sealed record GetPublicProfileQuery(Guid UserId) : IQuery<IResult>;
-internal sealed class GetPublicProfileQueryHandler(IApplicationReadDbContext readContext) : ResultWrappingQueryHandler<GetPublicProfileQuery>
+internal sealed class GetPublicProfileQueryHandler(IProfilesReadDbContext readContext) : ResultWrappingQueryHandler<GetPublicProfileQuery>
 {
     protected override async Task<IResult> HandleCore(GetPublicProfileQuery query, CancellationToken cancellationToken) =>
         await GetAsync(query.UserId, readContext, cancellationToken);
 
     private static async Task<IResult> GetAsync(
         Guid userId,
-        IApplicationReadDbContext readContext,
+        IProfilesReadDbContext readContext,
         CancellationToken cancellationToken)
     {
         UserProfile? profile = await readContext.UserProfiles
@@ -27,6 +27,8 @@ internal sealed class GetPublicProfileQueryHandler(IApplicationReadDbContext rea
         return Results.Ok(ProfileEndpointCommon.ToPublicResponse(profile));
     }
 }
+
+
 
 
 

@@ -1,31 +1,36 @@
 using System.Globalization;
 using System.Security.Cryptography;
 using System.Text;
+using Application.Abstractions.Notifications;
 using Application.Abstractions.Security;
 using Application.Abstractions.Users;
 using Application.Users.Register;
 using Domain.Modules.Notifications;
 using Domain.Notifications;
 using Domain.Users;
-using Infrastructure.Database;
 using Infrastructure.Notifications;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.Extensions.Logging;
 
 namespace Infrastructure.Authentication;
 
 internal sealed class UserPasswordResetService(
     UserManager<User> userManager,
-    ApplicationDbContext dbContext,
     AuthSecurityOptions authSecurityOptions,
     NotificationOptions notificationOptions,
-    NotificationSensitiveDataProtector protector,
-    NotificationTemplateRenderer templateRenderer) : IUserPasswordResetService
+    INotificationMessageWriter notificationMessageWriter,
+    NotificationTemplateRenderer templateRenderer,
+    ILogger<UserPasswordResetService> logger) : IUserPasswordResetService
 {
     public async Task<PasswordResetRequestResult> RequestResetAsync(string email, CancellationToken cancellationToken)
     {
         User? user = await userManager.FindByEmailAsync(email);
         if (user is null || string.IsNullOrWhiteSpace(user.Email))
         {
+            if (logger.IsEnabled(LogLevel.Debug))
+            {
+                logger.LogDebug("Password reset request ignored because user/email was not found. Email={Email}", email);
+            }
             return new PasswordResetRequestResult(false, null, null);
         }
 
@@ -42,6 +47,10 @@ internal sealed class UserPasswordResetService(
             DateTime cooldownEndsAtUtc = lastSentAtUtc.AddSeconds(resendCooldownSeconds);
             if (cooldownEndsAtUtc > nowUtc)
             {
+                if (logger.IsEnabled(LogLevel.Debug))
+                {
+                    logger.LogDebug("Password reset request blocked by cooldown. UserId={UserId} CooldownEndsAtUtc={CooldownEndsAtUtc}", user.Id, cooldownEndsAtUtc);
+                }
                 return new PasswordResetRequestResult(false, null, cooldownEndsAtUtc);
             }
         }
@@ -94,24 +103,31 @@ internal sealed class UserPasswordResetService(
             variables,
             cancellationToken);
 
-        dbContext.NotificationMessages.Add(new NotificationMessage
-        {
-            Id = Guid.NewGuid(),
-            CreatedByUserId = user.Id,
-            Channel = NotificationChannel.Email,
-            Priority = NotificationPriority.High,
-            Status = NotificationStatus.Pending,
-            RecipientEncrypted = protector.Protect(user.Email),
-            RecipientHash = NotificationSensitiveDataProtector.ComputeDeterministicHash(user.Email),
-            Subject = rendered?.Subject ?? "Password reset code",
-            Body = rendered?.Body ?? $"Your password reset code is: {code}",
-            Language = "fa-IR",
-            TemplateId = rendered?.TemplateId,
-            CreatedAtUtc = nowUtc,
-            MaxRetryCount = Math.Max(1, notificationOptions.MaxRetries)
-        });
+        bool queued = await notificationMessageWriter.TryQueueAsync(
+            new NotificationMessageDraft(
+                Id: Guid.NewGuid(),
+                CreatedByUserId: user.Id,
+                Channel: NotificationChannel.Email,
+                Priority: NotificationPriority.High,
+                Status: NotificationStatus.Pending,
+                RecipientRaw: user.Email,
+                Subject: rendered?.Subject ?? "Password reset code",
+                Body: rendered?.Body ?? $"Your password reset code is: {code}",
+                Language: "fa-IR",
+                CreatedAtUtc: nowUtc,
+                MaxRetryCount: Math.Max(1, notificationOptions.MaxRetries),
+                TemplateId: rendered?.TemplateId),
+            cancellationToken);
 
-        await dbContext.SaveChangesAsync(cancellationToken);
+        if (logger.IsEnabled(LogLevel.Information))
+        {
+            logger.LogInformation(
+                "Password reset notification processed. UserId={UserId} NotificationQueued={Queued} ExpiresAtUtc={ExpiresAtUtc}",
+                user.Id,
+                queued,
+                expiresAtUtc);
+        }
+
         return new PasswordResetRequestResult(true, expiresAtUtc, nowUtc.AddSeconds(resendCooldownSeconds));
     }
 

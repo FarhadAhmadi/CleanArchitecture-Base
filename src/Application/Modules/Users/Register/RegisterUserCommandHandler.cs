@@ -9,7 +9,7 @@ using SharedKernel;
 namespace Application.Users.Register;
 
 internal sealed class RegisterUserCommandHandler(
-    IApplicationDbContext context,
+    IUsersWriteDbContext context,
     UserManager<User> userManager,
     RoleManager<Role> roleManager)
     : ICommandHandler<RegisterUserCommand, Guid>
@@ -58,3 +58,5 @@ internal sealed class RegisterUserCommandHandler(
         return user.Id;
     }
 }
+
+

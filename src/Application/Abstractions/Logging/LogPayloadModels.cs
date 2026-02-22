@@ -1,6 +1,6 @@
 using Domain.Logging;
 
-namespace Infrastructure.Logging;
+namespace Application.Abstractions.Logging;
 
 public sealed class IngestLogRequest
 {

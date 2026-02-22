@@ -3,8 +3,8 @@ using Application.Abstractions.Data;
 using Application.Abstractions.Messaging;
 using Domain.Authorization;
 using Domain.Logging;
-using Infrastructure.Auditing;
-using Infrastructure.Logging;
+using Application.Abstractions.Auditing;
+using Application.Abstractions.Logging;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using SharedKernel;
@@ -14,7 +14,7 @@ namespace Application.Logging;
 
 public sealed record CreateLoggingRoleCommand(CreateRoleRequest Request) : ICommand<IResult>;
 internal sealed class CreateLoggingRoleCommandHandler(
-    IApplicationDbContext writeContext,
+    ILoggingWriteDbContext writeContext,
     IAuditTrailService auditTrailService,
     IHttpContextAccessor httpContextAccessor) : ResultWrappingCommandHandler<CreateLoggingRoleCommand>
 {
@@ -45,6 +45,8 @@ internal sealed class CreateLoggingRoleCommandHandler(
         return Results.NoContent();
     }
 }
+
+
 
 
 

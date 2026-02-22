@@ -4,7 +4,7 @@ using Application.Abstractions.Messaging;
 using Application.Abstractions.Scheduler;
 using Domain.Modules.Scheduler;
 using Domain.Scheduler;
-using Infrastructure.Auditing;
+using Application.Abstractions.Auditing;
 using Microsoft.EntityFrameworkCore;
 
 namespace Application.Scheduler;
@@ -20,7 +20,7 @@ public sealed record CreateJobCommand(
     int? MaxConsecutiveFailures) : ICommand<IResult>;
 
 internal sealed class CreateJobCommandHandler(
-    IApplicationDbContext dbContext,
+    ISchedulerWriteDbContext dbContext,
     IUserContext userContext,
     ISchedulerPayloadValidator payloadValidator,
     IAuditTrailService auditTrailService) : ResultWrappingCommandHandler<CreateJobCommand>
@@ -91,3 +91,5 @@ internal sealed class CreateJobCommandHandler(
         });
     }
 }
+
+

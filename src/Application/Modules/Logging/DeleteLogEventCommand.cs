@@ -3,8 +3,8 @@ using Application.Abstractions.Data;
 using Application.Abstractions.Messaging;
 using Domain.Authorization;
 using Domain.Logging;
-using Infrastructure.Auditing;
-using Infrastructure.Logging;
+using Application.Abstractions.Auditing;
+using Application.Abstractions.Logging;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using SharedKernel;
@@ -14,7 +14,7 @@ namespace Application.Logging;
 
 public sealed record DeleteLogEventCommand(Guid EventId) : ICommand<IResult>;
 internal sealed class DeleteLogEventCommandHandler(
-    IApplicationDbContext writeContext,
+    ILoggingWriteDbContext writeContext,
     IAuditTrailService auditTrailService,
     IHttpContextAccessor httpContextAccessor) : ResultWrappingCommandHandler<DeleteLogEventCommand>
 {
@@ -43,6 +43,8 @@ internal sealed class DeleteLogEventCommandHandler(
         return Results.NoContent();
     }
 }
+
+
 
 
 

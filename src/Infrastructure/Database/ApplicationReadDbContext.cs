@@ -15,7 +15,17 @@ using Microsoft.EntityFrameworkCore;
 namespace Infrastructure.Database;
 
 public sealed class ApplicationReadDbContext(DbContextOptions<ApplicationReadDbContext> options)
-    : DbContext(options), IApplicationReadDbContext
+    : DbContext(options),
+        IApplicationReadDbContext,
+        IUsersReadDbContext,
+        IAuthorizationReadDbContext,
+        ITodosReadDbContext,
+        IAuditReadDbContext,
+        ILoggingReadDbContext,
+        IProfilesReadDbContext,
+        INotificationsReadDbContext,
+        IFilesReadDbContext,
+        ISchedulerReadDbContext
 {
     public IQueryable<User> Users => Set<User>().AsNoTracking();
     public IQueryable<LogEvent> LogEvents => Set<LogEvent>().AsNoTracking();

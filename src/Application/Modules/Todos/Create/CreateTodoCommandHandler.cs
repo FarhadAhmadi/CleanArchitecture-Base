@@ -9,7 +9,7 @@ using SharedKernel;
 namespace Application.Todos.Create;
 
 internal sealed class CreateTodoCommandHandler(
-    IApplicationDbContext context,
+    ITodosWriteDbContext context,
     IDateTimeProvider dateTimeProvider,
     IUserContext userContext)
     : ICommandHandler<CreateTodoCommand, Guid>
@@ -41,3 +41,5 @@ internal sealed class CreateTodoCommandHandler(
         return todoItem.Id;
     }
 }
+
+

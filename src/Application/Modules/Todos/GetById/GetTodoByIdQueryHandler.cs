@@ -7,7 +7,7 @@ using SharedKernel;
 
 namespace Application.Todos.GetById;
 
-internal sealed class GetTodoByIdQueryHandler(IApplicationReadDbContext context, IUserContext userContext)
+internal sealed class GetTodoByIdQueryHandler(ITodosReadDbContext context, IUserContext userContext)
     : IQueryHandler<GetTodoByIdQuery, TodoResponse>
 {
     public async Task<Result<TodoResponse>> Handle(GetTodoByIdQuery query, CancellationToken cancellationToken)
@@ -25,3 +25,5 @@ internal sealed class GetTodoByIdQueryHandler(IApplicationReadDbContext context,
         return todo;
     }
 }
+
+

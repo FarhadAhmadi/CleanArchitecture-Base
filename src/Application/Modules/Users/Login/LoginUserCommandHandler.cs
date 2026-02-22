@@ -9,7 +9,7 @@ using SharedKernel;
 namespace Application.Users.Login;
 
 internal sealed class LoginUserCommandHandler(
-    IApplicationDbContext context,
+    IUsersWriteDbContext context,
     UserManager<User> userManager,
     ITokenProvider tokenProvider,
     IRefreshTokenProvider refreshTokenProvider,
@@ -87,3 +87,5 @@ internal sealed class LoginUserCommandHandler(
         return response;
     }
 }
+
+

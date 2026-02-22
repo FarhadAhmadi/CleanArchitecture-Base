@@ -22,7 +22,7 @@ internal sealed class UpdateMyProfileMusicCommandValidator : AbstractValidator<U
 
 internal sealed class UpdateMyProfileMusicCommandHandler(
     IUserContext userContext,
-    IApplicationDbContext writeContext,
+    IProfilesWriteDbContext writeContext,
     IValidator<UpdateMyProfileMusicCommand> validator) : ResultWrappingCommandHandler<UpdateMyProfileMusicCommand>
 {
     protected override async Task<IResult> HandleCore(UpdateMyProfileMusicCommand command, CancellationToken cancellationToken) =>
@@ -31,7 +31,7 @@ internal sealed class UpdateMyProfileMusicCommandHandler(
     private static async Task<IResult> UpdateAsync(
         UpdateMyProfileMusicCommand request,
         IUserContext userContext,
-        IApplicationDbContext writeContext,
+        IProfilesWriteDbContext writeContext,
         IValidator<UpdateMyProfileMusicCommand> validator,
         CancellationToken cancellationToken)
     {
@@ -81,6 +81,8 @@ internal sealed class UpdateMyProfileMusicCommandHandler(
         });
     }
 }
+
+
 
 
 

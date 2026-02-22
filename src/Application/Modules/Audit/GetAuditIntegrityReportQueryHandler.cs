@@ -1,15 +1,15 @@
 using Application.Abstractions.Data;
 using Application.Abstractions.Messaging;
 using Domain.Auditing;
-using Infrastructure.Auditing;
+using Application.Abstractions.Auditing;
 using Microsoft.EntityFrameworkCore;
 
 namespace Application.Audit;
 
 public sealed record GetAuditIntegrityReportQuery(bool UpdateFlags) : IQuery<IResult>;
 internal sealed class GetAuditIntegrityReportQueryHandler(
-    IApplicationReadDbContext readContext,
-    IApplicationDbContext writeContext,
+    IAuditReadDbContext readContext,
+    IAuditWriteDbContext writeContext,
     IAuditTrailService auditTrailService) : ResultWrappingQueryHandler<GetAuditIntegrityReportQuery>
 {
     protected override async Task<IResult> HandleCore(GetAuditIntegrityReportQuery query, CancellationToken cancellationToken)
@@ -52,6 +52,8 @@ internal sealed class GetAuditIntegrityReportQueryHandler(
         });
     }
 }
+
+
 
 
 

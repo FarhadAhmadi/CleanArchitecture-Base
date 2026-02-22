@@ -47,6 +47,24 @@ internal static class DataAccessModule
             sp.GetRequiredService<ApplicationDbContext>());
         services.AddScoped<IApplicationReadDbContext>(sp =>
             sp.GetRequiredService<ApplicationReadDbContext>());
+        services.AddScoped<IUsersWriteDbContext>(sp => sp.GetRequiredService<ApplicationDbContext>());
+        services.AddScoped<IUsersReadDbContext>(sp => sp.GetRequiredService<ApplicationReadDbContext>());
+        services.AddScoped<IAuthorizationWriteDbContext>(sp => sp.GetRequiredService<ApplicationDbContext>());
+        services.AddScoped<IAuthorizationReadDbContext>(sp => sp.GetRequiredService<ApplicationReadDbContext>());
+        services.AddScoped<ITodosWriteDbContext>(sp => sp.GetRequiredService<ApplicationDbContext>());
+        services.AddScoped<ITodosReadDbContext>(sp => sp.GetRequiredService<ApplicationReadDbContext>());
+        services.AddScoped<IAuditWriteDbContext>(sp => sp.GetRequiredService<ApplicationDbContext>());
+        services.AddScoped<IAuditReadDbContext>(sp => sp.GetRequiredService<ApplicationReadDbContext>());
+        services.AddScoped<ILoggingWriteDbContext>(sp => sp.GetRequiredService<ApplicationDbContext>());
+        services.AddScoped<ILoggingReadDbContext>(sp => sp.GetRequiredService<ApplicationReadDbContext>());
+        services.AddScoped<IProfilesWriteDbContext>(sp => sp.GetRequiredService<ApplicationDbContext>());
+        services.AddScoped<IProfilesReadDbContext>(sp => sp.GetRequiredService<ApplicationReadDbContext>());
+        services.AddScoped<INotificationsWriteDbContext>(sp => sp.GetRequiredService<ApplicationDbContext>());
+        services.AddScoped<INotificationsReadDbContext>(sp => sp.GetRequiredService<ApplicationReadDbContext>());
+        services.AddScoped<IFilesWriteDbContext>(sp => sp.GetRequiredService<ApplicationDbContext>());
+        services.AddScoped<IFilesReadDbContext>(sp => sp.GetRequiredService<ApplicationReadDbContext>());
+        services.AddScoped<ISchedulerWriteDbContext>(sp => sp.GetRequiredService<ApplicationDbContext>());
+        services.AddScoped<ISchedulerReadDbContext>(sp => sp.GetRequiredService<ApplicationReadDbContext>());
         services.AddScoped<SampleDataSeeder>();
 
         return services;

@@ -3,8 +3,8 @@ using Application.Abstractions.Data;
 using Application.Abstractions.Messaging;
 using Domain.Authorization;
 using Domain.Logging;
-using Infrastructure.Auditing;
-using Infrastructure.Logging;
+using Application.Abstractions.Auditing;
+using Application.Abstractions.Logging;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using SharedKernel;
@@ -14,7 +14,7 @@ namespace Application.Logging;
 
 public sealed record UpdateAlertRuleCommand(Guid Id, UpdateAlertRuleRequest Request) : ICommand<IResult>;
 internal sealed class UpdateAlertRuleCommandHandler(
-    IApplicationDbContext writeContext,
+    ILoggingWriteDbContext writeContext,
     IAuditTrailService auditTrailService,
     IHttpContextAccessor httpContextAccessor) : ResultWrappingCommandHandler<UpdateAlertRuleCommand>
 {
@@ -43,6 +43,8 @@ internal sealed class UpdateAlertRuleCommandHandler(
         return Results.Ok(rule);
     }
 }
+
+
 
 
 

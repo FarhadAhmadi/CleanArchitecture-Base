@@ -3,8 +3,8 @@ using Application.Abstractions.Data;
 using Application.Abstractions.Messaging;
 using Domain.Authorization;
 using Domain.Logging;
-using Infrastructure.Auditing;
-using Infrastructure.Logging;
+using Application.Abstractions.Auditing;
+using Application.Abstractions.Logging;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using SharedKernel;
@@ -13,7 +13,7 @@ using Application.Shared;
 namespace Application.Logging;
 
 public sealed record GetAlertIncidentByIdQuery(Guid Id) : IQuery<IResult>;
-internal sealed class GetAlertIncidentByIdQueryHandler(IApplicationReadDbContext readContext) : ResultWrappingQueryHandler<GetAlertIncidentByIdQuery>
+internal sealed class GetAlertIncidentByIdQueryHandler(ILoggingReadDbContext readContext) : ResultWrappingQueryHandler<GetAlertIncidentByIdQuery>
 {
     protected override async Task<IResult> HandleCore(GetAlertIncidentByIdQuery query, CancellationToken cancellationToken)
     {
@@ -56,6 +56,8 @@ internal sealed class GetAlertIncidentByIdQueryHandler(IApplicationReadDbContext
         });
     }
 }
+
+
 
 
 

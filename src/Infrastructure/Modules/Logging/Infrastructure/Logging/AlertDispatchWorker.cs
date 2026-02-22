@@ -1,7 +1,7 @@
 using Domain.Logging;
-using Domain.Modules.Notifications;
 using Domain.Notifications;
 using Domain.Users;
+using Application.Abstractions.Notifications;
 using Infrastructure.Authorization;
 using Infrastructure.Database;
 using Infrastructure.Notifications;
@@ -19,7 +19,6 @@ internal sealed class AlertDispatchWorker(
     IServiceScopeFactory scopeFactory,
     AuthorizationBootstrapOptions authorizationOptions,
     NotificationOptions notificationOptions,
-    NotificationSensitiveDataProtector protector,
     ILogger<AlertDispatchWorker> logger) : BackgroundService
 {
     private readonly ResiliencePipeline _retryPipeline = new ResiliencePipelineBuilder()
@@ -67,6 +66,7 @@ internal sealed class AlertDispatchWorker(
                 {
                     int notificationCount = await QueueAdminNotificationsAsync(
                         db,
+                        scope.ServiceProvider.GetRequiredService<INotificationMessageWriter>(),
                         templateRenderer,
                         incident,
                         rule,
@@ -98,6 +98,7 @@ internal sealed class AlertDispatchWorker(
 
     private async Task<int> QueueAdminNotificationsAsync(
         ApplicationDbContext db,
+        INotificationMessageWriter notificationMessageWriter,
         NotificationTemplateRenderer templateRenderer,
         AlertIncident incident,
         AlertRule rule,
@@ -146,27 +147,20 @@ internal sealed class AlertDispatchWorker(
         string body = renderedTemplate?.Body ??
                       $"Rule={rule.Name}\nIncidentId={incident.Id:N}\nEventId={triggerEvent.Id:N}\nMessage={triggerEvent.Message}";
 
-        foreach (User admin in adminUsers)
-        {
-            string email = admin.Email!;
-            db.NotificationMessages.Add(new NotificationMessage
-            {
-                Id = Guid.NewGuid(),
-                CreatedByUserId = admin.Id,
-                Channel = NotificationChannel.Email,
-                Priority = NotificationPriority.High,
-                Status = NotificationStatus.Pending,
-                RecipientEncrypted = protector.Protect(email),
-                RecipientHash = NotificationSensitiveDataProtector.ComputeDeterministicHash(email),
-                Subject = subject,
-                Body = body,
-                Language = "fa-IR",
-                TemplateId = renderedTemplate?.TemplateId,
-                CreatedAtUtc = DateTime.UtcNow,
-                MaxRetryCount = Math.Max(1, notificationOptions.MaxRetries)
-            });
-        }
+        List<NotificationMessageDraft> drafts = [.. adminUsers.Select(admin => new NotificationMessageDraft(
+            Id: Guid.NewGuid(),
+            CreatedByUserId: admin.Id,
+            Channel: NotificationChannel.Email,
+            Priority: Domain.Notifications.NotificationPriority.High,
+            Status: Domain.Notifications.NotificationStatus.Pending,
+            RecipientRaw: admin.Email!,
+            Subject: subject,
+            Body: body,
+            Language: "fa-IR",
+            CreatedAtUtc: DateTime.UtcNow,
+            MaxRetryCount: Math.Max(1, notificationOptions.MaxRetries),
+            TemplateId: renderedTemplate?.TemplateId))];
 
-        return adminUsers.Count;
+        return await notificationMessageWriter.QueueManyAsync(drafts, cancellationToken);
     }
 }

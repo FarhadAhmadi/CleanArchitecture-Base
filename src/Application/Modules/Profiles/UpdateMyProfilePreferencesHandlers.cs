@@ -23,7 +23,7 @@ internal sealed class UpdateMyProfilePreferencesCommandValidator : AbstractValid
 
 internal sealed class UpdateMyProfilePreferencesCommandHandler(
     IUserContext userContext,
-    IApplicationDbContext writeContext,
+    IProfilesWriteDbContext writeContext,
     IValidator<UpdateMyProfilePreferencesCommand> validator) : ResultWrappingCommandHandler<UpdateMyProfilePreferencesCommand>
 {
     protected override async Task<IResult> HandleCore(UpdateMyProfilePreferencesCommand command, CancellationToken cancellationToken) =>
@@ -32,7 +32,7 @@ internal sealed class UpdateMyProfilePreferencesCommandHandler(
     private static async Task<IResult> UpdateAsync(
         UpdateMyProfilePreferencesCommand request,
         IUserContext userContext,
-        IApplicationDbContext writeContext,
+        IProfilesWriteDbContext writeContext,
         IValidator<UpdateMyProfilePreferencesCommand> validator,
         CancellationToken cancellationToken)
     {
@@ -63,6 +63,8 @@ internal sealed class UpdateMyProfilePreferencesCommandHandler(
         return Results.Ok(ProfileEndpointCommon.ToPrivateResponse(profile));
     }
 }
+
+
 
 
 

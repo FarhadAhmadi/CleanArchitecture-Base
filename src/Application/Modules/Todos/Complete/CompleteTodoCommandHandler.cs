@@ -8,7 +8,7 @@ using SharedKernel;
 namespace Application.Todos.Complete;
 
 internal sealed class CompleteTodoCommandHandler(
-    IApplicationDbContext context,
+    ITodosWriteDbContext context,
     IDateTimeProvider dateTimeProvider,
     IUserContext userContext)
     : ICommandHandler<CompleteTodoCommand>
@@ -38,3 +38,5 @@ internal sealed class CompleteTodoCommandHandler(
         return Result.Success();
     }
 }
+
+

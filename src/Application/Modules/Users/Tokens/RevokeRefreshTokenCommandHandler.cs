@@ -8,7 +8,7 @@ using SharedKernel;
 namespace Application.Users.Tokens;
 
 internal sealed class RevokeRefreshTokenCommandHandler(
-    IApplicationDbContext context,
+    IUsersWriteDbContext context,
     IRefreshTokenProvider refreshTokenProvider,
     ISecurityEventLogger securityEventLogger) : ICommandHandler<RevokeRefreshTokenCommand>
 {
@@ -39,3 +39,5 @@ internal sealed class RevokeRefreshTokenCommandHandler(
         return Result.Success();
     }
 }
+
+

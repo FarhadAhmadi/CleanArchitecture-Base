@@ -17,7 +17,7 @@ internal sealed class UpdateMyProfileAvatarCommandValidator : AbstractValidator<
 
 internal sealed class UpdateMyProfileAvatarCommandHandler(
     IUserContext userContext,
-    IApplicationDbContext writeContext,
+    IProfilesWriteDbContext writeContext,
     IValidator<UpdateMyProfileAvatarCommand> validator) : ResultWrappingCommandHandler<UpdateMyProfileAvatarCommand>
 {
     protected override async Task<IResult> HandleCore(UpdateMyProfileAvatarCommand command, CancellationToken cancellationToken) =>
@@ -26,7 +26,7 @@ internal sealed class UpdateMyProfileAvatarCommandHandler(
     private static async Task<IResult> UpdateAsync(
         UpdateMyProfileAvatarCommand request,
         IUserContext userContext,
-        IApplicationDbContext writeContext,
+        IProfilesWriteDbContext writeContext,
         IValidator<UpdateMyProfileAvatarCommand> validator,
         CancellationToken cancellationToken)
     {
@@ -69,6 +69,8 @@ internal sealed class UpdateMyProfileAvatarCommandHandler(
         return Results.Ok(ProfileEndpointCommon.ToPrivateResponse(profile));
     }
 }
+
+
 
 
 

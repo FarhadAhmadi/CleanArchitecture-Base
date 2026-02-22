@@ -6,7 +6,7 @@ namespace Application.Scheduler;
 
 public sealed record GetJobExecutionLogsQuery(Guid JobId, int? Page, int? PageIndex, int? PageSize) : IQuery<IResult>;
 
-internal sealed class GetJobExecutionLogsQueryHandler(IApplicationReadDbContext readDbContext) : ResultWrappingQueryHandler<GetJobExecutionLogsQuery>
+internal sealed class GetJobExecutionLogsQueryHandler(ISchedulerReadDbContext readDbContext) : ResultWrappingQueryHandler<GetJobExecutionLogsQuery>
 {
     protected override async Task<IResult> HandleCore(GetJobExecutionLogsQuery query, CancellationToken cancellationToken)
     {
@@ -51,3 +51,5 @@ internal sealed class GetJobExecutionLogsQueryHandler(IApplicationReadDbContext 
         });
     }
 }
+
+

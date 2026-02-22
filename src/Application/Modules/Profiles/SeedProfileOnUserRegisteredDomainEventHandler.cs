@@ -7,7 +7,7 @@ using SharedKernel;
 namespace Application.Profiles;
 
 internal sealed class SeedProfileOnUserRegisteredDomainEventHandler(
-    IApplicationDbContext context,
+    IProfilesWriteDbContext context,
     IDateTimeProvider dateTimeProvider)
     : IDomainEventHandler<UserRegisteredDomainEvent>
 {
@@ -100,5 +100,7 @@ internal sealed class SeedProfileOnUserRegisteredDomainEventHandler(
         return (int)Math.Round(score / (double)total * 100, MidpointRounding.AwayFromZero);
     }
 }
+
+
 
 

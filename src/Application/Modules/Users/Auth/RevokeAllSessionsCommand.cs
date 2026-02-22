@@ -1,7 +1,7 @@
 using Application.Abstractions.Authentication;
 using Application.Abstractions.Data;
 using Application.Abstractions.Messaging;
-using Infrastructure.Auditing;
+using Application.Abstractions.Auditing;
 using Microsoft.EntityFrameworkCore;
 
 namespace Application.Users.Auth;
@@ -10,7 +10,7 @@ public sealed record RevokeAllSessionsCommand : ICommand<IResult>;
 
 internal sealed class RevokeAllSessionsCommandHandler(
     IUserContext userContext,
-    IApplicationDbContext dbContext,
+    IUsersWriteDbContext dbContext,
     IAuditTrailService auditTrailService) : ResultWrappingCommandHandler<RevokeAllSessionsCommand>
 {
     protected override async Task<IResult> HandleCore(RevokeAllSessionsCommand command, CancellationToken cancellationToken)
@@ -42,3 +42,5 @@ internal sealed class RevokeAllSessionsCommandHandler(
         return Results.Ok(new { revoked = activeTokens.Count });
     }
 }
+
+

@@ -11,8 +11,8 @@ namespace Web.Api.Endpoints.Notifications;
 
 internal sealed class NotificationUseCaseService(
     IUserContext userContext,
-    IApplicationDbContext writeContext,
-    IApplicationReadDbContext readContext,
+    INotificationsWriteDbContext writeContext,
+    INotificationsReadDbContext readContext,
     NotificationSensitiveDataProtector protector,
     NotificationOptions options,
     ILogger<NotificationUseCaseService> logger) : INotificationUseCaseService
@@ -644,4 +644,6 @@ internal sealed class NotificationUseCaseService(
         return string.Empty;
     }
 }
+
+
 

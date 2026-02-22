@@ -1,5 +1,5 @@
 using Application.Abstractions.Messaging;
-using Infrastructure.Logging;
+using Application.Abstractions.Logging;
 using Web.Api.Extensions;
 
 namespace Web.Api.Endpoints.Logging;

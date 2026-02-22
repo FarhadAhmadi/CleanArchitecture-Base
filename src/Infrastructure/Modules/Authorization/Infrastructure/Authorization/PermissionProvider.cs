@@ -7,7 +7,7 @@ using Microsoft.Extensions.Caching.Distributed;
 namespace Infrastructure.Authorization;
 
 internal sealed class PermissionProvider(
-    IApplicationReadDbContext context,
+    IAuthorizationReadDbContext context,
     IDistributedCache cache,
     IPermissionCacheVersionService versionService,
     PermissionCacheOptions options)
@@ -55,3 +55,5 @@ internal sealed class PermissionProvider(
         return [.. permissions];
     }
 }
+
+

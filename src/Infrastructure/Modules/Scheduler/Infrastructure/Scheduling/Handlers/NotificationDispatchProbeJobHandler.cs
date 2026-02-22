@@ -1,13 +1,12 @@
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
+using Application.Abstractions.Notifications;
 using Application.Abstractions.Scheduler;
-using Domain.Modules.Notifications;
 using Domain.Notifications;
 using Domain.Modules.Scheduler;
 using Domain.Scheduler;
 using Infrastructure.Database;
-using Infrastructure.Notifications;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
@@ -15,7 +14,7 @@ namespace Infrastructure.Scheduler;
 
 internal sealed class NotificationDispatchProbeJobHandler(
     ApplicationDbContext dbContext,
-    NotificationSensitiveDataProtector protector,
+    INotificationMessageWriter notificationMessageWriter,
     ILogger<NotificationDispatchProbeJobHandler> logger) : IScheduledJobHandler
 {
     public JobType JobType => JobType.NotificationDispatchProbe;
@@ -37,31 +36,27 @@ internal sealed class NotificationDispatchProbeJobHandler(
             ? "scheduler-probe@local.test"
             : payload.Recipient.Trim();
 
-        var message = new NotificationMessage
-        {
-            Id = Guid.NewGuid(),
-            CreatedByUserId = createdByUserId,
-            Channel = NotificationChannel.InApp,
-            Priority = NotificationPriority.Medium,
-            Status = NotificationStatus.Pending,
-            RecipientEncrypted = protector.Protect(recipient),
-            RecipientHash = ComputeSha256(recipient),
-            Subject = payload.Subject ?? "Scheduler Probe",
-            Body = payload.Body ?? $"Scheduler probe executed at {DateTime.UtcNow:O}.",
-            Language = "en-US",
-            CreatedAtUtc = DateTime.UtcNow,
-            MaxRetryCount = 3
-        };
+        NotificationMessageDraft draft = new(
+            Id: Guid.NewGuid(),
+            CreatedByUserId: createdByUserId,
+            Channel: NotificationChannel.InApp,
+            Priority: Domain.Notifications.NotificationPriority.Medium,
+            Status: Domain.Notifications.NotificationStatus.Pending,
+            RecipientRaw: recipient,
+            Subject: payload.Subject ?? "Scheduler Probe",
+            Body: payload.Body ?? $"Scheduler probe executed at {DateTime.UtcNow:O}.",
+            Language: "en-US",
+            CreatedAtUtc: DateTime.UtcNow,
+            MaxRetryCount: 3);
 
-        dbContext.NotificationMessages.Add(message);
-        await dbContext.SaveChangesAsync(cancellationToken);
+        await notificationMessageWriter.TryQueueAsync(draft, cancellationToken);
 
         if (logger.IsEnabled(LogLevel.Information))
         {
             logger.LogInformation(
                 "NotificationDispatchProbe queued notification. JobId={JobId} NotificationId={NotificationId}",
                 job.Id,
-                message.Id);
+                draft.Id);
         }
     }
 
@@ -80,12 +75,6 @@ internal sealed class NotificationDispatchProbeJobHandler(
         {
             return new ProbePayload(null, null, null);
         }
-    }
-
-    private static string ComputeSha256(string value)
-    {
-        byte[] bytes = Encoding.UTF8.GetBytes(value);
-        return Convert.ToHexString(SHA256.HashData(bytes));
     }
 
     private sealed record ProbePayload(string? Recipient, string? Subject, string? Body);

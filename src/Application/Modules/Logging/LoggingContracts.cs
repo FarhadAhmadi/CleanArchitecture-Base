@@ -1,7 +1,7 @@
 using Domain.Authorization;
 using Domain.Logging;
 using Application.Abstractions.Data;
-using Infrastructure.Logging;
+using Application.Abstractions.Logging;
 using Application.Shared;
 
 namespace Application.Logging;

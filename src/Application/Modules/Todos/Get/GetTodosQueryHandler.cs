@@ -8,7 +8,7 @@ using SharedKernel;
 
 namespace Application.Todos.Get;
 
-internal sealed class GetTodosQueryHandler(IApplicationReadDbContext context, IUserContext userContext)
+internal sealed class GetTodosQueryHandler(ITodosReadDbContext context, IUserContext userContext)
     : IQueryHandler<GetTodosQuery, PagedResponse<TodoResponse>>
 {
     public async Task<Result<PagedResponse<TodoResponse>>> Handle(GetTodosQuery query, CancellationToken cancellationToken)
@@ -60,3 +60,5 @@ internal sealed class GetTodosQueryHandler(IApplicationReadDbContext context, IU
         };
     }
 }
+
+

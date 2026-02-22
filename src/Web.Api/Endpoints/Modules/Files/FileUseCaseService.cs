@@ -3,6 +3,7 @@ using System.Text;
 using Application.Abstractions.Authentication;
 using Application.Abstractions.Data;
 using Application.Abstractions.Files;
+using Application.Abstractions.Logging;
 using Domain.Files;
 using Domain.Logging;
 using Infrastructure.Files;
@@ -16,13 +17,14 @@ namespace Web.Api.Endpoints.Files;
 
 internal sealed class FileUseCaseService(
     IUserContext userContext,
-    IApplicationDbContext writeContext,
-    IApplicationReadDbContext readContext,
+    IFilesWriteDbContext writeContext,
+    IFilesReadDbContext readContext,
     IFileObjectStorage storage,
     IFileMalwareScanner scanner,
     FileValidationOptions validationOptions,
     FileStorageOptions storageOptions,
     FileAppLinkService linkService,
+    IApplicationLogWriter applicationLogWriter,
     ILogger<FileUseCaseService> logger) : IFileUseCaseService
 {
     private const string SubjectTypeUser = "User";
@@ -705,35 +707,25 @@ internal sealed class FileUseCaseService(
         return Task.CompletedTask;
     }
 
-    private Task WritePublicLinkAuditAsync(HttpContext httpContext, string token, string mode, Guid? fileId, string outcome, CancellationToken cancellationToken)
+    private async Task WritePublicLinkAuditAsync(HttpContext httpContext, string token, string mode, Guid? fileId, string outcome, CancellationToken cancellationToken)
     {
         string tokenHash = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(token)));
-        string checksumPayload = $"{httpContext.TraceIdentifier}|{tokenHash}|{mode}|{fileId?.ToString("N")}|{outcome}";
-        string checksum = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(checksumPayload)));
 
-        writeContext.LogEvents.Add(new LogEvent
-        {
-            Id = Guid.NewGuid(),
-            TimestampUtc = DateTime.UtcNow,
-            Level = LogLevelType.Audit,
-            Message = "Public file link access attempt",
-            SourceService = "Web.Api",
-            SourceModule = "Files",
-            TraceId = httpContext.TraceIdentifier,
-            ActorType = "Anonymous",
-            Outcome = outcome,
-            Ip = httpContext.Connection.RemoteIpAddress?.ToString(),
-            UserAgent = httpContext.Request.Headers.UserAgent.ToString(),
-            HttpMethod = httpContext.Request.Method,
-            HttpPath = httpContext.Request.Path,
-            HttpStatusCode = null,
-            TagsCsv = "files,public-link,audit",
-            PayloadJson = $"{{\"tokenHash\":\"{tokenHash}\",\"mode\":\"{mode}\",\"fileId\":\"{fileId?.ToString("N")}\"}}",
-            Checksum = checksum
-        });
-
-        _ = cancellationToken;
-        return Task.CompletedTask;
+        await applicationLogWriter.TryWriteAsync(
+            new ApplicationLogEntry(
+                Id: Guid.NewGuid(),
+                TimestampUtc: DateTime.UtcNow,
+                Level: LogLevelType.Audit,
+                Message: "Public file link access attempt",
+                SourceService: "Web.Api",
+                SourceModule: "Files",
+                TraceId: httpContext.TraceIdentifier,
+                ActorType: "Anonymous",
+                ActorId: null,
+                Outcome: outcome,
+                TagsCsv: "files,public-link,audit",
+                PayloadJson: $"{{\"tokenHash\":\"{tokenHash}\",\"mode\":\"{mode}\",\"fileId\":\"{fileId?.ToString("N")}\"}}"),
+            cancellationToken);
     }
 
     private static string BuildObjectKey(string prefix, string module, string extension)
@@ -839,6 +831,8 @@ internal sealed class FileUseCaseService(
         return string.Empty;
     }
 }
+
+
 
 
 

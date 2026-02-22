@@ -21,6 +21,7 @@ internal static class NotificationsModule
         services.AddSingleton(options);
         services.AddSingleton<NotificationSensitiveDataProtector>();
         services.AddSingleton<INotificationRecipientProtector, NotificationRecipientProtector>();
+        services.AddScoped<INotificationMessageWriter, NotificationMessageWriter>();
         services.AddScoped<NotificationTemplateRenderer>();
         services.AddScoped<NotificationTemplateSeeder>();
 

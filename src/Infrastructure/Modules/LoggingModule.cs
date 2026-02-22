@@ -18,6 +18,7 @@ internal static class LoggingModule
         services.AddSingleton(options);
         services.AddSingleton<ILogSanitizer, LogSanitizer>();
         services.AddSingleton<ILogIntegrityService, LogIntegrityService>();
+        services.AddScoped<IApplicationLogWriter, ApplicationLogWriter>();
         services.AddSingleton<ILogIngestionQueue, LogIngestionQueue>();
         services.AddSingleton<IAlertDispatchQueue, AlertDispatchQueue>();
         services.AddScoped<IAlertIncidentDispatchScheduler, AlertIncidentDispatchScheduler>();

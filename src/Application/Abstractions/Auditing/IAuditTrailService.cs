@@ -1,6 +1,6 @@
 using Domain.Auditing;
 
-namespace Infrastructure.Auditing;
+namespace Application.Abstractions.Auditing;
 
 public interface IAuditTrailService
 {

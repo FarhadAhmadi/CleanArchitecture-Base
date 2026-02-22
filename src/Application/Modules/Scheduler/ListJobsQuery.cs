@@ -12,7 +12,7 @@ public sealed record ListJobsQuery(
     JobStatus? Status,
     string? Search) : IQuery<IResult>;
 
-internal sealed class ListJobsQueryHandler(IApplicationReadDbContext readDbContext) : ResultWrappingQueryHandler<ListJobsQuery>
+internal sealed class ListJobsQueryHandler(ISchedulerReadDbContext readDbContext) : ResultWrappingQueryHandler<ListJobsQuery>
 {
     protected override async Task<IResult> HandleCore(ListJobsQuery query, CancellationToken cancellationToken)
     {
@@ -68,3 +68,5 @@ internal sealed class ListJobsQueryHandler(IApplicationReadDbContext readDbConte
         });
     }
 }
+
+

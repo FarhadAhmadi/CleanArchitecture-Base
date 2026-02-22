@@ -3,7 +3,7 @@ using Application.Abstractions.Data;
 using Application.Abstractions.Messaging;
 using Domain.Modules.Scheduler;
 using Domain.Scheduler;
-using Infrastructure.Auditing;
+using Application.Abstractions.Auditing;
 using Microsoft.EntityFrameworkCore;
 
 namespace Application.Scheduler;
@@ -20,7 +20,7 @@ public sealed record UpsertJobScheduleCommand(
     int? MaxCatchUpRuns) : ICommand<IResult>;
 
 internal sealed class UpsertJobScheduleCommandHandler(
-    IApplicationDbContext dbContext,
+    ISchedulerWriteDbContext dbContext,
     IUserContext userContext,
     IAuditTrailService auditTrailService) : ResultWrappingCommandHandler<UpsertJobScheduleCommand>
 {
@@ -107,3 +107,5 @@ internal sealed class UpsertJobScheduleCommandHandler(
         });
     }
 }
+
+

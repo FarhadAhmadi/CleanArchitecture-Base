@@ -1,7 +1,7 @@
 using Application.Abstractions.Authentication;
 using Application.Abstractions.Data;
 using Application.Abstractions.Messaging;
-using Infrastructure.Auditing;
+using Application.Abstractions.Auditing;
 using Microsoft.EntityFrameworkCore;
 
 namespace Application.Scheduler;
@@ -9,7 +9,7 @@ namespace Application.Scheduler;
 public sealed record DeleteJobScheduleCommand(Guid JobId) : ICommand<IResult>;
 
 internal sealed class DeleteJobScheduleCommandHandler(
-    IApplicationDbContext dbContext,
+    ISchedulerWriteDbContext dbContext,
     IUserContext userContext,
     IAuditTrailService auditTrailService) : ResultWrappingCommandHandler<DeleteJobScheduleCommand>
 {
@@ -38,4 +38,6 @@ internal sealed class DeleteJobScheduleCommandHandler(
         return Results.Ok(new { deleted = true });
     }
 }
+
+
 

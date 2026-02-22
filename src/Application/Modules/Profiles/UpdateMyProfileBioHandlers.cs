@@ -17,7 +17,7 @@ internal sealed class UpdateMyProfileBioCommandValidator : AbstractValidator<Upd
 
 internal sealed class UpdateMyProfileBioCommandHandler(
     IUserContext userContext,
-    IApplicationDbContext writeContext,
+    IProfilesWriteDbContext writeContext,
     IValidator<UpdateMyProfileBioCommand> validator) : ResultWrappingCommandHandler<UpdateMyProfileBioCommand>
 {
     protected override async Task<IResult> HandleCore(UpdateMyProfileBioCommand command, CancellationToken cancellationToken) =>
@@ -26,7 +26,7 @@ internal sealed class UpdateMyProfileBioCommandHandler(
     private static async Task<IResult> UpdateAsync(
         UpdateMyProfileBioCommand request,
         IUserContext userContext,
-        IApplicationDbContext writeContext,
+        IProfilesWriteDbContext writeContext,
         IValidator<UpdateMyProfileBioCommand> validator,
         CancellationToken cancellationToken)
     {
@@ -55,6 +55,8 @@ internal sealed class UpdateMyProfileBioCommandHandler(
         return Results.Ok(ProfileEndpointCommon.ToPrivateResponse(profile));
     }
 }
+
+
 
 
 

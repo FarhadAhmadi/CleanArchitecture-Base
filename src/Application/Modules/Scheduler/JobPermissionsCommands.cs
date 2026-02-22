@@ -2,7 +2,7 @@ using Application.Abstractions.Authentication;
 using Application.Abstractions.Data;
 using Application.Abstractions.Messaging;
 using Domain.Modules.Scheduler;
-using Infrastructure.Auditing;
+using Application.Abstractions.Auditing;
 using Microsoft.EntityFrameworkCore;
 
 namespace Application.Scheduler;
@@ -17,7 +17,7 @@ public sealed record UpsertJobPermissionsCommand(
 public sealed record GetJobPermissionsQuery(Guid JobId) : IQuery<IResult>;
 
 internal sealed class UpsertJobPermissionsCommandHandler(
-    IApplicationDbContext dbContext,
+    ISchedulerWriteDbContext dbContext,
     IUserContext userContext,
     IAuditTrailService auditTrailService) : ResultWrappingCommandHandler<UpsertJobPermissionsCommand>
 {
@@ -82,7 +82,7 @@ internal sealed class UpsertJobPermissionsCommandHandler(
     }
 }
 
-internal sealed class GetJobPermissionsQueryHandler(IApplicationReadDbContext readDbContext) : ResultWrappingQueryHandler<GetJobPermissionsQuery>
+internal sealed class GetJobPermissionsQueryHandler(ISchedulerReadDbContext readDbContext) : ResultWrappingQueryHandler<GetJobPermissionsQuery>
 {
     protected override async Task<IResult> HandleCore(GetJobPermissionsQuery query, CancellationToken cancellationToken)
     {
@@ -105,4 +105,6 @@ internal sealed class GetJobPermissionsQueryHandler(IApplicationReadDbContext re
         return Results.Ok(new { total = items.Count, items });
     }
 }
+
+
 

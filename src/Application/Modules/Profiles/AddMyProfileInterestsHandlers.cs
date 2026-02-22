@@ -21,7 +21,7 @@ internal sealed class AddMyProfileInterestsCommandValidator : AbstractValidator<
 
 internal sealed class AddMyProfileInterestsCommandHandler(
     IUserContext userContext,
-    IApplicationDbContext writeContext,
+    IProfilesWriteDbContext writeContext,
     IValidator<AddMyProfileInterestsCommand> validator) : ResultWrappingCommandHandler<AddMyProfileInterestsCommand>
 {
     protected override async Task<IResult> HandleCore(AddMyProfileInterestsCommand command, CancellationToken cancellationToken) =>
@@ -30,7 +30,7 @@ internal sealed class AddMyProfileInterestsCommandHandler(
     private static async Task<IResult> AddAsync(
         AddMyProfileInterestsCommand request,
         IUserContext userContext,
-        IApplicationDbContext writeContext,
+        IProfilesWriteDbContext writeContext,
         IValidator<AddMyProfileInterestsCommand> validator,
         CancellationToken cancellationToken)
     {
@@ -65,6 +65,8 @@ internal sealed class AddMyProfileInterestsCommandHandler(
         return Results.Ok(ProfileEndpointCommon.ToPrivateResponse(profile));
     }
 }
+
+
 
 
 

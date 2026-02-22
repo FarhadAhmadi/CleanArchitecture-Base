@@ -9,7 +9,7 @@ namespace Application.Profiles;
 public sealed record GetMyProfileQuery : IQuery<IResult>;
 internal sealed class GetMyProfileQueryHandler(
     IUserContext userContext,
-    IApplicationReadDbContext readContext) : ResultWrappingQueryHandler<GetMyProfileQuery>
+    IProfilesReadDbContext readContext) : ResultWrappingQueryHandler<GetMyProfileQuery>
 {
     protected override async Task<IResult> HandleCore(GetMyProfileQuery query, CancellationToken cancellationToken)
     {
@@ -19,7 +19,7 @@ internal sealed class GetMyProfileQueryHandler(
 
     private static async Task<IResult> GetAsync(
         IUserContext userContext,
-        IApplicationReadDbContext readContext,
+        IProfilesReadDbContext readContext,
         CancellationToken cancellationToken)
     {
         UserProfile? profile = await readContext.UserProfiles
@@ -30,6 +30,8 @@ internal sealed class GetMyProfileQueryHandler(
             : Results.Ok(ProfileEndpointCommon.ToPrivateResponse(profile));
     }
 }
+
+
 
 
 

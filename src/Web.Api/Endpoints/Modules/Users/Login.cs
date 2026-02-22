@@ -1,7 +1,7 @@
 using Application.Abstractions.Authentication;
 using Application.Abstractions.Messaging;
 using Application.Users.Login;
-using Infrastructure.Auditing;
+using Application.Abstractions.Auditing;
 using SharedKernel;
 using Web.Api.Endpoints.Mappings;
 using Web.Api.Extensions;

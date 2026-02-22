@@ -16,7 +16,7 @@ internal sealed class UpdateMyProfilePrivacyCommandValidator : AbstractValidator
 
 internal sealed class UpdateMyProfilePrivacyCommandHandler(
     IUserContext userContext,
-    IApplicationDbContext writeContext,
+    IProfilesWriteDbContext writeContext,
     IValidator<UpdateMyProfilePrivacyCommand> validator) : ResultWrappingCommandHandler<UpdateMyProfilePrivacyCommand>
 {
     protected override async Task<IResult> HandleCore(UpdateMyProfilePrivacyCommand command, CancellationToken cancellationToken) =>
@@ -25,7 +25,7 @@ internal sealed class UpdateMyProfilePrivacyCommandHandler(
     private static async Task<IResult> UpdateAsync(
         UpdateMyProfilePrivacyCommand request,
         IUserContext userContext,
-        IApplicationDbContext writeContext,
+        IProfilesWriteDbContext writeContext,
         IValidator<UpdateMyProfilePrivacyCommand> validator,
         CancellationToken cancellationToken)
     {
@@ -56,6 +56,8 @@ internal sealed class UpdateMyProfilePrivacyCommandHandler(
         return Results.Ok(ProfileEndpointCommon.ToPrivateResponse(profile));
     }
 }
+
+
 
 
 

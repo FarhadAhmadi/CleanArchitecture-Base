@@ -3,8 +3,8 @@ using Application.Abstractions.Data;
 using Application.Abstractions.Messaging;
 using Domain.Authorization;
 using Domain.Logging;
-using Infrastructure.Auditing;
-using Infrastructure.Logging;
+using Application.Abstractions.Auditing;
+using Application.Abstractions.Logging;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using SharedKernel;
@@ -13,7 +13,7 @@ using Application.Shared;
 namespace Application.Logging;
 
 public sealed record GetLoggingAccessControlQuery : IQuery<IResult>;
-internal sealed class GetLoggingAccessControlQueryHandler(IApplicationReadDbContext readContext) : ResultWrappingQueryHandler<GetLoggingAccessControlQuery>
+internal sealed class GetLoggingAccessControlQueryHandler(ILoggingReadDbContext readContext) : ResultWrappingQueryHandler<GetLoggingAccessControlQuery>
 {
     protected override async Task<IResult> HandleCore(GetLoggingAccessControlQuery query, CancellationToken cancellationToken)
     {
@@ -38,6 +38,8 @@ internal sealed class GetLoggingAccessControlQueryHandler(IApplicationReadDbCont
         return Results.Ok(new { permissions, roles });
     }
 }
+
+
 
 
 

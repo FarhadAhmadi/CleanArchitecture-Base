@@ -9,7 +9,7 @@ using SharedKernel;
 namespace Application.Users.Tokens;
 
 internal sealed class RefreshTokenCommandHandler(
-    IApplicationDbContext context,
+    IUsersWriteDbContext context,
     ITokenProvider tokenProvider,
     IRefreshTokenProvider refreshTokenProvider,
     ITokenLifetimeProvider tokenLifetimeProvider,
@@ -105,3 +105,5 @@ internal sealed class RefreshTokenCommandHandler(
         }
     }
 }
+
+

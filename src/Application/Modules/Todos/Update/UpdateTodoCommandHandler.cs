@@ -7,7 +7,7 @@ using SharedKernel;
 namespace Application.Todos.Update;
 
 internal sealed class UpdateTodoCommandHandler(
-    IApplicationDbContext context)
+    ITodosWriteDbContext context)
     : ICommandHandler<UpdateTodoCommand>
 {
     public async Task<Result> Handle(UpdateTodoCommand command, CancellationToken cancellationToken)
@@ -27,3 +27,5 @@ internal sealed class UpdateTodoCommandHandler(
         return Result.Success();
     }
 }
+
+

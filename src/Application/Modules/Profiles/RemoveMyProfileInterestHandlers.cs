@@ -17,7 +17,7 @@ internal sealed class RemoveMyProfileInterestCommandValidator : AbstractValidato
 
 internal sealed class RemoveMyProfileInterestCommandHandler(
     IUserContext userContext,
-    IApplicationDbContext writeContext,
+    IProfilesWriteDbContext writeContext,
     IValidator<RemoveMyProfileInterestCommand> validator) : ResultWrappingCommandHandler<RemoveMyProfileInterestCommand>
 {
     protected override async Task<IResult> HandleCore(RemoveMyProfileInterestCommand command, CancellationToken cancellationToken) =>
@@ -26,7 +26,7 @@ internal sealed class RemoveMyProfileInterestCommandHandler(
     private static async Task<IResult> RemoveAsync(
         string interest,
         IUserContext userContext,
-        IApplicationDbContext writeContext,
+        IProfilesWriteDbContext writeContext,
         IValidator<RemoveMyProfileInterestCommand> validator,
         CancellationToken cancellationToken)
     {
@@ -60,6 +60,8 @@ internal sealed class RemoveMyProfileInterestCommandHandler(
         return Results.Ok(ProfileEndpointCommon.ToPrivateResponse(profile));
     }
 }
+
+
 
 
 

@@ -14,7 +14,7 @@ public sealed record GetAuditEntriesQuery(
     DateTime? From,
     DateTime? To) : IQuery<IResult>;
 
-internal sealed class GetAuditEntriesQueryHandler(IApplicationReadDbContext readContext) : ResultWrappingQueryHandler<GetAuditEntriesQuery>
+internal sealed class GetAuditEntriesQueryHandler(IAuditReadDbContext readContext) : ResultWrappingQueryHandler<GetAuditEntriesQuery>
 {
     protected override async Task<IResult> HandleCore(GetAuditEntriesQuery query, CancellationToken cancellationToken)
     {
@@ -71,6 +71,8 @@ internal sealed class GetAuditEntriesQueryHandler(IApplicationReadDbContext read
         });
     }
 }
+
+
 
 
 

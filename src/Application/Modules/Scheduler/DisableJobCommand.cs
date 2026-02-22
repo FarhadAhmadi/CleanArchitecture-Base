@@ -3,7 +3,7 @@ using Application.Abstractions.Data;
 using Application.Abstractions.Messaging;
 using Domain.Modules.Scheduler;
 using Domain.Scheduler;
-using Infrastructure.Auditing;
+using Application.Abstractions.Auditing;
 using Microsoft.EntityFrameworkCore;
 
 namespace Application.Scheduler;
@@ -11,7 +11,7 @@ namespace Application.Scheduler;
 public sealed record DisableJobCommand(Guid JobId) : ICommand<IResult>;
 
 internal sealed class DisableJobCommandHandler(
-    IApplicationDbContext dbContext,
+    ISchedulerWriteDbContext dbContext,
     IUserContext userContext,
     IAuditTrailService auditTrailService) : ResultWrappingCommandHandler<DisableJobCommand>
 {
@@ -41,3 +41,5 @@ internal sealed class DisableJobCommandHandler(
         return Results.Ok(new { job.Id, status = job.Status.ToString() });
     }
 }
+
+

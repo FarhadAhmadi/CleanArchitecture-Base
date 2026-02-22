@@ -1,7 +1,7 @@
 using System.Security.Claims;
 using Application.Abstractions.Messaging;
 using Application.Authorization.AssignPermissionToRole;
-using Infrastructure.Auditing;
+using Application.Abstractions.Auditing;
 using SharedKernel;
 using Web.Api.Endpoints.Mappings;
 using Web.Api.Endpoints.Users;

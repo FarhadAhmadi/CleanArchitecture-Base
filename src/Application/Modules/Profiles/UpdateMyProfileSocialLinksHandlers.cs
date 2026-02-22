@@ -24,7 +24,7 @@ internal sealed class UpdateMyProfileSocialLinksCommandValidator : AbstractValid
 
 internal sealed class UpdateMyProfileSocialLinksCommandHandler(
     IUserContext userContext,
-    IApplicationDbContext writeContext,
+    IProfilesWriteDbContext writeContext,
     IValidator<UpdateMyProfileSocialLinksCommand> validator) : ResultWrappingCommandHandler<UpdateMyProfileSocialLinksCommand>
 {
     protected override async Task<IResult> HandleCore(UpdateMyProfileSocialLinksCommand command, CancellationToken cancellationToken) =>
@@ -33,7 +33,7 @@ internal sealed class UpdateMyProfileSocialLinksCommandHandler(
     private static async Task<IResult> UpdateAsync(
         UpdateMyProfileSocialLinksCommand request,
         IUserContext userContext,
-        IApplicationDbContext writeContext,
+        IProfilesWriteDbContext writeContext,
         IValidator<UpdateMyProfileSocialLinksCommand> validator,
         CancellationToken cancellationToken)
     {
@@ -62,6 +62,8 @@ internal sealed class UpdateMyProfileSocialLinksCommandHandler(
         return Results.Ok(ProfileEndpointCommon.ToPrivateResponse(profile));
     }
 }
+
+
 
 
 

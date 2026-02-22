@@ -1,4 +1,4 @@
-namespace Infrastructure.Auditing;
+namespace Application.Abstractions.Auditing;
 
 public sealed record AuditRecordRequest(
     string ActorId,

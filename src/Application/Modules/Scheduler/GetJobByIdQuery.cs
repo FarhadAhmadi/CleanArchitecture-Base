@@ -6,7 +6,7 @@ namespace Application.Scheduler;
 
 public sealed record GetJobByIdQuery(Guid JobId) : IQuery<IResult>;
 
-internal sealed class GetJobByIdQueryHandler(IApplicationReadDbContext readDbContext) : ResultWrappingQueryHandler<GetJobByIdQuery>
+internal sealed class GetJobByIdQueryHandler(ISchedulerReadDbContext readDbContext) : ResultWrappingQueryHandler<GetJobByIdQuery>
 {
     protected override async Task<IResult> HandleCore(GetJobByIdQuery query, CancellationToken cancellationToken)
     {
@@ -38,3 +38,5 @@ internal sealed class GetJobByIdQueryHandler(IApplicationReadDbContext readDbCon
         return item is null ? Results.NotFound() : Results.Ok(item);
     }
 }
+
+
