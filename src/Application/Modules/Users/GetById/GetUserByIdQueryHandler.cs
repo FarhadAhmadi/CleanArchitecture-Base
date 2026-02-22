@@ -1,4 +1,3 @@
-using Application.Abstractions.Authentication;
 using Application.Abstractions.Data;
 using Application.Abstractions.Messaging;
 using Domain.Users;
@@ -7,16 +6,11 @@ using SharedKernel;
 
 namespace Application.Users.GetById;
 
-internal sealed class GetUserByIdQueryHandler(IApplicationReadDbContext context, IUserContext userContext)
+internal sealed class GetUserByIdQueryHandler(IApplicationReadDbContext context)
     : IQueryHandler<GetUserByIdQuery, UserResponse>
 {
     public async Task<Result<UserResponse>> Handle(GetUserByIdQuery query, CancellationToken cancellationToken)
     {
-        if (query.UserId != userContext.UserId)
-        {
-            return Result.Failure<UserResponse>(UserErrors.Unauthorized());
-        }
-
         UserResponse? user = await context.Users
             .Where(u => u.Id == query.UserId)
             .Select(UserMappings.ToModel)

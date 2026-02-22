@@ -1,5 +1,6 @@
 using Application.Authorization.AssignPermissionToRole;
 using Application.Authorization.AssignRoleToUser;
+using Application.Authorization.Roles;
 using Application.Todos.Complete;
 using Application.Todos.Copy;
 using Application.Todos.Create;
@@ -7,6 +8,7 @@ using Application.Todos.Delete;
 using Application.Todos.Get;
 using Application.Todos.GetById;
 using Application.Users.GetById;
+using Application.Users.Management;
 using Application.Users.Login;
 using Application.Users.Register;
 using Application.Users.Tokens;
@@ -90,5 +92,27 @@ internal static class EndpointMappings
         new(
             InputSanitizer.SanitizeIdentifier(request.RoleName, 100) ?? string.Empty,
             InputSanitizer.SanitizeIdentifier(request.PermissionCode, 200) ?? string.Empty);
+
+    internal static CreateUserCommand ToCommand(this CreateUser.Request request) =>
+        new(
+            InputSanitizer.SanitizeEmail(request.Email) ?? string.Empty,
+            InputSanitizer.SanitizeText(request.FirstName, 100) ?? string.Empty,
+            InputSanitizer.SanitizeText(request.LastName, 100) ?? string.Empty,
+            request.Password);
+
+    internal static UpdateUserCommand ToCommand(this UpdateUser.Request request, Guid userId) =>
+        new(
+            userId,
+            InputSanitizer.SanitizeEmail(request.Email) ?? string.Empty,
+            InputSanitizer.SanitizeText(request.FirstName, 100) ?? string.Empty,
+            InputSanitizer.SanitizeText(request.LastName, 100) ?? string.Empty);
+
+    internal static CreateRoleCommand ToCommand(this CreateRole.Request request) =>
+        new(InputSanitizer.SanitizeIdentifier(request.RoleName, 100) ?? string.Empty);
+
+    internal static UpdateRoleCommand ToCommand(this UpdateRole.Request request, Guid roleId) =>
+        new(
+            roleId,
+            InputSanitizer.SanitizeIdentifier(request.RoleName, 100) ?? string.Empty);
 
 }
