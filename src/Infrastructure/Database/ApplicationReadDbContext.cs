@@ -32,6 +32,7 @@ public sealed class ApplicationReadDbContext(DbContextOptions<ApplicationReadDbC
     public IQueryable<AlertRule> AlertRules => Set<AlertRule>().AsNoTracking();
     public IQueryable<AlertIncident> AlertIncidents => Set<AlertIncident>().AsNoTracking();
     public IQueryable<RefreshToken> RefreshTokens => Set<RefreshToken>().AsNoTracking();
+    public IQueryable<UserPasswordHistory> UserPasswordHistories => Set<UserPasswordHistory>().AsNoTracking();
     public IQueryable<Role> Roles => Set<Role>().AsNoTracking();
     public IQueryable<Permission> Permissions => Set<Permission>().AsNoTracking();
     public IQueryable<UserRole> UserRoles => Set<UserRole>().AsNoTracking();
@@ -56,6 +57,7 @@ public sealed class ApplicationReadDbContext(DbContextOptions<ApplicationReadDbC
     public IQueryable<JobDependency> JobDependencies => Set<JobDependency>().AsNoTracking();
     public IQueryable<JobExecution> JobExecutions => Set<JobExecution>().AsNoTracking();
     public IQueryable<JobPermissionEntry> JobPermissionEntries => Set<JobPermissionEntry>().AsNoTracking();
+    public IQueryable<IdempotencyRequest> IdempotencyRequests => Set<IdempotencyRequest>().AsNoTracking();
 
     internal IQueryable<OutboxMessage> OutboxMessages => Set<OutboxMessage>().AsNoTracking();
 

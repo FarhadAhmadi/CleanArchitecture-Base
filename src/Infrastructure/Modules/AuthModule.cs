@@ -20,6 +20,10 @@ internal static class AuthModule
         this IServiceCollection services,
         IConfiguration configuration)
     {
+        AuthSecurityOptions authSecurityOptions = configuration
+            .GetSection(AuthSecurityOptions.SectionName)
+            .Get<AuthSecurityOptions>() ?? new AuthSecurityOptions();
+
         JwtOptions jwtOptions = configuration
             .GetSection(JwtOptions.SectionName)
             .Get<JwtOptions>() ?? new JwtOptions();
@@ -34,19 +38,22 @@ internal static class AuthModule
         }
 
         ValidateJwtOptions(jwtOptions);
+        ValidateAuthSecurityOptions(authSecurityOptions);
 
         services.AddSingleton(jwtOptions);
+        services.AddSingleton<IPasswordValidator<User>, PasswordPolicyValidator>();
 
         services.AddIdentityCore<User>(options =>
             {
                 options.User.RequireUniqueEmail = true;
-                options.Password.RequiredLength = 8;
-                options.Password.RequireDigit = false;
-                options.Password.RequireLowercase = false;
-                options.Password.RequireUppercase = false;
-                options.Password.RequireNonAlphanumeric = false;
-                options.Lockout.MaxFailedAccessAttempts = 5;
-                options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(15);
+                options.Password.RequiredLength = Math.Max(8, authSecurityOptions.PasswordMinLength);
+                options.Password.RequireDigit = authSecurityOptions.PasswordRequireDigit;
+                options.Password.RequireLowercase = authSecurityOptions.PasswordRequireLowercase;
+                options.Password.RequireUppercase = authSecurityOptions.PasswordRequireUppercase;
+                options.Password.RequireNonAlphanumeric = authSecurityOptions.PasswordRequireNonAlphanumeric;
+                options.Password.RequiredUniqueChars = Math.Max(1, authSecurityOptions.PasswordRequiredUniqueChars);
+                options.Lockout.MaxFailedAccessAttempts = Math.Max(1, authSecurityOptions.MaxFailedLoginAttempts);
+                options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(Math.Max(1, authSecurityOptions.LockoutMinutes));
             })
             .AddRoles<Role>()
             .AddEntityFrameworkStores<ApplicationDbContext>()
@@ -145,6 +152,24 @@ internal static class AuthModule
         if (options.ExpirationInMinutes <= 0)
         {
             throw new InvalidOperationException("Jwt:ExpirationInMinutes must be greater than zero.");
+        }
+    }
+
+    private static void ValidateAuthSecurityOptions(AuthSecurityOptions options)
+    {
+        if (options.PasswordMinLength < 8 || options.PasswordMinLength > 128)
+        {
+            throw new InvalidOperationException("AuthSecurity:PasswordMinLength must be between 8 and 128.");
+        }
+
+        if (options.PasswordRequiredUniqueChars < 1 || options.PasswordRequiredUniqueChars > 32)
+        {
+            throw new InvalidOperationException("AuthSecurity:PasswordRequiredUniqueChars must be between 1 and 32.");
+        }
+
+        if (options.PasswordHistoryLimit < 1 || options.PasswordHistoryLimit > 24)
+        {
+            throw new InvalidOperationException("AuthSecurity:PasswordHistoryLimit must be between 1 and 24.");
         }
     }
 }

@@ -20,6 +20,7 @@ internal sealed class GetOperationalMetricsQueryHandler(
         bool isHealthy = corruptedRate <= sloOptions.MaxCorruptedLogRatePercent &&
                          snapshot.OutboxPending <= sloOptions.MaxOutboxPending &&
                          snapshot.OutboxFailed <= sloOptions.MaxOutboxFailed &&
+                         snapshot.OutboxOldestPendingAgeSeconds <= sloOptions.MaxOutboxBacklogAgeSeconds &&
                          snapshot.IngestionQueueDepth <= sloOptions.MaxIngestionQueueDepth;
 
         return Results.Ok(new
@@ -30,6 +31,7 @@ internal sealed class GetOperationalMetricsQueryHandler(
                 maxCorruptedLogRatePercent = sloOptions.MaxCorruptedLogRatePercent,
                 maxOutboxPending = sloOptions.MaxOutboxPending,
                 maxOutboxFailed = sloOptions.MaxOutboxFailed,
+                maxOutboxBacklogAgeSeconds = sloOptions.MaxOutboxBacklogAgeSeconds,
                 maxIngestionQueueDepth = sloOptions.MaxIngestionQueueDepth
             },
             values = new
@@ -37,6 +39,7 @@ internal sealed class GetOperationalMetricsQueryHandler(
                 corruptedLogRatePercent = Math.Round(corruptedRate, 4),
                 snapshot.OutboxPending,
                 snapshot.OutboxFailed,
+                snapshot.OutboxOldestPendingAgeSeconds,
                 snapshot.IngestionQueueDepth,
                 snapshot.IngestionDropped,
                 snapshot.AlertQueueDepth,

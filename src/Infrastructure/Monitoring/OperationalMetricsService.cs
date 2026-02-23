@@ -22,6 +22,15 @@ public sealed class OperationalMetricsService(
         IQueryable<OutboxMessage> outbox = dbContext.OutboxMessages;
         int pending = await outbox.CountAsync(x => x.ProcessedOnUtc == null && x.RetryCount < outboxOptions.MaxRetryCount, cancellationToken);
         int failed = await outbox.CountAsync(x => x.ProcessedOnUtc == null && x.RetryCount >= outboxOptions.MaxRetryCount, cancellationToken);
+        DateTime? oldestPendingUtc = await outbox
+            .Where(x => x.ProcessedOnUtc == null && x.RetryCount < outboxOptions.MaxRetryCount)
+            .OrderBy(x => x.OccurredOnUtc)
+            .Select(x => (DateTime?)x.OccurredOnUtc)
+            .FirstOrDefaultAsync(cancellationToken);
+
+        int oldestPendingAgeSeconds = oldestPendingUtc.HasValue
+            ? Math.Max(0, (int)(DateTime.UtcNow - oldestPendingUtc.Value).TotalSeconds)
+            : 0;
 
         return new OperationalMetricsSnapshot(
             IngestionQueueDepth: ingestionQueue.ApproximateCount,
@@ -31,6 +40,7 @@ public sealed class OperationalMetricsService(
             CorruptedLogEvents: corrupted,
             OutboxPending: pending,
             OutboxFailed: failed,
+            OutboxOldestPendingAgeSeconds: oldestPendingAgeSeconds,
             TimestampUtc: DateTime.UtcNow);
     }
 }

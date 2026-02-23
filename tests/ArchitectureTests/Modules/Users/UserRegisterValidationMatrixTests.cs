@@ -26,8 +26,7 @@ public sealed class UserRegisterValidationMatrixTests
             !string.IsNullOrWhiteSpace(firstName) &&
             !string.IsNullOrWhiteSpace(lastName) &&
             IsValidEmail(email) &&
-            !string.IsNullOrWhiteSpace(password) &&
-            password.Length >= 8;
+            IsStrongPassword(password);
 
         result.IsValid.ShouldBe(expectedValid);
     }
@@ -94,5 +93,20 @@ public sealed class UserRegisterValidationMatrixTests
         {
             return false;
         }
+    }
+
+    private static bool IsStrongPassword(string value)
+    {
+        if (string.IsNullOrWhiteSpace(value) || value.Length < 12)
+        {
+            return false;
+        }
+
+        bool hasUpper = value.Any(char.IsUpper);
+        bool hasLower = value.Any(char.IsLower);
+        bool hasDigit = value.Any(char.IsDigit);
+        bool hasSpecial = value.Any(ch => !char.IsLetterOrDigit(ch));
+
+        return hasUpper && hasLower && hasDigit && hasSpecial;
     }
 }

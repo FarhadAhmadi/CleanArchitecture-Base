@@ -25,7 +25,8 @@ public sealed class ApiWebApplicationFactory : WebApplicationFactory<Web.Api.Pro
         {
             configurationBuilder.AddInMemoryCollection(new Dictionary<string, string?>
             {
-                ["Notifications:Enabled"] = "false"
+                ["Notifications:Enabled"] = "false",
+                ["FileCleanup:Enabled"] = "false"
             });
         });
 

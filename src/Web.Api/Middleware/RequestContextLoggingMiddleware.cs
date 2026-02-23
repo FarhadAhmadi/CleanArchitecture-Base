@@ -5,6 +5,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Primitives;
 using Serilog.Context;
+using Web.Api.Infrastructure;
 
 namespace Web.Api.Middleware;
 
@@ -19,7 +20,7 @@ public sealed class RequestContextLoggingMiddleware(RequestDelegate next)
         string correlationId = GetCorrelationId(context);
         string requestPath = context.Request.Path.Value ?? string.Empty;
         string requestMethod = context.Request.Method;
-        string queryString = context.Request.QueryString.HasValue ? context.Request.QueryString.Value! : string.Empty;
+        string queryString = RequestLogSanitizer.SanitizeQueryString(context.Request);
         string userAgent = context.Request.Headers.UserAgent.ToString();
         string referer = context.Request.Headers.Referer.ToString();
         string endpointName = context.GetEndpoint()?.DisplayName ?? "unknown";

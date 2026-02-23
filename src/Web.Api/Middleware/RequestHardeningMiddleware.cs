@@ -14,6 +14,13 @@ internal sealed class RequestHardeningMiddleware(RequestDelegate next, ApiSecuri
 
     public async Task Invoke(HttpContext context)
     {
+        if (HttpMethods.IsTrace(context.Request.Method) ||
+            string.Equals(context.Request.Method, "TRACK", StringComparison.OrdinalIgnoreCase))
+        {
+            await WriteProblemAsync(context, StatusCodes.Status405MethodNotAllowed, "Method not allowed");
+            return;
+        }
+
         if (context.Request.Headers.Count > Math.Max(1, options.MaxRequestHeaderCount))
         {
             await WriteProblemAsync(context, StatusCodes.Status400BadRequest, "Invalid request");

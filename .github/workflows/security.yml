@@ -42,8 +42,28 @@ jobs:
       - name: Restore
         run: dotnet restore CleanArchitecture.slnx
 
-      - name: NuGet Vulnerability Scan
-        run: dotnet list CleanArchitecture.slnx package --vulnerable --include-transitive
+      - name: NuGet Vulnerability Scan (Fail on Findings)
+        run: |
+          dotnet list CleanArchitecture.slnx package --vulnerable --include-transitive --format json > vulnerable-packages.json
+          cat vulnerable-packages.json
+          jq -e '
+            [
+              .projects[]?.frameworks[]?.topLevelPackages[]?,
+              .projects[]?.frameworks[]?.transitivePackages[]?
+            ]
+            | map(select((.vulnerabilities // []) | length > 0))
+            | length == 0
+          ' vulnerable-packages.json
+
+      - name: Trivy Filesystem Scan
+        uses: aquasecurity/trivy-action@0.28.0
+        with:
+          scan-type: fs
+          scan-ref: .
+          format: table
+          severity: CRITICAL,HIGH
+          exit-code: "1"
+          ignore-unfixed: true
 
   secret-scan:
     runs-on: ubuntu-latest
@@ -54,3 +74,16 @@ jobs:
         uses: gitleaks/gitleaks-action@v2
         env:
           GITLEAKS_ENABLE_UPLOAD_ARTIFACT: true
+
+  dast:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: OWASP ZAP API Scan (OpenAPI Baseline)
+        uses: zaproxy/action-api-scan@v0.9.0
+        with:
+          target: "tests/ContractTests/Snapshots/openapi.v1.snapshot.json"
+          format: openapi
+          fail_action: true
+          cmd_options: "-a"

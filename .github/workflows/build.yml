@@ -37,11 +37,26 @@ jobs:
       - name: Build
         run: dotnet build ${{ env.SOLUTION_PATH }} --configuration Release --no-restore
 
+      - name: Install dotnet-ef
+        run: |
+          dotnet tool install --global dotnet-ef
+          echo "$HOME/.dotnet/tools" >> $GITHUB_PATH
+
+      - name: Check Migration Drift
+        run: |
+          dotnet ef migrations has-pending-model-changes \
+            --project src/Infrastructure/Infrastructure.csproj \
+            --startup-project src/Web.Api/Web.Api.csproj \
+            --context Infrastructure.Database.ApplicationDbContext
+
       - name: Format Check
         run: dotnet format ${{ env.SOLUTION_PATH }} --verify-no-changes --no-restore
 
-      - name: Test
-        run: dotnet test ${{ env.SOLUTION_PATH }} --configuration Release --no-build --no-restore
+      - name: Run Architecture Tests
+        run: dotnet test tests/ArchitectureTests/ArchitectureTests.csproj --configuration Release --no-build --no-restore
+
+      - name: Run Contract Tests
+        run: dotnet test tests/ContractTests/ContractTests.csproj --configuration Release --no-build --no-restore
 
       - name: Publish API
         run: dotnet publish src/Web.Api/Web.Api.csproj --configuration Release --no-build --no-restore -o artifacts/publish

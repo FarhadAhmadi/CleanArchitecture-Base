@@ -52,11 +52,16 @@ public static class DependencyInjection
             .GetSection(ExternalOAuthOptions.SectionName)
             .Get<ExternalOAuthOptions>() ?? new ExternalOAuthOptions();
 
+        IdempotencyOptions idempotencyOptions = configuration
+            .GetSection(IdempotencyOptions.SectionName)
+            .Get<IdempotencyOptions>() ?? new IdempotencyOptions();
+
         services.AddSingleton(apiSecurityOptions);
         services.AddSingleton(telemetryOptions);
         services.AddSingleton(operationalSloOptions);
         services.AddSingleton(operationalAlertingOptions);
         services.AddSingleton(externalOAuthOptions);
+        services.AddSingleton(idempotencyOptions);
 
         services.AddEndpointsApiExplorer();
         services.AddApiVersioning(options =>
@@ -252,6 +257,7 @@ public static class DependencyInjection
             });
 
         services.AddHostedService<OperationalAlertWorker>();
+        services.AddHostedService<IdempotencyCleanupWorker>();
 
         return services;
     }

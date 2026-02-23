@@ -1,12 +1,14 @@
 using System.Globalization;
 using System.Security.Cryptography;
 using System.Text;
+using Application.Abstractions.Data;
 using Application.Abstractions.Messaging;
 using Application.Abstractions.Security;
 using Application.Users.Register;
 using Domain.Users;
 using Application.Abstractions.Auditing;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 
 namespace Application.Users.Auth;
 
@@ -14,6 +16,7 @@ public sealed record ConfirmPasswordResetCommand(string Email, string Code, stri
 
 internal sealed class ConfirmPasswordResetCommandHandler(
     UserManager<User> userManager,
+    IUsersWriteDbContext dbContext,
     AuthSecurityOptions authSecurityOptions,
     IAuditTrailService auditTrailService) : ResultWrappingCommandHandler<ConfirmPasswordResetCommand>
 {
@@ -79,6 +82,30 @@ internal sealed class ConfirmPasswordResetCommandHandler(
             return Results.BadRequest(new { error = "Password reset failed.", details = resetResult.Errors.Select(x => x.Description).ToArray() });
         }
 
+        if (!string.IsNullOrWhiteSpace(user.PasswordHash))
+        {
+            dbContext.UserPasswordHistories.Add(new UserPasswordHistory
+            {
+                Id = Guid.NewGuid(),
+                UserId = user.Id,
+                PasswordHash = user.PasswordHash,
+                CreatedAtUtc = DateTime.UtcNow
+            });
+        }
+
+        DateTime nowUtc = DateTime.UtcNow;
+        List<RefreshToken> activeTokens = await dbContext.RefreshTokens
+            .Where(x => x.UserId == user.Id && x.RevokedAtUtc == null && x.ExpiresAtUtc > nowUtc)
+            .ToListAsync(cancellationToken);
+
+        foreach (RefreshToken token in activeTokens)
+        {
+            token.RevokedAtUtc = nowUtc;
+            token.RevokedReason = "Password reset";
+        }
+
+        await dbContext.SaveChangesAsync(cancellationToken);
+
         await userManager.UpdateSecurityStampAsync(user);
         await userManager.RemoveAuthenticationTokenAsync(user, PasswordResetTokens.Provider, PasswordResetTokens.CodeHash);
         await userManager.RemoveAuthenticationTokenAsync(user, PasswordResetTokens.Provider, PasswordResetTokens.ExpiryUtc);
@@ -92,7 +119,7 @@ internal sealed class ConfirmPasswordResetCommandHandler(
                 "auth.password-reset.success",
                 "User",
                 user.Id.ToString("N"),
-                "{\"scope\":\"password-reset\"}"),
+                $"{{\"scope\":\"password-reset\",\"revokedRefreshTokenCount\":{activeTokens.Count}}}"),
             cancellationToken);
 
         return Results.Ok(new { reset = true, userId = user.Id });

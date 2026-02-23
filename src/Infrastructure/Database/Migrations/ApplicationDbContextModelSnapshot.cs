@@ -339,6 +339,9 @@ namespace Infrastructure.Database.Migrations
                     b.Property<long>("SizeBytes")
                         .HasColumnType("bigint");
 
+                    b.Property<DateTime?>("StorageDeletedAtUtc")
+                        .HasColumnType("datetime2");
+
                     b.Property<DateTime?>("UpdatedAtUtc")
                         .HasColumnType("datetime2");
 
@@ -357,6 +360,8 @@ namespace Infrastructure.Database.Migrations
                     b.HasIndex("OwnerUserId");
 
                     b.HasIndex("Module", "UploadedAtUtc");
+
+                    b.HasIndex("IsDeleted", "StorageDeletedAtUtc", "DeletedAtUtc");
 
                     b.ToTable("FileAssets", "files");
                 });
@@ -1773,6 +1778,61 @@ namespace Infrastructure.Database.Migrations
                         .IsUnique();
 
                     b.ToTable("UserExternalLogins", "users");
+                });
+
+            modelBuilder.Entity("Infrastructure.Integration.IdempotencyRequest", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime?>("CompletedAtUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("ContentType")
+                        .HasMaxLength(120)
+                        .HasColumnType("nvarchar(120)");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("ExpiresAtUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("IsCompleted")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Key")
+                        .IsRequired()
+                        .HasMaxLength(120)
+                        .HasColumnType("nvarchar(120)");
+
+                    b.Property<byte[]>("ResponseBody")
+                        .HasColumnType("varbinary(max)");
+
+                    b.Property<string>("Scope")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<string>("ScopeHash")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("nvarchar(64)");
+
+                    b.Property<int?>("StatusCode")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ExpiresAtUtc");
+
+                    b.HasIndex("IsCompleted", "CreatedAtUtc");
+
+                    b.HasIndex("ScopeHash", "Key")
+                        .IsUnique();
+
+                    b.ToTable("IdempotencyRequests", "integration");
                 });
 
             modelBuilder.Entity("Infrastructure.Integration.InboxMessage", b =>

@@ -153,10 +153,7 @@ internal sealed class NotificationUseCaseService(
         if (!isAdmin)
         {
             Guid uid = userContext.UserId;
-            string uidText = uid.ToString("N");
-            IQueryable<Guid> aclRead = readContext.NotificationPermissionEntries
-                .Where(x => x.SubjectType == SubjectTypeUser && x.SubjectValue == uidText && x.CanRead)
-                .Select(x => x.NotificationId);
+            IQueryable<Guid> aclRead = ReadableNotificationIds(uid);
 
             query = query.Where(x => x.CreatedByUserId == uid || aclRead.Contains(x.Id));
         }
@@ -412,10 +409,10 @@ internal sealed class NotificationUseCaseService(
             return Results.BadRequest(new { message = "Invalid permission payload." });
         }
 
-        string normalizedSubjectValue = subjectValue.Trim();
-        if (normalizedSubjectType == SubjectTypeUser && Guid.TryParse(normalizedSubjectValue, out Guid userId))
+        (bool validSubject, string normalizedSubjectValue) = TryNormalizeSubjectValue(normalizedSubjectType, subjectValue);
+        if (!validSubject)
         {
-            normalizedSubjectValue = userId.ToString("N");
+            return Results.BadRequest(new { message = "Invalid permission payload." });
         }
 
         NotificationPermissionEntry? existing = await writeContext.NotificationPermissionEntries
@@ -612,6 +609,16 @@ internal sealed class NotificationUseCaseService(
             cancellationToken);
     }
 
+    private IQueryable<Guid> ReadableNotificationIds(Guid currentUserId)
+    {
+        string uid = currentUserId.ToString("N");
+        return readContext.NotificationPermissionEntries
+            .Where(x => x.CanRead &&
+                        (x.SubjectType == SubjectTypeUser && x.SubjectValue == uid ||
+                         x.SubjectType == SubjectTypeRole && UserRoleNames(currentUserId).Contains(x.SubjectValue)))
+            .Select(x => x.NotificationId);
+    }
+
     private IQueryable<string> UserRoleNames(Guid currentUserId)
     {
         return from ur in readContext.UserRoles
@@ -642,6 +649,22 @@ internal sealed class NotificationUseCaseService(
         }
 
         return string.Empty;
+    }
+
+    private static (bool IsValid, string Value) TryNormalizeSubjectValue(string subjectType, string? subjectValue)
+    {
+        string normalized = (subjectValue ?? string.Empty).Trim();
+        if (normalized.Length == 0 || normalized.Length > 150)
+        {
+            return (false, string.Empty);
+        }
+
+        if (subjectType == SubjectTypeUser && Guid.TryParse(normalized, out Guid userId))
+        {
+            normalized = userId.ToString("N");
+        }
+
+        return (true, normalized);
     }
 }
 

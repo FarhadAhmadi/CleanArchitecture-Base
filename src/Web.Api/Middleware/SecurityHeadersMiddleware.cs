@@ -10,10 +10,11 @@ public sealed class SecurityHeadersMiddleware(RequestDelegate next)
         context.Response.Headers.TryAdd("Permissions-Policy", "accelerometer=(), camera=(), geolocation=(), microphone=(), usb=()");
         context.Response.Headers.TryAdd("X-Permitted-Cross-Domain-Policies", "none");
         context.Response.Headers.TryAdd("Cross-Origin-Opener-Policy", "same-origin");
+        context.Response.Headers.TryAdd("Cross-Origin-Embedder-Policy", "require-corp");
         context.Response.Headers.TryAdd("Cross-Origin-Resource-Policy", "same-origin");
         context.Response.Headers.TryAdd(
             "Content-Security-Policy",
-            "default-src 'none'; frame-ancestors 'none'; object-src 'none'; base-uri 'none'; form-action 'none';");
+            "default-src 'none'; frame-ancestors 'none'; object-src 'none'; base-uri 'none'; form-action 'none'; script-src 'none'; style-src 'none'; img-src 'none'; connect-src 'none';");
 
         if (context.Request.Path.StartsWithSegments("/api", StringComparison.OrdinalIgnoreCase) ||
             context.Request.Path.StartsWithSegments("/logging", StringComparison.OrdinalIgnoreCase))

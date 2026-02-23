@@ -23,9 +23,14 @@ internal static class FilesModule
             .GetSection(ClamAvOptions.SectionName)
             .Get<ClamAvOptions>() ?? new ClamAvOptions();
 
+        FileCleanupOptions cleanupOptions = configuration
+            .GetSection(FileCleanupOptions.SectionName)
+            .Get<FileCleanupOptions>() ?? new FileCleanupOptions();
+
         services.AddSingleton(storageOptions);
         services.AddSingleton(validationOptions);
         services.AddSingleton(clamAvOptions);
+        services.AddSingleton(cleanupOptions);
 
         services.AddSingleton<IMinioClient>(_ =>
         {
@@ -63,6 +68,8 @@ internal static class FilesModule
         {
             services.AddSingleton<IFileMalwareScanner, NoOpMalwareScanner>();
         }
+
+        services.AddHostedService<DeletedFileCleanupWorker>();
 
         return services;
     }

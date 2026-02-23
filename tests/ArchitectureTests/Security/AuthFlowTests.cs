@@ -122,6 +122,24 @@ public sealed class AuthFlowTests : IClassFixture<ApiWebApplicationFactory>
         todos.StatusCode.ShouldBe(HttpStatusCode.OK);
     }
 
+    [Fact]
+    public async Task Register_ShouldRejectBreachedOrWeakPassword()
+    {
+        HttpClient client = _factory.CreateClient();
+
+        string email = $"weak-{Guid.NewGuid():N}@test.local";
+
+        HttpResponseMessage register = await client.PostAsJsonAsync("/api/v1/users/register", new
+        {
+            email,
+            firstName = "Weak",
+            lastName = "Password",
+            password = "password123"
+        });
+
+        register.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
+    }
+
     private async Task AttachDefaultUserRoleAsync(Guid userId)
     {
         using IServiceScope scope = _factory.Services.CreateScope();

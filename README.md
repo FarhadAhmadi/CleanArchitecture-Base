@@ -73,6 +73,12 @@ Persian architecture index:
 Persian module docs index:
 `docs/modules/README-fa.md`
 
+Security baseline (Persian):
+`docs/security/security-baseline-fa.md`
+
+Vulnerability disclosure policy:
+`SECURITY.md`
+
 ## Operational baseline added
 
 - Secret management via `SecretManagement` section, optional Azure Key Vault provider.
@@ -90,6 +96,8 @@ Persian module docs index:
   - security headers middleware
   - HSTS in production
   - per-user/per-IP rate limiting
+  - strong password policy + password history + common breached-password blocking
+  - sensitive query redaction in request logs
   - CI security workflow (`.github/workflows/security.yml`)
 - Audit trail (tamper-evident checksum chain):
   - `GET /api/v1/audit`
@@ -106,5 +114,12 @@ Persian module docs index:
 - DR readiness:
   - backup/restore/drill scripts under `scripts/dr`
   - runbook at `docs/operations/backup-restore-runbook.md`
+  - DR runbook at `docs/operations/dr-runbook.md`
   - scheduled drill workflow `.github/workflows/dr-drill.yml`
 - Performance test assets with k6 under `tests/Performance` and workflow `.github/workflows/performance.yml`.
+- Reliability governance:
+  - Reliability roadmap: `docs/operations/reliability-roadmap.md`
+  - SLO spec: `docs/operations/slo.md`
+  - Incident runbook: `docs/operations/incident-runbook.md`
+  - Architecture fitness rules: `docs/architecture/fitness-rules.md`
+  - Monthly reliability report template: `docs/operations/reliability-monthly-report-template.md`

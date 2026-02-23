@@ -31,6 +31,9 @@ public sealed class SecurityHardeningTests : IClassFixture<ApiWebApplicationFact
         response.Headers.Contains("Referrer-Policy").ShouldBeTrue();
         response.Headers.GetValues("Referrer-Policy").ShouldContain("no-referrer");
 
+        response.Headers.Contains("Cross-Origin-Embedder-Policy").ShouldBeTrue();
+        response.Headers.GetValues("Cross-Origin-Embedder-Policy").ShouldContain("require-corp");
+
         response.Headers.Contains("Content-Security-Policy").ShouldBeTrue();
         response.Headers.GetValues("Content-Security-Policy")
             .Single()
@@ -119,5 +122,19 @@ public sealed class SecurityHardeningTests : IClassFixture<ApiWebApplicationFact
         HttpResponseMessage response = await client.SendAsync(request);
 
         response.Headers.Contains("Access-Control-Allow-Origin").ShouldBeFalse();
+    }
+
+    [Fact]
+    public async Task TraceRequest_ShouldBeRejectedByRequestHardening()
+    {
+        using HttpClient client = _factory.CreateClient();
+
+        using var request = new HttpRequestMessage(new HttpMethod("TRACE"), "/health");
+
+        HttpResponseMessage response = await client.SendAsync(request);
+        string body = await response.Content.ReadAsStringAsync();
+
+        response.StatusCode.ShouldBe(HttpStatusCode.MethodNotAllowed);
+        body.ShouldContain("Method not allowed");
     }
 }

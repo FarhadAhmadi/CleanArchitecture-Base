@@ -33,6 +33,17 @@ internal sealed class RegisterUserCommandHandler(
             return Result.Failure<Guid>(Error.Problem("Users.CreateFailed", description));
         }
 
+        if (!string.IsNullOrWhiteSpace(user.PasswordHash))
+        {
+            context.UserPasswordHistories.Add(new UserPasswordHistory
+            {
+                Id = Guid.NewGuid(),
+                UserId = user.Id,
+                PasswordHash = user.PasswordHash,
+                CreatedAtUtc = DateTime.UtcNow
+            });
+        }
+
         Role? defaultRole = await roleManager.FindByNameAsync(DefaultUserRoleName)
             ?? await context.Roles.SingleOrDefaultAsync(r => r.Name == DefaultUserRoleName, cancellationToken);
 

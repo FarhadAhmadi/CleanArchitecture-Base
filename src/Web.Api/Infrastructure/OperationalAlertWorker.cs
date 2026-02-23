@@ -72,6 +72,12 @@ internal sealed class OperationalAlertWorker(
             incidents.Add($"Outbox failed breach: {snapshot.OutboxFailed} > {sloOptions.MaxOutboxFailed}");
         }
 
+        if (snapshot.OutboxOldestPendingAgeSeconds > sloOptions.MaxOutboxBacklogAgeSeconds)
+        {
+            incidents.Add(
+                $"Outbox backlog age breach: {snapshot.OutboxOldestPendingAgeSeconds}s > {sloOptions.MaxOutboxBacklogAgeSeconds}s");
+        }
+
         if (snapshot.IngestionQueueDepth > sloOptions.MaxIngestionQueueDepth)
         {
             incidents.Add($"Ingestion queue breach: {snapshot.IngestionQueueDepth} > {sloOptions.MaxIngestionQueueDepth}");
@@ -97,7 +103,7 @@ internal sealed class OperationalAlertWorker(
             ? string.Empty
             : $" | runbook={alertingOptions.RunbookBaseUrl!.TrimEnd('/')}/operations/orchestration-alerts";
         string message =
-            $"[Operational Alert] {incident} | timestamp={snapshot.TimestampUtc:O} | outboxPending={snapshot.OutboxPending} | outboxFailed={snapshot.OutboxFailed} | ingestionQueueDepth={snapshot.IngestionQueueDepth}{runbookLink}";
+            $"[Operational Alert] {incident} | timestamp={snapshot.TimestampUtc:O} | outboxPending={snapshot.OutboxPending} | outboxFailed={snapshot.OutboxFailed} | outboxOldestPendingAgeSeconds={snapshot.OutboxOldestPendingAgeSeconds} | ingestionQueueDepth={snapshot.IngestionQueueDepth}{runbookLink}";
 
         foreach (string webhookUrl in alertingOptions.WebhookUrls.Where(x => !string.IsNullOrWhiteSpace(x)))
         {

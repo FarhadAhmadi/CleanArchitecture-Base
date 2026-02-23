@@ -21,6 +21,7 @@ public interface IUsersWriteDbContext : IModuleWriteDbContext
 {
     DbSet<User> Users { get; }
     DbSet<RefreshToken> RefreshTokens { get; }
+    DbSet<UserPasswordHistory> UserPasswordHistories { get; }
     DbSet<UserExternalLogin> UserExternalLogins { get; }
     DbSet<Role> Roles { get; }
     DbSet<UserRole> UserRoles { get; }
@@ -30,6 +31,7 @@ public interface IUsersReadDbContext
 {
     IQueryable<User> Users { get; }
     IQueryable<RefreshToken> RefreshTokens { get; }
+    IQueryable<UserPasswordHistory> UserPasswordHistories { get; }
     IQueryable<UserExternalLogin> UserExternalLogins { get; }
 }
 

@@ -31,6 +31,8 @@ ApiSecurityOptions apiSecurityOptions = builder.Configuration
     .GetSection(ApiSecurityOptions.SectionName)
     .Get<ApiSecurityOptions>() ?? new ApiSecurityOptions();
 
+SecurityConfigurationValidator.Validate(builder.Configuration, builder.Environment);
+
 DatabaseMigrationOptions migrationOptions = builder.Configuration
     .GetSection(DatabaseMigrationOptions.SectionName)
     .Get<DatabaseMigrationOptions>() ?? new DatabaseMigrationOptions();
@@ -140,7 +142,7 @@ app.UseSerilogRequestLogging(options =>
         diagnosticContext.Set("RequestMethod", httpContext.Request.Method);
         diagnosticContext.Set(
             "RequestQueryString",
-            httpContext.Request.QueryString.HasValue ? httpContext.Request.QueryString.Value : string.Empty);
+            RequestLogSanitizer.SanitizeQueryString(httpContext.Request));
         diagnosticContext.Set("EndpointName", httpContext.GetEndpoint()?.DisplayName ?? "unknown");
         diagnosticContext.Set("CorrelationId", httpContext.TraceIdentifier);
         diagnosticContext.Set("StatusCode", httpContext.Response.StatusCode);
@@ -164,6 +166,7 @@ app.UseCors(Web.Api.DependencyInjection.GetCorsPolicyName());
 app.UseRateLimiter();
 app.UseAuthentication();
 app.UseAuthorization();
+app.UseRequestIdempotency();
 
 app.MapControllers();
 

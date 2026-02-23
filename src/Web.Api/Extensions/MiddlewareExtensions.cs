@@ -22,4 +22,10 @@ public static class MiddlewareExtensions
         app.UseMiddleware<RequestHardeningMiddleware>();
         return app;
     }
+
+    public static IApplicationBuilder UseRequestIdempotency(this IApplicationBuilder app)
+    {
+        app.UseMiddleware<RequestIdempotencyMiddleware>();
+        return app;
+    }
 }

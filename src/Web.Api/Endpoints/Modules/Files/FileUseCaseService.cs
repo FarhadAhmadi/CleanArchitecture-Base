@@ -303,9 +303,9 @@ internal sealed class FileUseCaseService(
             return Results.Forbid();
         }
 
-        await storage.DeleteAsync(file.ObjectKey, cancellationToken);
         file.IsDeleted = true;
         file.DeletedAtUtc = DateTime.UtcNow;
+        file.StorageDeletedAtUtc = null;
         file.UpdatedAtUtc = DateTime.UtcNow;
         file.Raise(new FileDeletedDomainEvent(file.Id, file.OwnerUserId));
         await WriteAccessAuditAsync(httpContext, file.Id, userContext.UserId, "delete", cancellationToken);
@@ -374,10 +374,7 @@ internal sealed class FileUseCaseService(
         if (!isAdmin)
         {
             Guid uid = userContext.UserId;
-            string uidText = uid.ToString("N");
-            IQueryable<Guid> aclRead = readContext.FilePermissionEntries
-                .Where(x => x.SubjectType == SubjectTypeUser && x.SubjectValue == uidText && x.CanRead)
-                .Select(x => x.FileId);
+            IQueryable<Guid> aclRead = ReadableFileIds(uid);
             q = q.Where(x => x.OwnerUserId == uid || aclRead.Contains(x.Id));
         }
 
@@ -434,10 +431,7 @@ internal sealed class FileUseCaseService(
         if (!isAdmin)
         {
             Guid uid = userContext.UserId;
-            string uidText = uid.ToString("N");
-            IQueryable<Guid> aclRead = readContext.FilePermissionEntries
-                .Where(x => x.SubjectType == SubjectTypeUser && x.SubjectValue == uidText && x.CanRead)
-                .Select(x => x.FileId);
+            IQueryable<Guid> aclRead = ReadableFileIds(uid);
 
             q = q.Where(x => x.OwnerUserId == uid || aclRead.Contains(x.Id));
         }
@@ -489,11 +483,7 @@ internal sealed class FileUseCaseService(
         string normalized = tag.Trim().ToUpperInvariant();
         Guid uid = userContext.UserId;
         bool isAdmin = await IsAdminAsync(uid, cancellationToken);
-        string uidText = uid.ToString("N");
-
-        IQueryable<Guid> aclRead = readContext.FilePermissionEntries
-            .Where(x => x.SubjectType == SubjectTypeUser && x.SubjectValue == uidText && x.CanRead)
-            .Select(x => x.FileId);
+        IQueryable<Guid> aclRead = ReadableFileIds(uid);
 
         List<object> items = await (
             from file in readContext.FileAssets
@@ -527,10 +517,10 @@ internal sealed class FileUseCaseService(
             return Results.BadRequest(new { message = "SubjectType must be User or Role." });
         }
 
-        string subjectValue = (input.SubjectValue ?? string.Empty).Trim();
-        if (subjectType == SubjectTypeUser && Guid.TryParse(subjectValue, out Guid parsedUser))
+        (bool validSubject, string subjectValue) = TryNormalizeSubjectValue(subjectType, input.SubjectValue);
+        if (!validSubject)
         {
-            subjectValue = parsedUser.ToString("N");
+            return Results.BadRequest(new { message = "SubjectValue is invalid." });
         }
 
         FilePermissionEntry? existing = await writeContext.FilePermissionEntries
@@ -640,6 +630,16 @@ internal sealed class FileUseCaseService(
                   x.SubjectType == SubjectTypeRole && UserRoleNames(userId).Contains(x.SubjectValue)) &&
                  x.CanRead,
             cancellationToken);
+    }
+
+    private IQueryable<Guid> ReadableFileIds(Guid userId)
+    {
+        string uid = userId.ToString("N");
+        return readContext.FilePermissionEntries
+            .Where(x => x.CanRead &&
+                        (x.SubjectType == SubjectTypeUser && x.SubjectValue == uid ||
+                         x.SubjectType == SubjectTypeRole && UserRoleNames(userId).Contains(x.SubjectValue)))
+            .Select(x => x.FileId);
     }
 
     private async Task<bool> HasWriteAccessAsync(FileAsset file, Guid userId, CancellationToken cancellationToken)
@@ -829,6 +829,22 @@ internal sealed class FileUseCaseService(
         }
 
         return string.Empty;
+    }
+
+    private static (bool IsValid, string Value) TryNormalizeSubjectValue(string subjectType, string? subjectValue)
+    {
+        string normalized = (subjectValue ?? string.Empty).Trim();
+        if (normalized.Length == 0 || normalized.Length > 150)
+        {
+            return (false, string.Empty);
+        }
+
+        if (subjectType == SubjectTypeUser && Guid.TryParse(normalized, out Guid parsedUser))
+        {
+            normalized = parsedUser.ToString("N");
+        }
+
+        return (true, normalized);
     }
 }
 

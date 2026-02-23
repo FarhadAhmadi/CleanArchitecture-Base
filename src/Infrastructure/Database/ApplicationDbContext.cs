@@ -46,6 +46,7 @@ namespace Infrastructure.Database;
     public DbSet<AlertRule> AlertRules { get; set; }
     public DbSet<AlertIncident> AlertIncidents { get; set; }
     public DbSet<RefreshToken> RefreshTokens { get; set; }
+    public DbSet<UserPasswordHistory> UserPasswordHistories { get; set; }
     public DbSet<Permission> Permissions { get; set; }
     public DbSet<RolePermission> RolePermissions { get; set; }
     public DbSet<UserPermission> UserPermissions { get; set; }
@@ -69,6 +70,7 @@ namespace Infrastructure.Database;
     public DbSet<JobExecution> JobExecutions { get; set; }
     public DbSet<JobPermissionEntry> JobPermissionEntries { get; set; }
     public DbSet<SchedulerLockLease> SchedulerLockLeases { get; set; }
+    public DbSet<IdempotencyRequest> IdempotencyRequests { get; set; }
     internal DbSet<OutboxMessage> OutboxMessages => Set<OutboxMessage>();
     internal DbSet<InboxMessage> InboxMessages => Set<InboxMessage>();
 
@@ -90,16 +92,14 @@ namespace Infrastructure.Database;
         ApplyAuditFields();
 
         List<IDomainEvent> domainEvents = CollectDomainEvents();
-
-        int result = await base.SaveChangesAsync(cancellationToken);
-
         if (domainEvents.Count != 0)
         {
             List<OutboxMessage> outboxMessages = [.. domainEvents.Select(integrationEventSerializer.ToOutboxMessage)];
             OutboxMessages.AddRange(outboxMessages);
-            await base.SaveChangesAsync(cancellationToken);
-            ClearDomainEvents();
         }
+
+        int result = await base.SaveChangesAsync(cancellationToken);
+        ClearDomainEvents();
 
         return result;
     }

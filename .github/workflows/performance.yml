@@ -7,10 +7,18 @@ on:
         description: "Target URL"
         required: true
       profile:
-        description: "load or soak"
+        description: "load, soak or scale-3x"
         required: true
         type: choice
-        options: [ "load", "soak" ]
+        options: [ "load", "soak", "scale-3x" ]
+      baseline_vus:
+        description: "Baseline VUs for scale-3x profile"
+        required: false
+        default: "30"
+      target_duration:
+        description: "Target duration for scale-3x profile"
+        required: false
+        default: "5m"
 
 jobs:
   k6:
@@ -22,5 +30,5 @@ jobs:
       - name: Run k6
         uses: grafana/run-k6-action@v1
         with:
-          path: ${{ inputs.profile == 'soak' && 'tests/Performance/k6/soak-test.js' || 'tests/Performance/k6/load-test.js' }}
-          flags: -e BASE_URL=${{ inputs.target }}
+          path: ${{ inputs.profile == 'soak' && 'tests/Performance/k6/soak-test.js' || (inputs.profile == 'scale-3x' && 'tests/Performance/k6/scale-3x.js' || 'tests/Performance/k6/load-test.js') }}
+          flags: -e BASE_URL=${{ inputs.target }} -e BASELINE_VUS=${{ inputs.baseline_vus }} -e TARGET_DURATION=${{ inputs.target_duration }}

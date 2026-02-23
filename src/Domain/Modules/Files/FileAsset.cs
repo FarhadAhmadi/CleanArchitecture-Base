@@ -21,4 +21,5 @@ public sealed class FileAsset : Entity
     public DateTime? UpdatedAtUtc { get; set; }
     public bool IsDeleted { get; set; }
     public DateTime? DeletedAtUtc { get; set; }
+    public DateTime? StorageDeletedAtUtc { get; set; }
 }
