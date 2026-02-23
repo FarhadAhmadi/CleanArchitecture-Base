@@ -22,15 +22,26 @@ internal sealed class AssignLoggingAccessCommandHandler(
     {
         command.Request.RoleName = InputSanitizer.SanitizeIdentifier(command.Request.RoleName, 100) ?? string.Empty;
         command.Request.PermissionCode = InputSanitizer.SanitizeIdentifier(command.Request.PermissionCode, 200) ?? string.Empty;
+        if (string.IsNullOrWhiteSpace(command.Request.RoleName) || string.IsNullOrWhiteSpace(command.Request.PermissionCode))
+        {
+            return Results.BadRequest(new { error = "Role name and permission code are required" });
+        }
 
-        Role? role = await writeContext.Roles.SingleOrDefaultAsync(x => x.Name == command.Request.RoleName, cancellationToken);
+        string normalizedRoleName = command.Request.RoleName.ToUpperInvariant();
+        Role? role = await writeContext.Roles.SingleOrDefaultAsync(
+            x => x.NormalizedName == normalizedRoleName || x.Name == command.Request.RoleName,
+            cancellationToken);
         if (role is null)
         {
             return Results.NotFound(new { error = "Role not found" });
         }
 
-        Permission? permission = await writeContext.Permissions
-            .SingleOrDefaultAsync(x => x.Code == command.Request.PermissionCode, cancellationToken);
+        List<Permission> candidates = await writeContext.Permissions
+            .Where(x => x.Code.StartsWith("logging."))
+            .ToListAsync(cancellationToken);
+
+        Permission? permission = candidates.SingleOrDefault(
+            x => string.Equals(x.Code, command.Request.PermissionCode, StringComparison.OrdinalIgnoreCase));
         if (permission is null)
         {
             return Results.NotFound(new { error = "Permission not found" });

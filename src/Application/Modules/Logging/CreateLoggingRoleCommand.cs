@@ -21,8 +21,15 @@ internal sealed class CreateLoggingRoleCommandHandler(
     protected override async Task<IResult> HandleCore(CreateLoggingRoleCommand command, CancellationToken cancellationToken)
     {
         command.Request.RoleName = InputSanitizer.SanitizeIdentifier(command.Request.RoleName, 100) ?? string.Empty;
+        if (string.IsNullOrWhiteSpace(command.Request.RoleName))
+        {
+            return Results.BadRequest(new { error = "Role name is required" });
+        }
 
-        bool exists = await writeContext.Roles.AnyAsync(x => x.Name == command.Request.RoleName, cancellationToken);
+        string normalizedRoleName = command.Request.RoleName.ToUpperInvariant();
+        bool exists = await writeContext.Roles.AnyAsync(
+            x => x.NormalizedName == normalizedRoleName || x.Name == command.Request.RoleName,
+            cancellationToken);
         if (exists)
         {
             return Results.Ok();

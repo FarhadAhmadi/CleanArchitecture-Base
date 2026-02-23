@@ -141,7 +141,7 @@ internal static class LoggingMappings
     }
 
     internal static Role ToEntity(this CreateRoleRequest request) =>
-        new() { Id = Guid.NewGuid(), Name = request.RoleName };
+        new() { Id = Guid.NewGuid(), Name = request.RoleName, NormalizedName = request.RoleName.ToUpperInvariant() };
 
     internal static RolePermission ToEntity(this AssignAccessRequest _, Guid roleId, Guid permissionId) =>
         new() { RoleId = roleId, PermissionId = permissionId };

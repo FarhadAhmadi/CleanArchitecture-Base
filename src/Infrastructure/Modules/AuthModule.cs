@@ -41,7 +41,7 @@ internal static class AuthModule
         ValidateAuthSecurityOptions(authSecurityOptions);
 
         services.AddSingleton(jwtOptions);
-        services.AddSingleton<IPasswordValidator<User>, PasswordPolicyValidator>();
+        services.AddScoped<IPasswordValidator<User>, PasswordPolicyValidator>();
 
         services.AddIdentityCore<User>(options =>
             {

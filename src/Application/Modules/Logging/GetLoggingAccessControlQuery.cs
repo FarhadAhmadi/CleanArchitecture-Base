@@ -17,31 +17,38 @@ internal sealed class GetLoggingAccessControlQueryHandler(ILoggingReadDbContext 
 {
     protected override async Task<IResult> HandleCore(GetLoggingAccessControlQuery query, CancellationToken cancellationToken)
     {
-        List<string> permissions = await readContext.Permissions
-            .Where(x => x.Code.StartsWith("logging.", StringComparison.OrdinalIgnoreCase))
-            .Select(x => x.Code)
+        var permissions = (await readContext.Permissions
+                .Select(x => x.Code)
+                .ToListAsync(cancellationToken))
+            .Where(x => x.StartsWith("logging.", StringComparison.OrdinalIgnoreCase))
             .OrderBy(x => x)
+            .ToList();
+
+        List<RolePermissionProjection> rolePermissions = await (
+                from rp in readContext.RolePermissions
+                join p in readContext.Permissions on rp.PermissionId equals p.Id
+                select new RolePermissionProjection(rp.RoleId, p.Code))
             .ToListAsync(cancellationToken);
 
-        var roles = await readContext.Roles
+        var roles = (await readContext.Roles
+                .Select(role => new { role.Id, role.Name })
+                .ToListAsync(cancellationToken))
             .Select(role => new
             {
                 role.Name,
-                Permissions = (
-                    from rp in readContext.RolePermissions
-                    join p in readContext.Permissions on rp.PermissionId equals p.Id
-                    where rp.RoleId == role.Id && p.Code.StartsWith("logging.")
-                    select p.Code).ToList()
+                Permissions = rolePermissions
+                    .Where(x => x.RoleId == role.Id && x.PermissionCode.StartsWith("logging.", StringComparison.OrdinalIgnoreCase))
+                    .Select(x => x.PermissionCode)
+                    .Distinct()
+                    .OrderBy(x => x)
+                    .ToList()
             })
-            .ToListAsync(cancellationToken);
+            .ToList();
 
         return Results.Ok(new { permissions, roles });
     }
 }
 
-
-
-
-
+internal sealed record RolePermissionProjection(Guid RoleId, string PermissionCode);
 
 

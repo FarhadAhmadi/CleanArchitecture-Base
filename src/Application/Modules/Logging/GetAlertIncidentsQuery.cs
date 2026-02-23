@@ -15,15 +15,48 @@ namespace Application.Logging;
 public sealed record GetAlertIncidentsQuery(int Page, int PageSize, string? Status) : IQuery<IResult>;
 internal sealed class GetAlertIncidentsQueryHandler(ILoggingReadDbContext readContext) : ResultWrappingQueryHandler<GetAlertIncidentsQuery>
 {
+    private static string? NormalizeStatus(string? status)
+    {
+        if (string.IsNullOrWhiteSpace(status))
+        {
+            return null;
+        }
+
+        string value = status.Trim();
+        if (string.Equals(value, "pending", StringComparison.OrdinalIgnoreCase))
+        {
+            return "pending";
+        }
+        if (string.Equals(value, "scheduled", StringComparison.OrdinalIgnoreCase))
+        {
+            return "scheduled";
+        }
+        if (string.Equals(value, "failed", StringComparison.OrdinalIgnoreCase))
+        {
+            return "failed";
+        }
+        if (string.Equals(value, "sent", StringComparison.OrdinalIgnoreCase))
+        {
+            return "sent";
+        }
+        if (string.Equals(value, "completed", StringComparison.OrdinalIgnoreCase))
+        {
+            return "completed";
+        }
+
+        return value;
+    }
+
     protected override async Task<IResult> HandleCore(GetAlertIncidentsQuery query, CancellationToken cancellationToken)
     {
         int normalizedPage = Math.Max(1, query.Page);
         int normalizedPageSize = Math.Clamp(query.PageSize <= 0 ? 50 : query.PageSize, 1, 200);
+        string? normalizedStatus = NormalizeStatus(query.Status);
 
         IQueryable<AlertIncident> readQuery = readContext.AlertIncidents;
-        if (!string.IsNullOrWhiteSpace(query.Status))
+        if (!string.IsNullOrWhiteSpace(normalizedStatus))
         {
-            readQuery = readQuery.Where(x => x.Status == query.Status);
+            readQuery = readQuery.Where(x => x.Status == normalizedStatus);
         }
 
         int total = await readQuery.CountAsync(cancellationToken);
