@@ -1,6 +1,7 @@
 using Application.Abstractions.Authentication;
 using Application.Abstractions.Data;
 using Application.Abstractions.Messaging;
+using Domain.Files;
 using Domain.Profiles;
 using FluentValidation;
 using FluentValidation.Results;
@@ -51,17 +52,36 @@ internal sealed class UpdateMyProfileMusicCommandHandler(
             return Results.NotFound();
         }
 
-        bool fileOwnedByUser = await writeContext.FileAssets
-            .AsNoTracking()
-            .AnyAsync(
-                x => x.Id == request.MusicFileId!.Value &&
-                     !x.IsDeleted &&
-                     x.OwnerUserId == userContext.UserId,
-                cancellationToken);
-
-        if (!fileOwnedByUser)
+        if (request.MusicFileId.HasValue)
         {
-            return Results.BadRequest(new { message = "musicFileId is invalid or not owned by user." });
+            FileAsset? musicFile = await writeContext.FileAssets
+                .AsNoTracking()
+                .SingleOrDefaultAsync(x => x.Id == request.MusicFileId.Value && !x.IsDeleted, cancellationToken);
+
+            if (musicFile is null)
+            {
+                return Results.BadRequest(new { code = "Profiles.MusicFileNotFound", message = "musicFileId was not found." });
+            }
+
+            if (musicFile.OwnerUserId != userContext.UserId)
+            {
+                return Results.BadRequest(new { code = "Profiles.MusicFileNotOwned", message = "musicFileId is not owned by user." });
+            }
+
+            if (musicFile.StorageStatus == FileStorageStatus.Pending)
+            {
+                return Results.Conflict(new { code = "Profiles.MusicFilePending", message = "musicFileId is still processing." });
+            }
+
+            if (musicFile.StorageStatus != FileStorageStatus.Available)
+            {
+                return Results.BadRequest(new
+                {
+                    code = "Profiles.MusicFileUnavailable",
+                    message = "musicFileId is unavailable.",
+                    storageStatus = musicFile.StorageStatus.ToString()
+                });
+            }
         }
 
         profile.FavoriteMusicTitle = InputSanitizer.SanitizeText(request.MusicTitle, 200);

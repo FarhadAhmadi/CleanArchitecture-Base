@@ -63,6 +63,11 @@ internal sealed class DeletedFileCleanupWorker(
                 await storage.DeleteAsync(file.ObjectKey, cancellationToken);
                 file.StorageDeletedAtUtc = DateTime.UtcNow;
             }
+            catch (FileNotFoundException)
+            {
+                // Object is already missing; mark as cleaned up to prevent endless retries.
+                file.StorageDeletedAtUtc = DateTime.UtcNow;
+            }
             catch (Exception exception)
             {
                 logger.LogWarning(

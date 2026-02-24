@@ -1,4 +1,5 @@
 using System.Security.Cryptography;
+using System.Diagnostics;
 using System.Text;
 using Application.Abstractions.Authentication;
 using Application.Abstractions.Data;
@@ -32,23 +33,34 @@ internal sealed class FileUseCaseService(
     private const string LinkModeInline = "inline";
     private const string LinkModeDownload = "download";
     private const string LinkModeStream = "stream";
+    private static readonly ActivitySource ActivitySource = new("Web.Api.Files");
 
     public async Task<IResult> UploadAsync(UploadFileInput input, HttpContext httpContext, CancellationToken cancellationToken)
     {
         if (input.File.Length == 0)
         {
-            return Results.BadRequest(new { message = "Empty file is not allowed." });
+            return Results.BadRequest(new { code = "Files.EmptyFile", message = "Empty file is not allowed." });
         }
 
         (bool isValid, string validationMessage) = ValidateFile(input.File.FileName, input.File.Length, input.File.ContentType, validationOptions);
         if (!isValid)
         {
-            return Results.BadRequest(new { message = validationMessage });
+            return Results.BadRequest(new { code = "Files.ValidationFailed", message = validationMessage });
         }
 
-        string safeFileName = SanitizeFileName(input.File.FileName);
+        string safeFileName;
+        try
+        {
+            safeFileName = SanitizeFileName(input.File.FileName);
+        }
+        catch (InvalidOperationException)
+        {
+            return Results.BadRequest(new { code = "Files.InvalidName", message = "Invalid file name." });
+        }
+
         string extension = Path.GetExtension(safeFileName).ToUpperInvariant();
         string objectKey = BuildObjectKey(storageOptions.ObjectPrefix, input.Module, extension);
+        string stagingObjectKey = BuildObjectKey(storageOptions.StagingObjectPrefix, input.Module, extension);
 
         await using Stream source = input.File.OpenReadStream();
         await using var copy = new MemoryStream((int)input.File.Length);
@@ -58,7 +70,7 @@ internal sealed class FileUseCaseService(
         FileScanResult scanResult = await scanner.ScanAsync(copy, cancellationToken);
         if (!scanResult.IsClean)
         {
-            return Results.BadRequest(new { message = "Malicious file detected.", details = scanResult.Message });
+            return Results.BadRequest(new { code = "Files.MaliciousContent", message = "Malicious file detected.", details = scanResult.Message });
         }
 
         copy.Position = 0;
@@ -79,48 +91,74 @@ internal sealed class FileUseCaseService(
             Description = string.IsNullOrWhiteSpace(input.Description) ? null : input.Description.Trim(),
             Sha256 = sha256,
             IsScanned = true,
+            StorageStatus = FileStorageStatus.Pending,
+            StagingObjectKey = stagingObjectKey,
+            UploadRequestedAtUtc = DateTime.UtcNow,
             UploadedAtUtc = DateTime.UtcNow
         };
 
-        bool uploadCompleted = false;
+        writeContext.FileAssets.Add(entity);
+        await WriteAccessAuditAsync(httpContext, entity.Id, userContext.UserId, "upload-requested", cancellationToken);
+        await writeContext.SaveChangesAsync(cancellationToken);
+
+        using Activity? activity = ActivitySource.StartActivity("files.upload.requested", ActivityKind.Internal);
+        activity?.SetTag("file.id", entity.Id.ToString("N"));
+        activity?.SetTag("file.object_key", entity.ObjectKey);
+        activity?.SetTag("file.staging_object_key", entity.StagingObjectKey);
+
         try
         {
-            await storage.UploadAsync(objectKey, copy, copy.Length, input.File.ContentType ?? "application/octet-stream", cancellationToken);
-            uploadCompleted = true;
-
-            writeContext.FileAssets.Add(entity);
-            entity.Raise(new FileUploadedDomainEvent(entity.Id, entity.OwnerUserId, entity.Module, entity.SizeBytes));
-            await WriteAccessAuditAsync(httpContext, entity.Id, userContext.UserId, "upload", cancellationToken);
+            await storage.UploadAsync(stagingObjectKey, copy, copy.Length, input.File.ContentType ?? "application/octet-stream", cancellationToken);
+            await WriteAccessAuditAsync(httpContext, entity.Id, userContext.UserId, "upload-staged", cancellationToken);
             await writeContext.SaveChangesAsync(cancellationToken);
 
             if (logger.IsEnabled(LogLevel.Information))
             {
                 logger.LogInformation(
-                    "File uploaded. FileId={FileId} OwnerUserId={OwnerUserId} Module={Module} SizeBytes={SizeBytes}",
+                    "File upload requested and staged. FileId={FileId} OwnerUserId={OwnerUserId} Module={Module} SizeBytes={SizeBytes} Status={Status}",
                     entity.Id,
                     entity.OwnerUserId,
                     entity.Module,
-                    entity.SizeBytes);
+                    entity.SizeBytes,
+                    entity.StorageStatus);
             }
         }
-        catch
+        catch (Exception exception)
         {
-            if (uploadCompleted)
-            {
-                try
-                {
-                    await storage.DeleteAsync(objectKey, cancellationToken);
-                }
-                catch
-                {
-                    // Best effort compensation to avoid orphan objects when DB write fails.
-                }
-            }
+            entity.StorageStatus = FileStorageStatus.Failed;
+            entity.StorageError = exception.Message;
+            entity.StorageRetryCount += 1;
+            entity.StorageLastCheckedAtUtc = DateTime.UtcNow;
+            entity.UpdatedAtUtc = DateTime.UtcNow;
+            await WriteAccessAuditAsync(httpContext, entity.Id, userContext.UserId, "upload-failed", cancellationToken);
+            await writeContext.SaveChangesAsync(cancellationToken);
 
-            throw;
+            logger.LogWarning(
+                exception,
+                "File staging failed and has been marked as Failed. FileId={FileId} ObjectKey={ObjectKey}",
+                entity.Id,
+                entity.ObjectKey);
+
+            return Results.Json(new
+            {
+                code = "Files.UploadFailed",
+                message = "File upload failed while staging.",
+                fileId = entity.Id,
+                storageStatus = entity.StorageStatus.ToString()
+            }, statusCode: StatusCodes.Status503ServiceUnavailable);
         }
 
-        return Results.Ok(new { fileId = entity.Id, entity.FileName, entity.SizeBytes, entity.ContentType, entity.Module, entity.UploadedAtUtc });
+        return Results.Accepted($"/api/v1/files/{entity.Id}", new
+        {
+            fileId = entity.Id,
+            entity.FileName,
+            entity.SizeBytes,
+            entity.ContentType,
+            entity.Module,
+            entity.UploadedAtUtc,
+            storageStatus = entity.StorageStatus.ToString(),
+            pollAfterSeconds = 2
+        });
     }
 
     public IResult Validate(ValidateFileInput input)
@@ -149,7 +187,23 @@ internal sealed class FileUseCaseService(
             return Results.Forbid();
         }
 
-        return Results.Ok(new { file.Id, file.FileName, file.ContentType, file.SizeBytes, file.Module, file.Folder, file.Description, file.OwnerUserId, file.UploadedAtUtc, file.UpdatedAtUtc, file.IsEncrypted });
+        return Results.Ok(new
+        {
+            file.Id,
+            file.FileName,
+            file.ContentType,
+            file.SizeBytes,
+            file.Module,
+            file.Folder,
+            file.Description,
+            file.OwnerUserId,
+            file.UploadedAtUtc,
+            file.UpdatedAtUtc,
+            file.IsEncrypted,
+            storageStatus = file.StorageStatus.ToString(),
+            file.StorageError,
+            file.StorageAvailableAtUtc
+        });
     }
 
     public async Task<IResult> DownloadAsync(Guid fileId, HttpContext httpContext, CancellationToken cancellationToken)
@@ -165,7 +219,18 @@ internal sealed class FileUseCaseService(
             return Results.Forbid();
         }
 
-        (Stream content, string contentType) = await storage.OpenReadAsync(file.ObjectKey, cancellationToken);
+        if (file.StorageStatus != FileStorageStatus.Available)
+        {
+            return ToControlledUnavailableResult(file, includePlaceholder: false);
+        }
+
+        (Stream? Content, string ContentType, string? FailureCode) contentResult = await TryOpenReadOrMarkMissingAsync(file, includePlaceholder: false, cancellationToken);
+        if (contentResult.Content is null)
+        {
+            return ToControlledUnavailableResult(file, includePlaceholder: false, contentResult.FailureCode);
+        }
+
+        (Stream content, string contentType) = (contentResult.Content, contentResult.ContentType);
         await WriteAccessAuditAsync(httpContext, file.Id, userContext.UserId, "download", cancellationToken);
         await writeContext.SaveChangesAsync(cancellationToken);
 
@@ -189,7 +254,18 @@ internal sealed class FileUseCaseService(
             return Results.Forbid();
         }
 
-        (Stream content, string contentType) = await storage.OpenReadAsync(file.ObjectKey, cancellationToken);
+        if (file.StorageStatus != FileStorageStatus.Available)
+        {
+            return ToControlledUnavailableResult(file, includePlaceholder: true);
+        }
+
+        (Stream? Content, string ContentType, string? FailureCode) contentResult = await TryOpenReadOrMarkMissingAsync(file, includePlaceholder: true, cancellationToken);
+        if (contentResult.Content is null)
+        {
+            return ToControlledUnavailableResult(file, includePlaceholder: true, contentResult.FailureCode);
+        }
+
+        (Stream content, string contentType) = (contentResult.Content, contentResult.ContentType);
         await WriteAccessAuditAsync(httpContext, file.Id, userContext.UserId, "stream", cancellationToken);
         await writeContext.SaveChangesAsync(cancellationToken);
 
@@ -213,6 +289,11 @@ internal sealed class FileUseCaseService(
         if (!await HasReadAccessAsync(file, userContext.UserId, cancellationToken))
         {
             return Results.Forbid();
+        }
+
+        if (file.StorageStatus != FileStorageStatus.Available)
+        {
+            return ToControlledUnavailableResult(file, includePlaceholder: false);
         }
 
         string normalizedMode = NormalizeLinkMode(mode);
@@ -252,7 +333,25 @@ internal sealed class FileUseCaseService(
             return Results.NotFound();
         }
 
-        (Stream content, string contentType) = await storage.OpenReadAsync(file.ObjectKey, cancellationToken);
+        if (file.StorageStatus != FileStorageStatus.Available)
+        {
+            await WritePublicLinkAuditAsync(httpContext, token, mode, file.Id, "object-unavailable", cancellationToken);
+            await writeContext.SaveChangesAsync(cancellationToken);
+            return ToControlledUnavailableResult(file, includePlaceholder: string.Equals(mode, LinkModeStream, StringComparison.Ordinal));
+        }
+
+        (Stream? Content, string ContentType, string? FailureCode) contentResult = await TryOpenReadOrMarkMissingAsync(
+            file,
+            includePlaceholder: string.Equals(mode, LinkModeStream, StringComparison.Ordinal),
+            cancellationToken);
+        if (contentResult.Content is null)
+        {
+            await WritePublicLinkAuditAsync(httpContext, token, mode, file.Id, "object-not-found", cancellationToken);
+            await writeContext.SaveChangesAsync(cancellationToken);
+            return ToControlledUnavailableResult(file, includePlaceholder: string.Equals(mode, LinkModeStream, StringComparison.Ordinal), contentResult.FailureCode);
+        }
+
+        (Stream content, string contentType) = (contentResult.Content, contentResult.ContentType);
         await WriteAccessAuditAsync(httpContext, file.Id, null, $"public-{mode}", cancellationToken);
         await WritePublicLinkAuditAsync(httpContext, token, mode, file.Id, "success", cancellationToken);
         await writeContext.SaveChangesAsync(cancellationToken);
@@ -411,7 +510,7 @@ internal sealed class FileUseCaseService(
         List<object> items = await q.OrderByDescending(x => x.UploadedAtUtc)
             .Skip((normalizedPage - 1) * normalizedPageSize)
             .Take(normalizedPageSize)
-            .Select(x => new { x.Id, x.FileName, x.Extension, x.ContentType, x.SizeBytes, x.Module, x.Folder, x.OwnerUserId, x.UploadedAtUtc })
+            .Select(x => new { x.Id, x.FileName, x.Extension, x.ContentType, x.SizeBytes, x.Module, x.Folder, x.OwnerUserId, x.UploadedAtUtc, storageStatus = x.StorageStatus.ToString() })
             .Cast<object>()
             .ToListAsync(cancellationToken);
         return Results.Ok(new { page = normalizedPage, pageSize = normalizedPageSize, total, items });
@@ -442,7 +541,7 @@ internal sealed class FileUseCaseService(
         List<object> items = await q.OrderByDescending(x => x.UploadedAtUtc)
             .Skip((normalizedPage - 1) * normalizedPageSize)
             .Take(normalizedPageSize)
-            .Select(x => new { x.Id, x.FileName, x.ContentType, x.SizeBytes, x.Folder, x.UploadedAtUtc })
+            .Select(x => new { x.Id, x.FileName, x.ContentType, x.SizeBytes, x.Folder, x.UploadedAtUtc, storageStatus = x.StorageStatus.ToString() })
             .Cast<object>()
             .ToListAsync(cancellationToken);
 
@@ -490,7 +589,7 @@ internal sealed class FileUseCaseService(
             join ft in readContext.FileTags on file.Id equals ft.FileId
             where !file.IsDeleted && ft.Tag == normalized && (isAdmin || file.OwnerUserId == uid || aclRead.Contains(file.Id))
             orderby file.UploadedAtUtc descending
-            select new { file.Id, file.FileName, file.ContentType, file.SizeBytes, file.Module, file.UploadedAtUtc })
+            select new { file.Id, file.FileName, file.ContentType, file.SizeBytes, file.Module, file.UploadedAtUtc, storageStatus = file.StorageStatus.ToString() })
             .Cast<object>()
             .ToListAsync(cancellationToken);
 
@@ -728,6 +827,94 @@ internal sealed class FileUseCaseService(
             cancellationToken);
     }
 
+    private async Task<(Stream? Content, string ContentType, string? FailureCode)> TryOpenReadOrMarkMissingAsync(
+        FileAsset file,
+        bool includePlaceholder,
+        CancellationToken cancellationToken)
+    {
+        using Activity? activity = ActivitySource.StartActivity("files.storage.open_read", ActivityKind.Internal);
+        activity?.SetTag("file.id", file.Id.ToString("N"));
+        activity?.SetTag("file.object_key", file.ObjectKey);
+        activity?.SetTag("file.storage_status", file.StorageStatus.ToString());
+
+        try
+        {
+            (Stream content, string contentType) result = await storage.OpenReadAsync(file.ObjectKey, cancellationToken);
+            return (result.content, result.contentType, null);
+        }
+        catch (FileNotFoundException)
+        {
+            await MarkFileMissingAsync(file.Id, cancellationToken);
+
+            if (includePlaceholder && IsImageContentType(file.ContentType) && storageOptions.EnableMissingObjectPlaceholder)
+            {
+                byte[] fallback = Encoding.UTF8.GetBytes(storageOptions.MissingObjectPlaceholderSvg);
+                return (new MemoryStream(fallback), "image/svg+xml", "Files.Unavailable");
+            }
+
+            return (null, "application/octet-stream", "Files.Unavailable");
+        }
+        catch (Exception exception)
+        {
+            logger.LogWarning(
+                exception,
+                "File storage read failed. FileId={FileId} ObjectKey={ObjectKey}",
+                file.Id,
+                file.ObjectKey);
+            return (null, "application/octet-stream", "Files.StorageUnavailable");
+        }
+    }
+
+    private async Task MarkFileMissingAsync(Guid fileId, CancellationToken cancellationToken)
+    {
+        FileAsset? tracked = await writeContext.FileAssets.SingleOrDefaultAsync(x => x.Id == fileId, cancellationToken);
+        if (tracked is null)
+        {
+            return;
+        }
+
+        tracked.StorageStatus = FileStorageStatus.Missing;
+        tracked.StorageError = "Object not found in storage.";
+        tracked.StorageLastCheckedAtUtc = DateTime.UtcNow;
+        tracked.UpdatedAtUtc = DateTime.UtcNow;
+        await writeContext.SaveChangesAsync(cancellationToken);
+    }
+
+    private IResult ToControlledUnavailableResult(FileAsset file, bool includePlaceholder, string? failureCode = null)
+    {
+        if (string.Equals(failureCode, "Files.StorageUnavailable", StringComparison.Ordinal))
+        {
+            return Results.Json(new
+            {
+                code = "Files.StorageUnavailable",
+                message = "File storage is currently unavailable."
+            }, statusCode: StatusCodes.Status503ServiceUnavailable);
+        }
+
+        if (file.StorageStatus == FileStorageStatus.Pending)
+        {
+            return Results.Conflict(new
+            {
+                code = "Files.Pending",
+                message = "File is being processed and is not available yet.",
+                storageStatus = file.StorageStatus.ToString()
+            });
+        }
+
+        if (includePlaceholder && IsImageContentType(file.ContentType) && storageOptions.EnableMissingObjectPlaceholder)
+        {
+            byte[] fallback = Encoding.UTF8.GetBytes(storageOptions.MissingObjectPlaceholderSvg);
+            return Results.File(new MemoryStream(fallback), "image/svg+xml", enableRangeProcessing: false);
+        }
+
+        return Results.NotFound(new
+        {
+            code = failureCode ?? "Files.Unavailable",
+            message = "File is unavailable.",
+            storageStatus = file.StorageStatus.ToString()
+        });
+    }
+
     private static string BuildObjectKey(string prefix, string module, string extension)
     {
         string safeModule = string.IsNullOrWhiteSpace(module) ? "general" : module.Trim();
@@ -789,6 +976,12 @@ internal sealed class FileUseCaseService(
         byte[] hash = SHA256.HashData(stream);
         stream.Position = 0;
         return Convert.ToHexString(hash);
+    }
+
+    private static bool IsImageContentType(string? contentType)
+    {
+        return !string.IsNullOrWhiteSpace(contentType) &&
+               contentType.StartsWith("image/", StringComparison.OrdinalIgnoreCase);
     }
 
     private static string NormalizeLinkMode(string? mode)

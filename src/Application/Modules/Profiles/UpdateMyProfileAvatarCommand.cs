@@ -1,6 +1,7 @@
 using Application.Abstractions.Authentication;
 using Application.Abstractions.Data;
 using Application.Abstractions.Messaging;
+using Domain.Files;
 using Domain.Profiles;
 using FluentValidation;
 using FluentValidation.Results;
@@ -12,7 +13,10 @@ public sealed record UpdateMyProfileAvatarCommand(Guid? AvatarFileId) : ICommand
 
 internal sealed class UpdateMyProfileAvatarCommandValidator : AbstractValidator<UpdateMyProfileAvatarCommand>
 {
-    public UpdateMyProfileAvatarCommandValidator() { }
+    public UpdateMyProfileAvatarCommandValidator()
+    {
+        RuleFor(x => x.AvatarFileId).NotNull();
+    }
 }
 
 internal sealed class UpdateMyProfileAvatarCommandHandler(
@@ -46,17 +50,33 @@ internal sealed class UpdateMyProfileAvatarCommandHandler(
             return Results.NotFound();
         }
 
-        bool fileOwnedByUser = await writeContext.FileAssets
+        FileAsset? avatarFile = await writeContext.FileAssets
             .AsNoTracking()
-            .AnyAsync(
-                x => x.Id == request.AvatarFileId!.Value &&
-                     !x.IsDeleted &&
-                     x.OwnerUserId == userContext.UserId,
-                cancellationToken);
+            .SingleOrDefaultAsync(x => x.Id == request.AvatarFileId!.Value && !x.IsDeleted, cancellationToken);
 
-        if (!fileOwnedByUser)
+        if (avatarFile is null)
         {
-            return Results.BadRequest(new { message = "avatarFileId is invalid or not owned by user." });
+            return Results.BadRequest(new { code = "Profiles.AvatarFileNotFound", message = "avatarFileId was not found." });
+        }
+
+        if (avatarFile.OwnerUserId != userContext.UserId)
+        {
+            return Results.BadRequest(new { code = "Profiles.AvatarFileNotOwned", message = "avatarFileId is not owned by user." });
+        }
+
+        if (avatarFile.StorageStatus == FileStorageStatus.Pending)
+        {
+            return Results.Conflict(new { code = "Profiles.AvatarFilePending", message = "avatarFileId is still processing." });
+        }
+
+        if (avatarFile.StorageStatus != FileStorageStatus.Available)
+        {
+            return Results.BadRequest(new
+            {
+                code = "Profiles.AvatarFileUnavailable",
+                message = "avatarFileId is unavailable.",
+                storageStatus = avatarFile.StorageStatus.ToString()
+            });
         }
 
         profile.AvatarFileId = request.AvatarFileId;

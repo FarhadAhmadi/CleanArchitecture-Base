@@ -1,6 +1,6 @@
 ﻿# ماژول Profiles
 
-تاریخ به‌روزرسانی: 2026-02-21
+تاریخ به‌روزرسانی: 2026-02-24
 
 ## هدف
 مدیریت پروفایل شخصی و عمومی کاربر با قابلیت گزارش مدیریتی.
@@ -42,6 +42,18 @@
 - file id نامعتبر در avatar/music
 - نقض policy حریم خصوصی
 - پارامترهای بازه گزارش نامعتبر
+
+## ماتریس خطا (پروفایل + فایل)
+| Code | HTTP | توضیح | رفتار پیشنهادی فرانت |
+|---|---|---|---|
+| `Profiles.AvatarFileNotFound` | 400 | فایل avatar وجود ندارد | کاربر فایل جدید انتخاب کند |
+| `Profiles.AvatarFileNotOwned` | 400 | فایل avatar متعلق به کاربر نیست | خطای دسترسی نشان داده شود |
+| `Profiles.AvatarFilePending` | 409 | فایل avatar هنوز پردازش نشده | retry با polling |
+| `Profiles.AvatarFileUnavailable` | 400 | فایل avatar در storage در دسترس نیست | پیام graceful + آپلود مجدد |
+| `Profiles.MusicFileNotFound` | 400 | فایل music وجود ندارد | کاربر فایل جدید انتخاب کند |
+| `Profiles.MusicFileNotOwned` | 400 | فایل music متعلق به کاربر نیست | خطای دسترسی نشان داده شود |
+| `Profiles.MusicFilePending` | 409 | فایل music هنوز پردازش نشده | retry با polling |
+| `Profiles.MusicFileUnavailable` | 400 | فایل music در storage در دسترس نیست | پیام graceful + آپلود مجدد |
 
 ## روند استفاده و Workflow
 ### مسیر اصلی

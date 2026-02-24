@@ -105,12 +105,29 @@ await app.ApplyMigrationsIfEnabledAsync(migrationOptions);
 
 app.MapHealthChecks("health", new HealthCheckOptions
 {
+    Predicate = _ => false,
     ResponseWriter = static async (httpContext, report) =>
     {
         httpContext.Response.ContentType = "application/json";
         await httpContext.Response.WriteAsJsonAsync(new
         {
             status = report.Status.ToString()
+        });
+    }
+});
+
+app.MapHealthChecks("ready", new HealthCheckOptions
+{
+    Predicate = check => check.Tags.Contains("ready"),
+    ResponseWriter = static async (httpContext, report) =>
+    {
+        httpContext.Response.ContentType = "application/json";
+        await httpContext.Response.WriteAsJsonAsync(new
+        {
+            status = report.Status.ToString(),
+            checks = report.Entries.ToDictionary(
+                x => x.Key,
+                x => new { status = x.Value.Status.ToString(), description = x.Value.Description })
         });
     }
 });

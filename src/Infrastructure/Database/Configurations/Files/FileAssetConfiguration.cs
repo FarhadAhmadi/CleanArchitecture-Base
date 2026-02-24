@@ -24,6 +24,13 @@ internal sealed class FileAssetConfiguration : IEntityTypeConfiguration<FileAsse
         builder.Property(x => x.Folder).HasMaxLength(300);
         builder.Property(x => x.Description).HasMaxLength(500);
         builder.Property(x => x.Sha256).HasMaxLength(64).IsRequired();
+        builder.Property(x => x.StorageStatus).IsRequired();
+        builder.Property(x => x.StorageError).HasMaxLength(500);
+        builder.Property(x => x.StorageRetryCount).IsRequired();
+        builder.Property(x => x.StagingObjectKey).HasMaxLength(400);
+        builder.Property(x => x.UploadRequestedAtUtc).IsRequired();
+        builder.Property(x => x.StorageAvailableAtUtc);
+        builder.Property(x => x.StorageLastCheckedAtUtc);
         builder.Property(x => x.UploadedAtUtc).IsRequired();
         builder.Property(x => x.StorageDeletedAtUtc);
 
@@ -36,6 +43,7 @@ internal sealed class FileAssetConfiguration : IEntityTypeConfiguration<FileAsse
         builder.HasIndex(x => new { x.Module, x.UploadedAtUtc });
         builder.HasIndex(x => x.FileName);
         builder.HasIndex(x => x.IsDeleted);
+        builder.HasIndex(x => new { x.StorageStatus, x.UploadRequestedAtUtc });
         builder.HasIndex(x => new { x.IsDeleted, x.StorageDeletedAtUtc, x.DeletedAtUtc });
     }
 }

@@ -107,6 +107,7 @@ public interface IProfilesReadDbContext
 {
     IQueryable<UserProfile> UserProfiles { get; }
     IQueryable<User> Users { get; }
+    IQueryable<FileAsset> FileAssets { get; }
 }
 
 public interface INotificationsWriteDbContext : IModuleWriteDbContext

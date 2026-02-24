@@ -21,6 +21,18 @@ internal static class ProfileEndpointCommon
 
     internal static object ToPrivateResponse(UserProfile profile)
     {
+        return ToPrivateResponse(profile, avatarStorageStatus: null, musicStorageStatus: null);
+    }
+
+    internal static object ToPrivateResponse(UserProfile profile, string? avatarStorageStatus, string? musicStorageStatus)
+    {
+        Guid? avatarFileId = ShouldExposeFileReference(profile.AvatarFileId, avatarStorageStatus)
+            ? profile.AvatarFileId
+            : null;
+        Guid? musicFileId = ShouldExposeFileReference(profile.FavoriteMusicFileId, musicStorageStatus)
+            ? profile.FavoriteMusicFileId
+            : null;
+
         return new
         {
             profile.Id,
@@ -28,7 +40,7 @@ internal static class ProfileEndpointCommon
             profile.DisplayName,
             profile.Bio,
             profile.AvatarUrl,
-            profile.AvatarFileId,
+            AvatarFileId = avatarFileId,
             profile.DateOfBirth,
             profile.Gender,
             profile.Location,
@@ -39,7 +51,9 @@ internal static class ProfileEndpointCommon
             profile.ContactPhone,
             profile.FavoriteMusicTitle,
             profile.FavoriteMusicArtist,
-            profile.FavoriteMusicFileId,
+            FavoriteMusicFileId = musicFileId,
+            avatarStorageStatus,
+            musicStorageStatus,
             interests = ParseInterests(profile.InterestsCsv),
             socialLinks = ParseSocialLinks(profile.SocialLinksJson),
             profile.IsProfilePublic,
@@ -57,19 +71,33 @@ internal static class ProfileEndpointCommon
 
     internal static object ToPublicResponse(UserProfile profile)
     {
+        return ToPublicResponse(profile, avatarStorageStatus: null, musicStorageStatus: null);
+    }
+
+    internal static object ToPublicResponse(UserProfile profile, string? avatarStorageStatus, string? musicStorageStatus)
+    {
+        Guid? avatarFileId = ShouldExposeFileReference(profile.AvatarFileId, avatarStorageStatus)
+            ? profile.AvatarFileId
+            : null;
+        Guid? musicFileId = ShouldExposeFileReference(profile.FavoriteMusicFileId, musicStorageStatus)
+            ? profile.FavoriteMusicFileId
+            : null;
+
         return new
         {
             profile.UserId,
             profile.DisplayName,
             profile.Bio,
             profile.AvatarUrl,
-            profile.AvatarFileId,
+            AvatarFileId = avatarFileId,
             profile.Location,
             profile.WebsiteUrl,
             profile.PreferredLanguage,
             profile.FavoriteMusicTitle,
             profile.FavoriteMusicArtist,
-            profile.FavoriteMusicFileId,
+            FavoriteMusicFileId = musicFileId,
+            avatarStorageStatus,
+            musicStorageStatus,
             interests = ParseInterests(profile.InterestsCsv),
             socialLinks = ParseSocialLinks(profile.SocialLinksJson),
             profile.ProfileCompletenessScore,
@@ -184,6 +212,21 @@ internal static class ProfileEndpointCommon
         }
 
         return (int)Math.Round(score / (double)total * 100, MidpointRounding.AwayFromZero);
+    }
+
+    private static bool ShouldExposeFileReference(Guid? fileId, string? storageStatus)
+    {
+        if (!fileId.HasValue)
+        {
+            return false;
+        }
+
+        if (string.IsNullOrWhiteSpace(storageStatus))
+        {
+            return true;
+        }
+
+        return string.Equals(storageStatus, "Available", StringComparison.Ordinal);
     }
 }
 

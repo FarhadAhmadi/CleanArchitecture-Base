@@ -1,6 +1,7 @@
 using Application.Abstractions.Authentication;
 using Application.Abstractions.Data;
 using Application.Abstractions.Messaging;
+using Domain.Files;
 using Domain.Profiles;
 using FluentValidation;
 using FluentValidation.Results;
@@ -33,12 +34,36 @@ internal sealed class GetMyProfileMusicQueryHandler(
             return Results.NotFound();
         }
 
+        string? musicStorageStatus = await ResolveStorageStatusAsync(profile.FavoriteMusicFileId, readContext, cancellationToken);
+        Guid? musicFileId = string.Equals(musicStorageStatus, FileStorageStatus.Available.ToString(), StringComparison.Ordinal)
+            ? profile.FavoriteMusicFileId
+            : null;
+
         return Results.Ok(new
         {
             profile.FavoriteMusicTitle,
             profile.FavoriteMusicArtist,
-            profile.FavoriteMusicFileId
+            FavoriteMusicFileId = musicFileId,
+            musicStorageStatus
         });
+    }
+
+    private static async Task<string?> ResolveStorageStatusAsync(
+        Guid? fileId,
+        IProfilesReadDbContext readContext,
+        CancellationToken cancellationToken)
+    {
+        if (!fileId.HasValue)
+        {
+            return null;
+        }
+
+        FileStorageStatus? status = await readContext.FileAssets
+            .Where(x => x.Id == fileId.Value && !x.IsDeleted)
+            .Select(x => (FileStorageStatus?)x.StorageStatus)
+            .SingleOrDefaultAsync(cancellationToken);
+
+        return status?.ToString() ?? FileStorageStatus.Missing.ToString();
     }
 }
 

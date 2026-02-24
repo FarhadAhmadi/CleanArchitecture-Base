@@ -16,6 +16,7 @@ using Microsoft.Extensions.Http.Resilience;
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
+using Infrastructure.Files;
 using Infrastructure.Scheduler;
 using Web.Api.Endpoints.Files;
 using Web.Api.Endpoints.Notifications;
@@ -237,7 +238,8 @@ public static class DependencyInjection
                     .AddAspNetCoreInstrumentation()
                     .AddHttpClientInstrumentation()
                     .AddRuntimeInstrumentation()
-                    .AddMeter(SchedulerMetrics.MeterName);
+                    .AddMeter(SchedulerMetrics.MeterName)
+                    .AddMeter(FileStorageMetrics.MeterName);
 
                 if (!string.IsNullOrWhiteSpace(telemetryOptions.OtlpEndpoint))
                 {

@@ -26,11 +26,18 @@
 3. Validate queue broker health and outbox processor lag.
 4. Validate dependency health (cache, storage, SMTP, external APIs).
 5. Correlate trace IDs for failing requests.
+6. برای فایل‌ها:
+   - `GET /ready` و check `file-storage`
+   - نرخ `files.storage.object_not_found.count`
+   - وضعیت‌های `Pending/Missing/Failed` در `files.FileAssets`
 
 ## Containment
 - Roll back latest release if regression confirmed.
 - Reduce traffic (rate limit hardening or temporary feature kill-switch).
 - Disable non-critical background jobs if they amplify incident.
+- فعال‌سازی auto-heal:
+  - اجرای فوری reconciliation job برای همسان‌سازی DB و object storage
+  - retry دستی فایل‌های `Pending` یا `Missing` بر اساس runbook فایل
 
 ## Recovery Criteria
 - Error budget burn returns to normal.
@@ -47,3 +54,4 @@
 1. Blameless postmortem.
 2. Action items with owners and due dates.
 3. Add prevention tests/alerts/runbook updates.
+4. ثبت chaos scenario برای storage fault (timeout/object-not-found/circuit-open).

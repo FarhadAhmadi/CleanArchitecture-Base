@@ -27,10 +27,20 @@ internal static class FilesModule
             .GetSection(FileCleanupOptions.SectionName)
             .Get<FileCleanupOptions>() ?? new FileCleanupOptions();
 
+        FileUploadProcessingOptions uploadProcessingOptions = configuration
+            .GetSection(FileUploadProcessingOptions.SectionName)
+            .Get<FileUploadProcessingOptions>() ?? new FileUploadProcessingOptions();
+
+        FileReconciliationOptions reconciliationOptions = configuration
+            .GetSection(FileReconciliationOptions.SectionName)
+            .Get<FileReconciliationOptions>() ?? new FileReconciliationOptions();
+
         services.AddSingleton(storageOptions);
         services.AddSingleton(validationOptions);
         services.AddSingleton(clamAvOptions);
         services.AddSingleton(cleanupOptions);
+        services.AddSingleton(uploadProcessingOptions);
+        services.AddSingleton(reconciliationOptions);
 
         services.AddSingleton<IMinioClient>(_ =>
         {
@@ -58,6 +68,7 @@ internal static class FilesModule
         });
 
         services.AddSingleton<IFileObjectStorage, MinioFileObjectStorage>();
+        services.AddSingleton<FileStorageMetrics>();
         services.AddSingleton<FileAppLinkService>();
 
         if (clamAvOptions.Enabled)
@@ -70,6 +81,8 @@ internal static class FilesModule
         }
 
         services.AddHostedService<DeletedFileCleanupWorker>();
+        services.AddHostedService<FileUploadProcessingWorker>();
+        services.AddHostedService<FileStorageReconciliationWorker>();
 
         return services;
     }

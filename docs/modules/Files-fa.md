@@ -1,9 +1,15 @@
 ﻿# ماژول Files
 
-تاریخ به‌روزرسانی: 2026-02-21
+تاریخ به‌روزرسانی: 2026-02-24
 
 ## هدف
-سرویس مدیریت فایل با قابلیت upload/download/stream، اشتراک امن، ACL و audit دسترسی.
+سرویس مدیریت فایل با قابلیت upload/download/stream، اشتراک امن، ACL، audit دسترسی و lifecycle مبتنی بر وضعیت ذخیره‌سازی.
+
+## مدل وضعیت فایل (Source of Truth در DB)
+- `Pending`: درخواست آپلود ثبت شده ولی فایل هنوز به object نهایی materialize نشده است.
+- `Available`: فایل در object storage در دسترس است.
+- `Missing`: رکورد DB وجود دارد ولی object یافت نشده است.
+- `Failed`: پردازش یا ذخیره‌سازی نهایی شکست خورده است.
 
 ## ترتیب IOrderedEndpoint
 این ماژول از `IOrderedEndpoint` استفاده می‌کند. نکته: چند endpoint دارای Order یکسان هستند؛ ترتیب نهایی بین آن‌ها به ترتیب registration وابسته است.
@@ -29,7 +35,7 @@
 ## کاتالوگ کامل Endpointها
 | Method | Path | دسترسی | دلیل وجود | ورودی‌ها |
 |---|---|---|---|---|
-| POST | `/api/v1/files` | `files.write` | آپلود فایل | Form: `file`, `module`, `folder`, `description` |
+| POST | `/api/v1/files` | `files.write` | ثبت درخواست آپلود (async, two-phase) | Form: `file`, `module`, `folder`, `description` |
 | POST | `/api/v1/files/validate` | `files.write` | اعتبارسنجی فایل قبل از upload کامل | Body: `fileName`, `sizeBytes`, `contentType` |
 | POST | `/api/v1/files/scan` | `files.write` | اسکن امنیتی فایل | Form: `file`, `module`, `folder`, `description` |
 | GET | `/api/v1/files/{fileId:guid}` | `files.read` | دریافت metadata فایل | Path: `fileId` |
@@ -56,6 +62,9 @@
 - `files/public/{token}` policy rate-limit اختصاصی دارد.
 - `GetSecureFileLink/Share` از `mode` برای کنترل رفتار لینک استفاده می‌کنند.
 - برای محیط production، scan واقعی (ClamAV) و rotation کلید لینک ضروری است.
+- `POST /files` به‌صورت `202 Accepted` پاسخ می‌دهد و `storageStatus` برمی‌گرداند.
+- `GET /files/{id}` برای polling وضعیت فایل استفاده می‌شود.
+- در مسیر read، اگر object موجود نباشد پاسخ کنترل‌شده `404/409` یا fallback thumbnail برگردانده می‌شود (exception خام برنمی‌گردد).
 
 ## مدل‌های ورودی مهم
 - `UploadFileRequest`: file/form fields
@@ -76,23 +85,36 @@
 - upload فایل با content-type/size غیرمجاز
 - ACL conflict در اشتراک‌گذاری
 
+## ماتریس خطا (Files)
+| Code | HTTP | توضیح | رفتار پیشنهادی فرانت |
+|---|---|---|---|
+| `Files.ValidationFailed` | 400 | ورودی فایل نامعتبر است | نمایش validation message |
+| `Files.InvalidName` | 400 | نام فایل ناامن/نامعتبر است | اصلاح نام فایل |
+| `Files.MaliciousContent` | 400 | فایل در malware scan رد شده | آپلود فایل سالم |
+| `Files.Pending` | 409 | فایل هنوز در حال پردازش async است | polling + retry |
+| `Files.Unavailable` | 404 | object در storage موجود نیست | fallback thumbnail یا retry |
+| `Files.StorageUnavailable` | 503 | storage در دسترس نیست/timeout/circuit-open | fail-soft + backoff retry |
+| `Files.UploadFailed` | 503 | staging upload شکست خورده | retry با فایل جدید |
+
 ## روند استفاده و Workflow
 ### مسیر اصلی
 1. validate + scan
-2. upload
-3. download/stream
-4. secure/public link
-5. ACL management
+2. upload requested (DB: `Pending`)
+3. stage upload + async worker
+4. stored (DB: `Available`)
+5. download/stream/secure link
+6. ACL management
 
 ### Workflow (upload تا share)
 ```mermaid
 flowchart LR
     A[POST /files/validate] --> B[POST /files/scan]
-    B --> C[POST /files]
-    C --> D[GET metadata/download/stream]
-    D --> E[GET link or POST share]
-    E --> F[GET /files/public/:token]
-    F --> G[Audit access + rate limit]
+    B --> C[POST /files -> 202 Pending]
+    C --> D[Worker: stage -> object final]
+    D --> E[GET metadata/download/stream]
+    E --> F[GET link or POST share]
+    F --> G[GET /files/public/:token]
+    G --> H[Audit access + rate limit]
 ```
 
 ### Workflow (ACL)

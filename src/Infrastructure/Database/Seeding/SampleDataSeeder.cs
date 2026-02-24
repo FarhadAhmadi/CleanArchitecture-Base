@@ -370,6 +370,10 @@ public sealed class SampleDataSeeder(
                 IsScanned = true,
                 IsInfected = false,
                 IsEncrypted = false,
+                StorageStatus = FileStorageStatus.Available,
+                UploadRequestedAtUtc = now.AddDays(-15),
+                StorageAvailableAtUtc = now.AddDays(-15),
+                StorageLastCheckedAtUtc = now.AddDays(-1),
                 UploadedAtUtc = now.AddDays(-15)
             },
             new FileAsset
@@ -388,6 +392,10 @@ public sealed class SampleDataSeeder(
                 IsScanned = true,
                 IsInfected = false,
                 IsEncrypted = true,
+                StorageStatus = FileStorageStatus.Available,
+                UploadRequestedAtUtc = now.AddDays(-6),
+                StorageAvailableAtUtc = now.AddDays(-6),
+                StorageLastCheckedAtUtc = now.AddDays(-1),
                 UploadedAtUtc = now.AddDays(-6),
                 UpdatedAtUtc = now.AddDays(-2)
             },
@@ -407,6 +415,10 @@ public sealed class SampleDataSeeder(
                 IsScanned = true,
                 IsInfected = false,
                 IsEncrypted = false,
+                StorageStatus = FileStorageStatus.Available,
+                UploadRequestedAtUtc = now.AddDays(-3),
+                StorageAvailableAtUtc = now.AddDays(-3),
+                StorageLastCheckedAtUtc = now.AddDays(-1),
                 UploadedAtUtc = now.AddDays(-3)
             }
         ];

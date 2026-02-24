@@ -19,4 +19,8 @@ public interface IFileObjectStorage
     Task<(Stream Content, string ContentType)> OpenReadAsync(
         string objectKey,
         CancellationToken cancellationToken);
+
+    Task<bool> ExistsAsync(string objectKey, CancellationToken cancellationToken);
+
+    Task MarkHealthyAsync(CancellationToken cancellationToken);
 }

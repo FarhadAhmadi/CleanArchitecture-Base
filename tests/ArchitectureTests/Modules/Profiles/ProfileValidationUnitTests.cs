@@ -56,6 +56,18 @@ public sealed class ProfileValidationUnitTests
         result.Errors.Count.ShouldBeGreaterThanOrEqualTo(2);
     }
 
+    [Fact]
+    public async Task UpdateMyProfileAvatarCommandValidator_ShouldRejectNullAvatarFileId()
+    {
+        ServiceProvider services = BuildServices();
+        IValidator<UpdateMyProfileAvatarCommand> validator = services.GetRequiredService<IValidator<UpdateMyProfileAvatarCommand>>();
+
+        UpdateMyProfileAvatarCommand command = new(null);
+        FluentValidation.Results.ValidationResult result = await validator.ValidateAsync(command);
+
+        result.IsValid.ShouldBeFalse();
+    }
+
     private static ServiceProvider BuildServices()
     {
         return new ServiceCollection()

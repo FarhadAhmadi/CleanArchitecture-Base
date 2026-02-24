@@ -200,5 +200,18 @@ public sealed class ApiWebApplicationFactory : WebApplicationFactory<Web.Api.Pro
             Stream stream = new MemoryStream();
             return Task.FromResult((stream, "application/octet-stream"));
         }
+
+        public Task<bool> ExistsAsync(string objectKey, CancellationToken cancellationToken)
+        {
+            _ = objectKey;
+            _ = cancellationToken;
+            return Task.FromResult(true);
+        }
+
+        public Task MarkHealthyAsync(CancellationToken cancellationToken)
+        {
+            _ = cancellationToken;
+            return Task.CompletedTask;
+        }
     }
 }

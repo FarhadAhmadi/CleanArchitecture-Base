@@ -1,6 +1,7 @@
 using Application.Abstractions.Authentication;
 using Application.Abstractions.Data;
 using Application.Abstractions.Messaging;
+using Domain.Files;
 using Domain.Profiles;
 using Microsoft.EntityFrameworkCore;
 
@@ -27,7 +28,28 @@ internal sealed class GetMyProfileQueryHandler(
 
         return profile is null
             ? Results.NotFound()
-            : Results.Ok(ProfileEndpointCommon.ToPrivateResponse(profile));
+            : Results.Ok(ProfileEndpointCommon.ToPrivateResponse(
+                profile,
+                await ResolveStorageStatusAsync(profile.AvatarFileId, readContext, cancellationToken),
+                await ResolveStorageStatusAsync(profile.FavoriteMusicFileId, readContext, cancellationToken)));
+    }
+
+    private static async Task<string?> ResolveStorageStatusAsync(
+        Guid? fileId,
+        IProfilesReadDbContext readContext,
+        CancellationToken cancellationToken)
+    {
+        if (!fileId.HasValue)
+        {
+            return null;
+        }
+
+        FileStorageStatus? status = await readContext.FileAssets
+            .Where(x => x.Id == fileId.Value && !x.IsDeleted)
+            .Select(x => (FileStorageStatus?)x.StorageStatus)
+            .SingleOrDefaultAsync(cancellationToken);
+
+        return status?.ToString() ?? FileStorageStatus.Missing.ToString();
     }
 }
 
