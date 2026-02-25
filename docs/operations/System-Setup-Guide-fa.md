@@ -37,12 +37,12 @@ dotnet build CleanArchitecture.slnx -c Debug
 
 ### 3.3 migration
 ```powershell
-dotnet ef database update --project src/Infrastructure/Infrastructure.csproj --startup-project src/Web.Api/Web.Api.csproj --context Infrastructure.Database.ApplicationDbContext
+dotnet ef database update --project src/Platform/Infrastructure.csproj --startup-project src/Host/Web.Api.csproj --context Infrastructure.Database.ApplicationDbContext
 ```
 
 ### 3.4 run
 ```powershell
-dotnet run --project src/Web.Api/Web.Api.csproj
+dotnet run --project src/Host/Web.Api.csproj
 ```
 
 ## 4) آدرس‌های مهم
@@ -66,8 +66,8 @@ dotnet run --project src/Web.Api/Web.Api.csproj
 ## 6) ساختار ماژولی فعلی
 - Domain: `src/Domain/Modules/*`
 - Application: `src/Application/Modules/*`
-- Infrastructure: `src/Infrastructure/Modules/*`
-- API Endpoints: `src/Web.Api/Endpoints/Modules/*`
+- Infrastructure: `src/Platform/Modules/*`
+- API Endpoints: `src/Host/Endpoints/Modules/*`
 
 ## 7) کنترل کیفیت
 1. `dotnet format --verify-no-changes`
@@ -87,3 +87,4 @@ dotnet run --project src/Web.Api/Web.Api.csproj
 3. برای job زمان‌بندی ثبت کن (`POST /api/v1/scheduler/jobs/{jobId}/schedule`).
 4. وضعیت اجرا را در `GET /api/v1/scheduler/jobs/logs` بررسی کن.
 5. یک اعلان آزمایشی بساز و در `GET /api/v1/notifications/reports/summary` نتیجه را بررسی کن.
+

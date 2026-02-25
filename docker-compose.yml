@@ -1,10 +1,10 @@
-services:
+﻿services:
   web-api:
     image: ${DOCKER_REGISTRY-}webapi
     container_name: web-api
     build:
       context: .
-      dockerfile: src/Web.Api/Dockerfile
+      dockerfile: src/Host/Dockerfile
     ports:
       - 5000:8080
       - 5001:8081
@@ -106,3 +106,4 @@ services:
 
 volumes:
   sqlserver_data:
+

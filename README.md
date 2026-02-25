@@ -1,4 +1,4 @@
-# Clean Architecture Template
+﻿# Clean Architecture Template
 
 What's included in the template?
 
@@ -108,8 +108,8 @@ Vulnerability disclosure policy:
   - Kubernetes manifests under `deploy/k8s`
   - deployment switch script `deploy/k8s/blue-green-deploy.sh`
 - Docker assets:
-  - active build file: `src/Web.Api/Dockerfile`
-  - versioned alternatives: `src/Web.Api/docker/Dockerfile.net8`, `src/Web.Api/docker/Dockerfile.net9`
+  - active build file: `src/Host/Dockerfile`
+  - versioned alternatives: `src/Host/docker/Dockerfile.net8`, `src/Host/docker/Dockerfile.net9`
 - Infrastructure as code (Azure Terraform) under `infra/terraform` with `dev/staging/prod` tfvars.
 - DR readiness:
   - backup/restore/drill scripts under `scripts/dr`
@@ -123,3 +123,4 @@ Vulnerability disclosure policy:
   - Incident runbook: `docs/operations/incident-runbook.md`
   - Architecture fitness rules: `docs/architecture/fitness-rules.md`
   - Monthly reliability report template: `docs/operations/reliability-monthly-report-template.md`
+

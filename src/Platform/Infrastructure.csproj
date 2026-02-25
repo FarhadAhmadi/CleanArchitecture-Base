@@ -1,0 +1,46 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+	<PackageReference Include="AspNetCore.HealthChecks.SqlServer" />
+    <PackageReference Include="EFCore.NamingConventions" />
+	<PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" />
+	<PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" />
+	<PackageReference Include="Microsoft.Extensions.Identity.Core" />
+    <PackageReference Include="Microsoft.Extensions.Diagnostics.HealthChecks" />
+    <PackageReference Include="Microsoft.Extensions.Caching.StackExchangeRedis" />
+    <PackageReference Include="RabbitMQ.Client" />
+    <PackageReference Include="Minio" />
+    <PackageReference Include="Polly" />
+    <PackageReference Include="Newtonsoft.Json" />
+    <PackageReference Include="Cronos" />
+	<PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Core\Application\Application.csproj" />
+    <ProjectReference Include="..\Core\Domain\Domain.csproj" />
+    <ProjectReference Include="..\Core\Kernel\SharedKernel.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="..\Modules\**\Infrastructure\**\*.cs">
+      <Link>Modules\$([System.String]::Copy('%(RecursiveDir)').Replace('Infrastructure\\', ''))%(Filename)%(Extension)</Link>
+    </Compile>
+    <Compile Include="..\Shared\Infrastructure\**\*.cs">
+      <Link>Shared\$([System.String]::Copy('%(RecursiveDir)').Replace('Infrastructure\\', ''))%(Filename)%(Extension)</Link>
+    </Compile>
+  </ItemGroup>
+
+  <ItemGroup>
+	<InternalsVisibleTo Include="ArchitectureTests" />
+	<InternalsVisibleTo Include="ContractTests" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Update="Database\Migrations\*.cs">
+      <NoWarn>$(NoWarn);IDE0161;CA1861</NoWarn>
+    </Compile>
+  </ItemGroup>
+
+</Project>

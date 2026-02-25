@@ -1,4 +1,4 @@
-param(
+﻿param(
     [Parameter(Mandatory = $true)]
     [string]$SmtpHost,
 
@@ -27,7 +27,7 @@ param(
 Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
 
-$projectPath = "src/Web.Api/Web.Api.csproj"
+$projectPath = "src/Host/Web.Api.csproj"
 
 if (-not (Test-Path $projectPath)) {
     throw "Web API project not found at '$projectPath'. Run this script from repository root."
@@ -61,3 +61,4 @@ Write-Host "  dotnet run --project $projectPath"
 Write-Host ""
 Write-Host "To verify secret values:"
 Write-Host "  dotnet user-secrets list --project $projectPath"
+

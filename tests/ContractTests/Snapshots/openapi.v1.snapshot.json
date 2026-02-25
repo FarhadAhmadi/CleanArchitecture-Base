@@ -39,30 +39,6 @@
         ],
         "parameters": [
           {
-            "name": "Page",
-            "in": "query",
-            "schema": {
-              "type": "integer",
-              "format": "int32"
-            }
-          },
-          {
-            "name": "PageIndex",
-            "in": "query",
-            "schema": {
-              "type": "integer",
-              "format": "int32"
-            }
-          },
-          {
-            "name": "PageSize",
-            "in": "query",
-            "schema": {
-              "type": "integer",
-              "format": "int32"
-            }
-          },
-          {
             "name": "ActorId",
             "in": "query",
             "schema": {
@@ -90,6 +66,44 @@
             "schema": {
               "type": "string",
               "format": "date-time"
+            }
+          },
+          {
+            "name": "sortBy",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "sortOrder",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "pageIndex",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
             }
           }
         ],
@@ -478,6 +492,20 @@
             }
           },
           {
+            "name": "sortBy",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "sortOrder",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
             "name": "page",
             "in": "query",
             "schema": {
@@ -517,6 +545,20 @@
         "parameters": [
           {
             "name": "module",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "sortBy",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "sortOrder",
             "in": "query",
             "schema": {
               "type": "string"
@@ -718,7 +760,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/Infrastructure.Logging.IngestLogRequest"
+                "$ref": "#/components/schemas/Application.Abstractions.Logging.IngestLogRequest"
               }
             }
           },
@@ -1020,7 +1062,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/Infrastructure.Logging.IngestLogRequest"
+                "$ref": "#/components/schemas/Application.Abstractions.Logging.IngestLogRequest"
               }
             }
           },
@@ -1049,7 +1091,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/Infrastructure.Logging.IngestLogRequest"
+                "$ref": "#/components/schemas/Application.Abstractions.Logging.IngestLogRequest"
               }
             }
           },
@@ -1382,30 +1424,6 @@
         ],
         "parameters": [
           {
-            "name": "Page",
-            "in": "query",
-            "schema": {
-              "type": "integer",
-              "format": "int32"
-            }
-          },
-          {
-            "name": "PageIndex",
-            "in": "query",
-            "schema": {
-              "type": "integer",
-              "format": "int32"
-            }
-          },
-          {
-            "name": "PageSize",
-            "in": "query",
-            "schema": {
-              "type": "integer",
-              "format": "int32"
-            }
-          },
-          {
             "name": "Channel",
             "in": "query",
             "schema": {
@@ -1433,6 +1451,44 @@
             "schema": {
               "type": "string",
               "format": "date-time"
+            }
+          },
+          {
+            "name": "sortBy",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "sortOrder",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "pageIndex",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
             }
           }
         ],
@@ -1703,30 +1759,6 @@
         ],
         "parameters": [
           {
-            "name": "Page",
-            "in": "query",
-            "schema": {
-              "type": "integer",
-              "format": "int32"
-            }
-          },
-          {
-            "name": "PageIndex",
-            "in": "query",
-            "schema": {
-              "type": "integer",
-              "format": "int32"
-            }
-          },
-          {
-            "name": "PageSize",
-            "in": "query",
-            "schema": {
-              "type": "integer",
-              "format": "int32"
-            }
-          },
-          {
             "name": "From",
             "in": "query",
             "schema": {
@@ -1754,6 +1786,44 @@
             "in": "query",
             "schema": {
               "$ref": "#/components/schemas/Domain.Notifications.NotificationStatus"
+            }
+          },
+          {
+            "name": "sortBy",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "sortOrder",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "pageIndex",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
             }
           }
         ],
@@ -2009,37 +2079,6 @@
         ],
         "parameters": [
           {
-            "name": "Page",
-            "in": "query",
-            "schema": {
-              "type": "integer",
-              "format": "int32"
-            }
-          },
-          {
-            "name": "PageIndex",
-            "in": "query",
-            "schema": {
-              "type": "integer",
-              "format": "int32"
-            }
-          },
-          {
-            "name": "PageSize",
-            "in": "query",
-            "schema": {
-              "type": "integer",
-              "format": "int32"
-            }
-          },
-          {
-            "name": "Search",
-            "in": "query",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
             "name": "IsProfilePublic",
             "in": "query",
             "schema": {
@@ -2083,6 +2122,51 @@
             "schema": {
               "type": "string",
               "format": "date-time"
+            }
+          },
+          {
+            "name": "search",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "sortBy",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "sortOrder",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "pageIndex",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
             }
           }
         ],
@@ -2329,30 +2413,6 @@
         ],
         "parameters": [
           {
-            "name": "Page",
-            "in": "query",
-            "schema": {
-              "type": "integer",
-              "format": "int32"
-            }
-          },
-          {
-            "name": "PageIndex",
-            "in": "query",
-            "schema": {
-              "type": "integer",
-              "format": "int32"
-            }
-          },
-          {
-            "name": "PageSize",
-            "in": "query",
-            "schema": {
-              "type": "integer",
-              "format": "int32"
-            }
-          },
-          {
             "name": "Status",
             "in": "query",
             "schema": {
@@ -2360,10 +2420,48 @@
             }
           },
           {
-            "name": "Search",
+            "name": "search",
             "in": "query",
             "schema": {
               "type": "string"
+            }
+          },
+          {
+            "name": "sortBy",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "sortOrder",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "pageIndex",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
             }
           }
         ],
@@ -2609,30 +2707,6 @@
             }
           },
           {
-            "name": "Page",
-            "in": "query",
-            "schema": {
-              "type": "integer",
-              "format": "int32"
-            }
-          },
-          {
-            "name": "PageIndex",
-            "in": "query",
-            "schema": {
-              "type": "integer",
-              "format": "int32"
-            }
-          },
-          {
-            "name": "PageSize",
-            "in": "query",
-            "schema": {
-              "type": "integer",
-              "format": "int32"
-            }
-          },
-          {
             "name": "jobId",
             "in": "path",
             "required": true,
@@ -2663,6 +2737,67 @@
               "type": "string",
               "format": "date-time"
             }
+          },
+          {
+            "name": "sortBy",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "sortOrder",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "pageIndex",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/scheduler/jobs/{jobId}/replay": {
+      "post": {
+        "tags": [
+          "Scheduler"
+        ],
+        "parameters": [
+          {
+            "name": "jobId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
           }
         ],
         "responses": {
@@ -2678,30 +2813,6 @@
           "Scheduler"
         ],
         "parameters": [
-          {
-            "name": "Page",
-            "in": "query",
-            "schema": {
-              "type": "integer",
-              "format": "int32"
-            }
-          },
-          {
-            "name": "PageIndex",
-            "in": "query",
-            "schema": {
-              "type": "integer",
-              "format": "int32"
-            }
-          },
-          {
-            "name": "PageSize",
-            "in": "query",
-            "schema": {
-              "type": "integer",
-              "format": "int32"
-            }
-          },
           {
             "name": "JobId",
             "in": "query",
@@ -2732,8 +2843,79 @@
               "type": "string",
               "format": "date-time"
             }
+          },
+          {
+            "name": "sortBy",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "sortOrder",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "pageIndex",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
           }
         ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/scheduler/jobs/{jobId}/quarantine": {
+      "post": {
+        "tags": [
+          "Scheduler"
+        ],
+        "parameters": [
+          {
+            "name": "jobId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Web.Api.Endpoints.Scheduler.QuarantineJobRequest"
+              }
+            }
+          },
+          "required": true
+        },
         "responses": {
           "200": {
             "description": "OK"
@@ -2817,6 +2999,92 @@
         }
       }
     },
+    "/api/v1/scheduler/jobs/{jobId}/dependencies": {
+      "post": {
+        "tags": [
+          "Scheduler"
+        ],
+        "parameters": [
+          {
+            "name": "jobId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Web.Api.Endpoints.Scheduler.AddJobDependencyRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "Scheduler"
+        ],
+        "parameters": [
+          {
+            "name": "jobId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/scheduler/jobs/{jobId}/dependencies/{dependsOnJobId}": {
+      "delete": {
+        "tags": [
+          "Scheduler"
+        ],
+        "parameters": [
+          {
+            "name": "jobId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "dependsOnJobId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/v1/todos/{id}/complete": {
       "put": {
         "tags": [
@@ -2890,17 +3158,17 @@
         ],
         "parameters": [
           {
-            "name": "search",
-            "in": "query",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
             "name": "isCompleted",
             "in": "query",
             "schema": {
               "type": "boolean"
+            }
+          },
+          {
+            "name": "search",
+            "in": "query",
+            "schema": {
+              "type": "string"
             }
           },
           {
@@ -3037,11 +3305,243 @@
         }
       }
     },
+    "/api/v1/authorization/roles": {
+      "post": {
+        "tags": [
+          "Users"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Web.Api.Endpoints.Authorization.CreateRole-Request"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "Users"
+        ],
+        "parameters": [
+          {
+            "name": "search",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/authorization/roles/{roleId}": {
+      "delete": {
+        "tags": [
+          "Users"
+        ],
+        "parameters": [
+          {
+            "name": "roleId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "Users"
+        ],
+        "parameters": [
+          {
+            "name": "roleId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Users"
+        ],
+        "parameters": [
+          {
+            "name": "roleId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Web.Api.Endpoints.Authorization.UpdateRole-Request"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/v1/authorization": {
       "get": {
         "tags": [
           "Users"
         ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/users": {
+      "post": {
+        "tags": [
+          "Users"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Web.Api.Endpoints.Users.CreateUser-Request"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "Users"
+        ],
+        "parameters": [
+          {
+            "name": "search",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/users/{userId}": {
+      "delete": {
+        "tags": [
+          "Users"
+        ],
+        "parameters": [
+          {
+            "name": "userId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "Users"
+        ],
+        "parameters": [
+          {
+            "name": "userId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Users"
+        ],
+        "parameters": [
+          {
+            "name": "userId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Web.Api.Endpoints.Users.UpdateUser-Request"
+              }
+            }
+          },
+          "required": true
+        },
         "responses": {
           "200": {
             "description": "OK"
@@ -3071,21 +3571,10 @@
         }
       }
     },
-    "/api/v1/users/{userId}": {
+    "/api/v1/users/me": {
       "get": {
         "tags": [
           "Users"
-        ],
-        "parameters": [
-          {
-            "name": "userId",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
-          }
         ],
         "responses": {
           "200": {
@@ -3094,7 +3583,7 @@
         }
       }
     },
-    "/api/v1/users/me": {
+    "/api/v1/users/sessions": {
       "get": {
         "tags": [
           "Users"
@@ -3279,10 +3768,45 @@
         }
       }
     },
+    "/api/v1/users/sessions/revoke-all-except-current": {
+      "post": {
+        "tags": [
+          "Users"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/v1/users/sessions/revoke-all": {
       "post": {
         "tags": [
           "Users"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/users/sessions/{sessionId}/revoke": {
+      "post": {
+        "tags": [
+          "Users"
+        ],
+        "parameters": [
+          {
+            "name": "sessionId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
         ],
         "responses": {
           "200": {
@@ -3316,6 +3840,103 @@
   },
   "components": {
     "schemas": {
+      "Application.Abstractions.Logging.IngestLogRequest": {
+        "type": "object",
+        "properties": {
+          "timestampUtc": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "level": {
+            "$ref": "#/components/schemas/Domain.Logging.LogLevelType"
+          },
+          "message": {
+            "type": "string",
+            "nullable": true
+          },
+          "sourceService": {
+            "type": "string",
+            "nullable": true
+          },
+          "sourceModule": {
+            "type": "string",
+            "nullable": true
+          },
+          "traceId": {
+            "type": "string",
+            "nullable": true
+          },
+          "requestId": {
+            "type": "string",
+            "nullable": true
+          },
+          "tenantId": {
+            "type": "string",
+            "nullable": true
+          },
+          "actorType": {
+            "type": "string",
+            "nullable": true
+          },
+          "actorId": {
+            "type": "string",
+            "nullable": true
+          },
+          "outcome": {
+            "type": "string",
+            "nullable": true
+          },
+          "sessionId": {
+            "type": "string",
+            "nullable": true
+          },
+          "ip": {
+            "type": "string",
+            "nullable": true
+          },
+          "userAgent": {
+            "type": "string",
+            "nullable": true
+          },
+          "deviceInfo": {
+            "type": "string",
+            "nullable": true
+          },
+          "httpMethod": {
+            "type": "string",
+            "nullable": true
+          },
+          "httpPath": {
+            "type": "string",
+            "nullable": true
+          },
+          "httpStatusCode": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "errorCode": {
+            "type": "string",
+            "nullable": true
+          },
+          "errorStackHash": {
+            "type": "string",
+            "nullable": true
+          },
+          "tags": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "nullable": true
+          },
+          "payloadJson": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
       "Application.Logging.AssignAccessRequest": {
         "type": "object",
         "properties": {
@@ -3336,7 +3957,7 @@
           "events": {
             "type": "array",
             "items": {
-              "$ref": "#/components/schemas/Infrastructure.Logging.IngestLogRequest"
+              "$ref": "#/components/schemas/Application.Abstractions.Logging.IngestLogRequest"
             },
             "nullable": true
           }
@@ -3470,12 +4091,33 @@
           3,
           4,
           5,
-          6
+          6,
+          7,
+          8
         ],
         "type": "integer",
         "format": "int32"
       },
       "Domain.Scheduler.JobStatus": {
+        "enum": [
+          1,
+          2,
+          3,
+          4
+        ],
+        "type": "integer",
+        "format": "int32"
+      },
+      "Domain.Scheduler.JobType": {
+        "enum": [
+          1,
+          2,
+          3
+        ],
+        "type": "integer",
+        "format": "int32"
+      },
+      "Domain.Scheduler.MisfirePolicy": {
         "enum": [
           1,
           2,
@@ -3492,103 +4134,6 @@
         ],
         "type": "integer",
         "format": "int32"
-      },
-      "Infrastructure.Logging.IngestLogRequest": {
-        "type": "object",
-        "properties": {
-          "timestampUtc": {
-            "type": "string",
-            "format": "date-time"
-          },
-          "level": {
-            "$ref": "#/components/schemas/Domain.Logging.LogLevelType"
-          },
-          "message": {
-            "type": "string",
-            "nullable": true
-          },
-          "sourceService": {
-            "type": "string",
-            "nullable": true
-          },
-          "sourceModule": {
-            "type": "string",
-            "nullable": true
-          },
-          "traceId": {
-            "type": "string",
-            "nullable": true
-          },
-          "requestId": {
-            "type": "string",
-            "nullable": true
-          },
-          "tenantId": {
-            "type": "string",
-            "nullable": true
-          },
-          "actorType": {
-            "type": "string",
-            "nullable": true
-          },
-          "actorId": {
-            "type": "string",
-            "nullable": true
-          },
-          "outcome": {
-            "type": "string",
-            "nullable": true
-          },
-          "sessionId": {
-            "type": "string",
-            "nullable": true
-          },
-          "ip": {
-            "type": "string",
-            "nullable": true
-          },
-          "userAgent": {
-            "type": "string",
-            "nullable": true
-          },
-          "deviceInfo": {
-            "type": "string",
-            "nullable": true
-          },
-          "httpMethod": {
-            "type": "string",
-            "nullable": true
-          },
-          "httpPath": {
-            "type": "string",
-            "nullable": true
-          },
-          "httpStatusCode": {
-            "type": "integer",
-            "format": "int32",
-            "nullable": true
-          },
-          "errorCode": {
-            "type": "string",
-            "nullable": true
-          },
-          "errorStackHash": {
-            "type": "string",
-            "nullable": true
-          },
-          "tags": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            },
-            "nullable": true
-          },
-          "payloadJson": {
-            "type": "string",
-            "nullable": true
-          }
-        },
-        "additionalProperties": false
       },
       "Microsoft.AspNetCore.Http.IResult": {
         "type": "object",
@@ -3662,6 +4207,26 @@
             "type": "string",
             "format": "uuid"
           },
+          "roleName": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "Web.Api.Endpoints.Authorization.CreateRole-Request": {
+        "type": "object",
+        "properties": {
+          "roleName": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "Web.Api.Endpoints.Authorization.UpdateRole-Request": {
+        "type": "object",
+        "properties": {
           "roleName": {
             "type": "string",
             "nullable": true
@@ -4088,6 +4653,16 @@
         },
         "additionalProperties": false
       },
+      "Web.Api.Endpoints.Scheduler.AddJobDependencyRequest": {
+        "type": "object",
+        "properties": {
+          "dependsOnJobId": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        "additionalProperties": false
+      },
       "Web.Api.Endpoints.Scheduler.CreateJobRequest": {
         "type": "object",
         "properties": {
@@ -4096,6 +4671,48 @@
             "nullable": true
           },
           "description": {
+            "type": "string",
+            "nullable": true
+          },
+          "type": {
+            "$ref": "#/components/schemas/Domain.Scheduler.JobType"
+          },
+          "payloadJson": {
+            "type": "string",
+            "nullable": true
+          },
+          "maxRetryAttempts": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "retryBackoffSeconds": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "maxExecutionSeconds": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "maxConsecutiveFailures": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "Web.Api.Endpoints.Scheduler.QuarantineJobRequest": {
+        "type": "object",
+        "properties": {
+          "quarantineMinutes": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "reason": {
             "type": "string",
             "nullable": true
           }
@@ -4111,6 +4728,33 @@
           },
           "description": {
             "type": "string",
+            "nullable": true
+          },
+          "type": {
+            "$ref": "#/components/schemas/Domain.Scheduler.JobType"
+          },
+          "payloadJson": {
+            "type": "string",
+            "nullable": true
+          },
+          "maxRetryAttempts": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "retryBackoffSeconds": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "maxExecutionSeconds": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "maxConsecutiveFailures": {
+            "type": "integer",
+            "format": "int32",
             "nullable": true
           }
         },
@@ -4165,6 +4809,14 @@
             "type": "string",
             "format": "date-time",
             "nullable": true
+          },
+          "misfirePolicy": {
+            "$ref": "#/components/schemas/Domain.Scheduler.MisfirePolicy"
+          },
+          "maxCatchUpRuns": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
           }
         },
         "additionalProperties": false
@@ -4191,6 +4843,28 @@
           "priority": {
             "type": "integer",
             "format": "int32"
+          }
+        },
+        "additionalProperties": false
+      },
+      "Web.Api.Endpoints.Users.CreateUser-Request": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "nullable": true
+          },
+          "firstName": {
+            "type": "string",
+            "nullable": true
+          },
+          "lastName": {
+            "type": "string",
+            "nullable": true
+          },
+          "password": {
+            "type": "string",
+            "nullable": true
           }
         },
         "additionalProperties": false
@@ -4283,6 +4957,24 @@
         "type": "object",
         "properties": {
           "refreshToken": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "Web.Api.Endpoints.Users.UpdateUser-Request": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "nullable": true
+          },
+          "firstName": {
+            "type": "string",
+            "nullable": true
+          },
+          "lastName": {
             "type": "string",
             "nullable": true
           }

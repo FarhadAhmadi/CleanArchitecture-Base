@@ -22,8 +22,8 @@ $projectRoot = Resolve-Path (Join-Path $PSScriptRoot "..\..")
 $modulePascal = (Get-Culture).TextInfo.ToTitleCase($Module.ToLower()).Replace(" ", "")
 $featurePascal = (Get-Culture).TextInfo.ToTitleCase($Feature.ToLower()).Replace(" ", "")
 
-$applicationDir = Join-Path $projectRoot "src\Application\Modules\$modulePascal\$featurePascal"
-$endpointDir = Join-Path $projectRoot "src\Web.Api\Endpoints\Modules\$modulePascal"
+$applicationDir = Join-Path $projectRoot "src\Modules\$modulePascal\Application\$featurePascal"
+$endpointDir = Join-Path $projectRoot "src\Modules\$modulePascal\Api\Endpoints"
 $testDir = Join-Path $projectRoot "tests\ArchitectureTests\Features\$modulePascal"
 
 New-DirectoryIfMissing $applicationDir
