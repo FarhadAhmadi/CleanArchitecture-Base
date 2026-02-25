@@ -11,5 +11,7 @@ internal sealed class UpdateUserCommandValidator : AbstractValidator<UpdateUserC
         RuleFor(c => c.Email).NotEmpty().EmailAddress().MaximumLength(320);
         RuleFor(c => c.FirstName).NotEmpty().MaximumLength(100);
         RuleFor(c => c.LastName).NotEmpty().MaximumLength(100);
+        RuleFor(c => c.PhoneNumber).MaximumLength(32).When(c => !string.IsNullOrWhiteSpace(c.PhoneNumber));
+        RuleFor(c => c.FailedLoginCount).GreaterThanOrEqualTo(0).When(c => c.FailedLoginCount.HasValue);
     }
 }

@@ -59,6 +59,10 @@ public sealed class SampleDataSeeder(
         await SeedNotificationDeliveryAttemptsAsync(notificationId, now, cancellationToken);
 
         await SeedSchedulerRuntimeAsync(ops.Id, now, cancellationToken);
+        await SeedDemoLogEventsAsync(admin.Id, ops.Id, support.Id, customer.Id, now, cancellationToken);
+        await SeedDemoFilesAsync(admin.Id, ops.Id, support.Id, customer.Id, now, cancellationToken);
+        await SeedDemoNotificationsAsync(admin.Id, ops.Id, support.Id, customer.Id, now, cancellationToken);
+        await SeedDemoSchedulerExecutionsAsync(now, cancellationToken);
         await SeedAuditTrailAsync(admin.Id, ops.Id, notificationId, warnLogId, now, cancellationToken);
 
         await dbContext.SaveChangesAsync(cancellationToken);
@@ -1124,6 +1128,295 @@ public sealed class SampleDataSeeder(
             HasIntegrityIssue = false,
             IsDeleted = false
         };
+    }
+
+    private async Task SeedDemoLogEventsAsync(
+        Guid adminUserId,
+        Guid opsUserId,
+        Guid supportUserId,
+        Guid customerUserId,
+        DateTime now,
+        CancellationToken cancellationToken)
+    {
+        const int targetCount = 84;
+        HashSet<string> existingKeys = [.. await dbContext.LogEvents
+            .Where(x => x.IdempotencyKey != null && x.IdempotencyKey.StartsWith("seed-log-demo-"))
+            .Select(x => x.IdempotencyKey!)
+            .ToListAsync(cancellationToken)];
+
+        if (existingKeys.Count >= targetCount)
+        {
+            return;
+        }
+
+        Guid[] actors = [adminUserId, opsUserId, supportUserId, customerUserId];
+        string[] services = ["scheduler", "notifications", "files", "profiles", "audit", "auth"];
+        string[] modules = ["runtime", "dispatch", "storage", "ui", "integrity", "api"];
+        string[] messages =
+        [
+            "Background job completed successfully.",
+            "Notification retried after transient provider failure.",
+            "File scan completed and signature verified.",
+            "Profile preferences updated from web client.",
+            "Audit chain verification completed.",
+            "Authentication session refresh executed."
+        ];
+        LogLevelType[] levels =
+        [
+            LogLevelType.Info,
+            LogLevelType.Warning,
+            LogLevelType.Info,
+            LogLevelType.Error,
+            LogLevelType.Security,
+            LogLevelType.Audit
+        ];
+
+        int nextIndex = existingKeys.Count;
+        for (int i = nextIndex; i < targetCount; i++)
+        {
+            string key = $"seed-log-demo-{i:000}";
+            if (!existingKeys.Add(key))
+            {
+                continue;
+            }
+
+            int pivot = i % services.Length;
+            LogLevelType level = levels[i % levels.Length];
+            string outcome = level is LogLevelType.Error or LogLevelType.Critical ? "failed" : "success";
+            Guid actorId = actors[i % actors.Length];
+            DateTime timestamp = now.AddMinutes(-((i + 1) * 17 % (24 * 60)));
+            string message = $"{messages[pivot]} [demo-{i:000}]";
+
+            dbContext.LogEvents.Add(BuildLogEvent(
+                Guid.NewGuid(),
+                key,
+                timestamp,
+                level,
+                message,
+                services[pivot],
+                modules[pivot],
+                actorId.ToString("N"),
+                outcome));
+        }
+    }
+
+    private async Task SeedDemoFilesAsync(
+        Guid adminUserId,
+        Guid opsUserId,
+        Guid supportUserId,
+        Guid customerUserId,
+        DateTime now,
+        CancellationToken cancellationToken)
+    {
+        const int targetCount = 18;
+        int existingDemoFiles = await dbContext.FileAssets.CountAsync(
+            x => !x.IsDeleted && x.ObjectKey.StartsWith("seed/demo/"),
+            cancellationToken);
+
+        if (existingDemoFiles >= targetCount)
+        {
+            return;
+        }
+
+        Guid[] owners = [adminUserId, opsUserId, supportUserId, customerUserId];
+        string[] modules = ["scheduler", "notifications", "profiles", "audit", "files", "logging"];
+        string[] extensions = [".json", ".csv", ".pdf", ".png", ".txt"];
+
+        for (int i = existingDemoFiles; i < targetCount; i++)
+        {
+            string extension = extensions[i % extensions.Length];
+            string module = modules[i % modules.Length];
+            FileStorageStatus storageStatus = FileStorageStatus.Available;
+            if (i % 7 == 0)
+            {
+                storageStatus = FileStorageStatus.Pending;
+            }
+            else if (i % 11 == 0)
+            {
+                storageStatus = FileStorageStatus.Failed;
+            }
+
+            dbContext.FileAssets.Add(new FileAsset
+            {
+                Id = Guid.NewGuid(),
+                OwnerUserId = owners[i % owners.Length],
+                ObjectKey = $"seed/demo/{module}/artifact-{i:000}{extension}",
+                FileName = $"artifact-{i:000}{extension}",
+                Extension = extension,
+                ContentType = extension switch
+                {
+                    ".csv" => "text/csv",
+                    ".pdf" => "application/pdf",
+                    ".png" => "image/png",
+                    ".json" => "application/json",
+                    _ => "text/plain"
+                },
+                SizeBytes = 18_000 + i * 2_700L,
+                Module = module,
+                Folder = $"/demo/{module}",
+                Description = $"Seeded demo file for {module} module.",
+                Sha256 = ComputeSha256($"seed-demo-file-{i:000}"),
+                IsScanned = true,
+                IsInfected = i % 13 == 0,
+                IsEncrypted = i % 3 == 0,
+                StorageStatus = storageStatus,
+                StorageError = storageStatus == FileStorageStatus.Failed ? "Simulated storage timeout" : null,
+                StorageRetryCount = storageStatus == FileStorageStatus.Failed ? 2 : 0,
+                UploadRequestedAtUtc = now.AddHours(-48).AddMinutes(i * 23),
+                StorageAvailableAtUtc = storageStatus == FileStorageStatus.Available ? now.AddHours(-47).AddMinutes(i * 23) : null,
+                UploadedAtUtc = now.AddHours(-48).AddMinutes(i * 23),
+                UpdatedAtUtc = now.AddHours(-6).AddMinutes(i),
+                IsDeleted = false
+            });
+        }
+    }
+
+    private async Task SeedDemoNotificationsAsync(
+        Guid adminUserId,
+        Guid opsUserId,
+        Guid supportUserId,
+        Guid customerUserId,
+        DateTime now,
+        CancellationToken cancellationToken)
+    {
+        const int targetCount = 24;
+        int existing = await dbContext.NotificationMessages.CountAsync(
+            x => x.Subject.StartsWith("[seed][demo]"),
+            cancellationToken);
+
+        if (existing >= targetCount)
+        {
+            return;
+        }
+
+        Guid[] creators = [adminUserId, opsUserId, supportUserId];
+        string[] recipients =
+        [
+            CustomerEmail,
+            OpsEmail,
+            SupportEmail,
+            customerUserId.ToString("N"),
+            adminUserId.ToString("N")
+        ];
+        NotificationChannel[] channels =
+        [
+            NotificationChannel.Email,
+            NotificationChannel.InApp,
+            NotificationChannel.Push,
+            NotificationChannel.Slack,
+            NotificationChannel.Teams
+        ];
+        NotificationStatus[] statuses =
+        [
+            NotificationStatus.Delivered,
+            NotificationStatus.Pending,
+            NotificationStatus.Scheduled,
+            NotificationStatus.Failed,
+            NotificationStatus.Sent
+        ];
+        NotificationPriority[] priorities =
+        [
+            NotificationPriority.Low,
+            NotificationPriority.Medium,
+            NotificationPriority.High
+        ];
+
+        for (int i = existing; i < targetCount; i++)
+        {
+            NotificationStatus status = statuses[i % statuses.Length];
+            DateTime createdAt = now.AddHours(-72).AddMinutes(i * 34);
+            string recipient = recipients[i % recipients.Length];
+
+            dbContext.NotificationMessages.Add(new NotificationMessage
+            {
+                Id = Guid.NewGuid(),
+                CreatedByUserId = creators[i % creators.Length],
+                Channel = channels[i % channels.Length],
+                Priority = priorities[i % priorities.Length],
+                Status = status,
+                RecipientEncrypted = Convert.ToBase64String(Encoding.UTF8.GetBytes(recipient)),
+                RecipientHash = ComputeSha256(recipient),
+                Subject = $"[seed][demo] Alert #{i:000} for operations visibility",
+                Body = $"Demo notification payload #{i:000} generated for dashboard coverage.",
+                Language = "fa-IR",
+                TemplateId = null,
+                RetryCount = status == NotificationStatus.Failed ? 3 : 0,
+                MaxRetryCount = 5,
+                CreatedAtUtc = createdAt,
+                ScheduledAtUtc = status == NotificationStatus.Scheduled ? createdAt.AddMinutes(20) : null,
+                SentAtUtc = status is NotificationStatus.Sent or NotificationStatus.Delivered ? createdAt.AddMinutes(2) : null,
+                DeliveredAtUtc = status == NotificationStatus.Delivered ? createdAt.AddMinutes(3) : null,
+                LastError = status == NotificationStatus.Failed ? "Simulated provider failure for demo seed." : null,
+                IsArchived = false
+            });
+        }
+    }
+
+    private async Task SeedDemoSchedulerExecutionsAsync(
+        DateTime now,
+        CancellationToken cancellationToken)
+    {
+        List<ScheduledJob> jobs = await dbContext.ScheduledJobs
+            .OrderBy(x => x.Name)
+            .Take(6)
+            .ToListAsync(cancellationToken);
+
+        if (jobs.Count == 0)
+        {
+            return;
+        }
+
+        int existing = await dbContext.JobExecutions.CountAsync(
+            x => x.TriggeredBy == "seed-demo",
+            cancellationToken);
+
+        const int targetCount = 48;
+        if (existing >= targetCount)
+        {
+            return;
+        }
+
+        JobExecutionStatus[] statuses =
+        [
+            JobExecutionStatus.Succeeded,
+            JobExecutionStatus.Succeeded,
+            JobExecutionStatus.Failed,
+            JobExecutionStatus.Running,
+            JobExecutionStatus.DeadLettered,
+            JobExecutionStatus.Scheduled
+        ];
+
+        for (int i = existing; i < targetCount; i++)
+        {
+            ScheduledJob job = jobs[i % jobs.Count];
+            JobExecutionStatus status = statuses[i % statuses.Length];
+            DateTime startedAt = now.AddHours(-36).AddMinutes(i * 31);
+            DateTime? finishedAt = status is JobExecutionStatus.Running or JobExecutionStatus.Scheduled
+                ? null
+                : startedAt.AddSeconds(2 + i % 7);
+
+            dbContext.JobExecutions.Add(new JobExecution
+            {
+                Id = Guid.NewGuid(),
+                JobId = job.Id,
+                Status = status,
+                TriggeredBy = "seed-demo",
+                NodeId = i % 2 == 0 ? "seed-node-a" : "seed-node-b",
+                ScheduledAtUtc = startedAt.AddSeconds(-2),
+                StartedAtUtc = startedAt,
+                FinishedAtUtc = finishedAt,
+                DurationMs = finishedAt.HasValue ? (int)Math.Max(250, (finishedAt.Value - startedAt).TotalMilliseconds) : 0,
+                Attempt = 1 + i % 3,
+                MaxAttempts = 3,
+                IsReplay = i % 9 == 0,
+                IsDeadLetter = status == JobExecutionStatus.DeadLettered,
+                DeadLetterReason = status == JobExecutionStatus.DeadLettered ? "Simulated exhausted retries." : null,
+                PayloadSnapshotJson = $"{{\"source\":\"seed-demo\",\"ordinal\":{i}}}",
+                Error = status is JobExecutionStatus.Failed or JobExecutionStatus.DeadLettered
+                    ? "Simulated execution failure for dashboard coverage."
+                    : null
+            });
+        }
     }
 
     private static string ComputeSha256(string input)

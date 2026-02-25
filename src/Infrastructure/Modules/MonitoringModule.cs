@@ -10,6 +10,7 @@ internal static class MonitoringModule
     {
         services.AddScoped<IOperationalMetricsService, OperationalMetricsService>();
         services.AddScoped<IOrchestrationHealthService, OrchestrationHealthService>();
+        services.AddScoped<IObservabilityDashboardService, ObservabilityDashboardService>();
         services.AddScoped<IOrchestrationReplayService, OrchestrationReplayService>();
         services.AddSingleton<IEventContractCatalogService, EventContractCatalogService>();
         return services;

@@ -24,7 +24,14 @@ internal sealed class CreateUserCommandHandler(
             Email = command.Email,
             UserName = command.Email,
             FirstName = command.FirstName,
-            LastName = command.LastName
+            LastName = command.LastName,
+            PhoneNumber = string.IsNullOrWhiteSpace(command.PhoneNumber) ? null : command.PhoneNumber.Trim(),
+            EmailConfirmed = command.EmailConfirmed ?? false,
+            PhoneNumberConfirmed = command.PhoneNumberConfirmed ?? false,
+            TwoFactorEnabled = command.TwoFactorEnabled ?? false,
+            LockoutEnabled = command.LockoutEnabled ?? true,
+            FailedLoginCount = Math.Max(command.FailedLoginCount ?? 0, 0),
+            LockoutEndUtc = command.LockoutEndUtc
         };
 
         IdentityResult createResult = await userManager.CreateAsync(user, command.Password);
@@ -52,7 +59,18 @@ internal sealed class CreateUserCommandHandler(
             Id = user.Id,
             Email = user.Email ?? command.Email,
             FirstName = user.FirstName,
-            LastName = user.LastName
+            LastName = user.LastName,
+            PhoneNumber = user.PhoneNumber,
+            EmailConfirmed = user.EmailConfirmed,
+            PhoneNumberConfirmed = user.PhoneNumberConfirmed,
+            TwoFactorEnabled = user.TwoFactorEnabled,
+            LockoutEnabled = user.LockoutEnabled,
+            LockoutEndUtc = user.LockoutEndUtc,
+            FailedLoginCount = user.FailedLoginCount,
+            AuditCreatedBy = user.AuditCreatedBy,
+            AuditCreatedAtUtc = user.AuditCreatedAtUtc,
+            AuditUpdatedBy = user.AuditUpdatedBy,
+            AuditUpdatedAtUtc = user.AuditUpdatedAtUtc
         };
     }
 }

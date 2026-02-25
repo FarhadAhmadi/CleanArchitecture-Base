@@ -11,7 +11,18 @@ namespace Web.Api.Endpoints.Users;
 
 internal sealed class CreateUser : IEndpoint
 {
-    public sealed record Request(string Email, string FirstName, string LastName, string Password);
+    public sealed record Request(
+        string Email,
+        string FirstName,
+        string LastName,
+        string Password,
+        string? PhoneNumber,
+        bool? EmailConfirmed,
+        bool? PhoneNumberConfirmed,
+        bool? TwoFactorEnabled,
+        bool? LockoutEnabled,
+        DateTime? LockoutEndUtc,
+        int? FailedLoginCount);
 
     public void MapEndpoint(IEndpointRouteBuilder app)
     {

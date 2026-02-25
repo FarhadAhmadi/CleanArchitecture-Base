@@ -10,6 +10,17 @@ internal static class UserMappings
         Id = user.Id,
         FirstName = user.FirstName,
         LastName = user.LastName,
-        Email = user.Email ?? string.Empty
+        Email = user.Email ?? string.Empty,
+        PhoneNumber = user.PhoneNumber,
+        EmailConfirmed = user.EmailConfirmed,
+        PhoneNumberConfirmed = user.PhoneNumberConfirmed,
+        TwoFactorEnabled = user.TwoFactorEnabled,
+        LockoutEnabled = user.LockoutEnabled,
+        LockoutEndUtc = user.LockoutEndUtc,
+        FailedLoginCount = user.FailedLoginCount,
+        AuditCreatedBy = user.AuditCreatedBy,
+        AuditCreatedAtUtc = user.AuditCreatedAtUtc,
+        AuditUpdatedBy = user.AuditUpdatedBy,
+        AuditUpdatedAtUtc = user.AuditUpdatedAtUtc
     };
 }

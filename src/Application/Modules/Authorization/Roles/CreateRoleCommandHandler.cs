@@ -37,7 +37,15 @@ internal sealed class CreateRoleCommandHandler(
         return new RoleCrudResponse
         {
             Id = role.Id,
-            Name = role.Name ?? command.RoleName
+            Name = role.Name ?? command.RoleName,
+            NormalizedName = role.NormalizedName ?? command.RoleName.ToUpperInvariant(),
+            PermissionCount = 0,
+            UserCount = 0,
+            IsSystemRole = (role.NormalizedName ?? string.Empty) == "ADMIN" || (role.NormalizedName ?? string.Empty) == "USER",
+            AuditCreatedBy = role.AuditCreatedBy,
+            AuditCreatedAtUtc = role.AuditCreatedAtUtc,
+            AuditUpdatedBy = role.AuditUpdatedBy,
+            AuditUpdatedAtUtc = role.AuditUpdatedAtUtc
         };
     }
 }

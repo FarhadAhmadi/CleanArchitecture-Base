@@ -11,7 +11,18 @@ namespace Web.Api.Endpoints.Users;
 
 internal sealed class UpdateUser : IEndpoint
 {
-    public sealed record Request(string Email, string FirstName, string LastName);
+    public sealed record Request(
+        string Email,
+        string FirstName,
+        string LastName,
+        string? PhoneNumber,
+        bool? EmailConfirmed,
+        bool? PhoneNumberConfirmed,
+        bool? TwoFactorEnabled,
+        bool? LockoutEnabled,
+        DateTime? LockoutEndUtc,
+        bool? ClearLockoutEnd,
+        int? FailedLoginCount);
 
     public void MapEndpoint(IEndpointRouteBuilder app)
     {

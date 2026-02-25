@@ -10,15 +10,15 @@ internal sealed class ApiSecurityOptions
 
     public int RequestTimeoutSeconds { get; init; } = 30;
 
-    public int RateLimitPermitLimit { get; init; } = 100;
+    public int RateLimitPermitLimit { get; init; } = 200;
 
     public int RateLimitWindowSeconds { get; init; } = 60;
 
-    public int PerUserRateLimitPermitLimit { get; init; } = 60;
+    public int PerUserRateLimitPermitLimit { get; init; } = 120;
 
-    public int PerIpRateLimitPermitLimit { get; init; } = 120;
+    public int PerIpRateLimitPermitLimit { get; init; } = 240;
 
-    public int PublicFileLinkRateLimitPermitLimit { get; init; } = 20;
+    public int PublicFileLinkRateLimitPermitLimit { get; init; } = 40;
 
     public int PublicFileLinkRateLimitWindowSeconds { get; init; } = 60;
 

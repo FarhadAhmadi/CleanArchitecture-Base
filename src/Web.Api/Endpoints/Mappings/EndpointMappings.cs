@@ -98,14 +98,29 @@ internal static class EndpointMappings
             InputSanitizer.SanitizeEmail(request.Email) ?? string.Empty,
             InputSanitizer.SanitizeText(request.FirstName, 100) ?? string.Empty,
             InputSanitizer.SanitizeText(request.LastName, 100) ?? string.Empty,
-            request.Password);
+            request.Password,
+            InputSanitizer.SanitizeText(request.PhoneNumber, 32),
+            request.EmailConfirmed,
+            request.PhoneNumberConfirmed,
+            request.TwoFactorEnabled,
+            request.LockoutEnabled,
+            request.LockoutEndUtc?.ToUniversalTime(),
+            request.FailedLoginCount);
 
     internal static UpdateUserCommand ToCommand(this UpdateUser.Request request, Guid userId) =>
         new(
             userId,
             InputSanitizer.SanitizeEmail(request.Email) ?? string.Empty,
             InputSanitizer.SanitizeText(request.FirstName, 100) ?? string.Empty,
-            InputSanitizer.SanitizeText(request.LastName, 100) ?? string.Empty);
+            InputSanitizer.SanitizeText(request.LastName, 100) ?? string.Empty,
+            InputSanitizer.SanitizeText(request.PhoneNumber, 32),
+            request.EmailConfirmed,
+            request.PhoneNumberConfirmed,
+            request.TwoFactorEnabled,
+            request.LockoutEnabled,
+            request.LockoutEndUtc?.ToUniversalTime(),
+            request.ClearLockoutEnd,
+            request.FailedLoginCount);
 
     internal static CreateRoleCommand ToCommand(this CreateRole.Request request) =>
         new(InputSanitizer.SanitizeIdentifier(request.RoleName, 100) ?? string.Empty);
